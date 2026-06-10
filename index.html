@@ -199,6 +199,35 @@
    </div>
 
   <script>
+// --- ส่วนที่แก้ไขเพิ่มเติม: สร้างระบบฐานข้อมูลสำรองอัตโนมัติหากรันนอกระบบหลัก ---
+if (!window.dataSdk || !window.dataSdk.create) {
+  window.dataSdk = {
+    _handler: null,
+    init: async function(handler) {
+      this._handler = handler;
+      const localData = JSON.parse(localStorage.getItem('korat_pittaya_docs') || '[]');
+      setTimeout(() => { if(this._handler) this._handler.onDataChanged(localData); }, 100);
+      return { isOk: true };
+    },
+    create: async function(record) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const localData = JSON.parse(localStorage.getItem('korat_pittaya_docs') || '[]');
+          record.id = 'id_' + Date.now();
+          localData.push(record);
+          localStorage.setItem('korat_pittaya_docs', JSON.stringify(localData));
+          if(this._handler) this._handler.onDataChanged(localData);
+          resolve({ isOk: true, data: record });
+        }, 800); // จำลองการอัปโหลดแป๊บเดียวเสร็จ
+      });
+    }
+  };
+}
+
+if (!window.elementSdk) {
+  window.elementSdk = { init: () => {} };
+}
+
 // Data
 const ROOMS = ["ม.1/1", "ม.2/1", "ม.3/1", "ม.3/2", "ม.4/1", "ม.4/2", "ม.5/1", "ม.5/2", "ม.6/1", "ม.6/2"];
 const DOC_TYPES = ["แบบ ปพ.", "แผนการจัดการเรียนรู้", "รายงานแผนปฏิบัติการสอน"];
@@ -337,7 +366,6 @@ function buildLookup(data) {
   return map;
 }
 
-// ปรับปรุงฟังก์ชันคำนวณและแสดงผลความคืบหน้ารายห้องเรียนบนแผงควบคุม
 function renderMetrics() {
   const totalTasks = referenceItems.length;
   const lookup = buildLookup(submissions);
@@ -440,7 +468,7 @@ function renderTable() {
 
 function renderLog() {
   const container = document.getElementById('log-container');
-  if (submissions.length === 0) {
+  if (!submissions || submissions.length === 0) {
     container.innerHTML = '<p class="text-gray-400 text-xs text-center py-6">ยังไม่มีข้อมูลการทำรายการ</p>';
     return;
   }
@@ -510,12 +538,14 @@ async function handleSubmit(e) {
   });
 
   btn.disabled = false;
-  btn.innerHTML = 'บันทึกข้อมูลการนำส่ง';
+  btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i> บันทึกข้อมูลการนำส่ง';
   lucide.createIcons();
 
   if (result.isOk) {
-    showFeedback('success', `บันทึกและนำส่งไฟล์สำเร็จ: ${doc_type} (${round}) สำหรับห้อง ${room}`);
+    showFeedback('success', `บันทึกสำเร็จ: ${doc_type} (${round}) ห้อง ${room}`);
     clearFile();
+    // สลับหน้ากลับไปดูแดชบอร์ดหลังบันทึกสำเร็จ
+    setTimeout(() => { switchTab('dashboard'); }, 1000);
   } else {
     showFeedback('error', 'เกิดข้อผิดพลาด กรุณาลองอีกครั้ง');
   }
@@ -526,13 +556,14 @@ function showFeedback(type, msg) {
   const colors = { success: 'bg-emerald-50 text-emerald-800 border-emerald-300', error: 'bg-red-50 text-red-800 border-red-300', warning: 'bg-amber-50 text-amber-800 border-amber-300' };
   el.className = `${colors[type]} border rounded-lg px-3 py-2 text-xs mt-3 fade-in font-semibold`;
   el.textContent = msg;
+  el.classList.remove('hidden');
   setTimeout(() => { el.className = 'hidden'; }, 4000);
 }
 
 // Data SDK
 const dataHandler = {
   onDataChanged(data) {
-    submissions = data;
+    submissions = data || [];
     renderMetrics();
     renderTable();
     renderLog();
@@ -563,7 +594,6 @@ window.elementSdk.init({
     const hdr = config.header_color || defaultConfig.header_color;
     const txt = config.text_color || defaultConfig.text_color;
     const acc = config.accent_color || defaultConfig.accent_color;
-    const btn = config.button_color || defaultConfig.button_color;
     const font = config.font_family || defaultConfig.font_family;
     const size = config.font_size || defaultConfig.font_size;
 
@@ -577,24 +607,7 @@ window.elementSdk.init({
 
     document.querySelectorAll('.navy-bg').forEach(el => el.style.backgroundColor = hdr);
     document.querySelectorAll('.gold-accent').forEach(el => el.style.color = acc);
-  },
-  mapToCapabilities: (config) => ({
-    recolorables: [
-      { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
-      { get: () => config.header_color || defaultConfig.header_color, set: (v) => { config.header_color = v; window.elementSdk.setConfig({ header_color: v }); } },
-      { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
-      { get: () => config.accent_color || defaultConfig.accent_color, set: (v) => { config.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); } },
-      { get: () => config.button_color || defaultConfig.button_color, set: (v) => { config.button_color = v; window.elementSdk.setConfig({ button_color: v }); } }
-    ],
-    borderables: [],
-    fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
-    fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } }
-  }),
-  mapToEditPanelValues: (config) => new Map([
-    ['system_title', config.system_title || defaultConfig.system_title],
-    ['department_name', config.department_name || defaultConfig.department_name],
-    ['academic_year', config.academic_year || defaultConfig.academic_year]
-  ])
+  }
 });
 
 (async () => {
@@ -602,7 +615,6 @@ window.elementSdk.init({
   if (!r.isOk) console.error('Data SDK init failed');
 })();
 
-// Initialize dynamic dropdown settings
 handleDocTypeChange();
 lucide.createIcons();
   </script>
