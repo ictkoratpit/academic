@@ -47,9 +47,10 @@
    </header>
 
    <div class="max-w-7xl mx-auto px-6 pt-4">
-    <div class="flex gap-6 border-b border-gray-200">
+    <div class="flex gap-6 border-b border-gray-200 overflow-x-auto whitespace-nowrap">
      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="pb-3 px-2 text-sm font-bold text-indigo-900 border-b-2 border-indigo-900 transition-all"> ส่วนควบคุมและสรุปผล </button> 
      <button onclick="switchTab('submission')" id="tab-submission" class="pb-3 px-2 text-sm font-bold text-gray-400 border-b-2 border-transparent transition-all"> แบบฟอร์มนำส่งเอกสาร </button>
+     <button onclick="switchTab('admin')" id="tab-admin" class="pb-3 px-2 text-sm font-bold text-red-600 border-b-2 border-transparent transition-all flex items-center gap-1"> <i data-lucide="shield" class="w-4 h-4"></i> ส่วนจัดการข้อมูล (แอดมิน) </button>
     </div>
    </div>
 
@@ -198,8 +199,35 @@
     </div>
    </div>
 
+   <div id="panel-admin" class="max-w-7xl mx-auto px-6 py-6 hidden fade-in">
+    <div class="bg-white rounded-lg card-shadow overflow-hidden">
+     <div class="p-4 bg-red-900 text-white flex justify-between items-center border-b-2 border-red-500 flex-wrap gap-2">
+      <h2 class="font-bold text-sm flex items-center gap-2"><i data-lucide="database" class="w-4 h-4"></i> ระบบจัดการฐานข้อมูลสำหรับผู้ดูแลระบบ</h2>
+      <div class="flex items-center gap-2">
+       <button onclick="clearAllData()" class="text-xs bg-red-800 hover:bg-red-700 px-3 py-1.5 rounded transition-colors border border-red-600 flex items-center gap-1"><i data-lucide="trash-2" class="w-3 h-3"></i> ล้างข้อมูลทั้งหมด</button>
+       <button onclick="logoutAdmin()" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition-colors border border-gray-600 flex items-center gap-1"><i data-lucide="log-out" class="w-3 h-3"></i> ออกจากระบบ</button>
+      </div>
+     </div>
+     <div class="overflow-x-auto">
+      <table class="w-full text-xs">
+       <thead class="bg-gray-50">
+        <tr>
+         <th class="text-left px-4 py-3 font-bold text-gray-700">วันที่/เวลา</th>
+         <th class="text-left px-4 py-3 font-bold text-gray-700">ห้อง</th>
+         <th class="text-left px-4 py-3 font-bold text-gray-700">ประเภทเอกสาร</th>
+         <th class="text-left px-4 py-3 font-bold text-gray-700">รอบนำส่ง</th>
+         <th class="text-left px-4 py-3 font-bold text-gray-700">ไฟล์ที่แนบมา</th>
+         <th class="text-center px-4 py-3 font-bold text-gray-700">จัดการ</th>
+        </tr>
+       </thead>
+       <tbody id="admin-table-body">
+        </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+
   <script>
-// --- ส่วนที่แก้ไขเพิ่มเติม: สร้างระบบฐานข้อมูลสำรองอัตโนมัติหากรันนอกระบบหลัก ---
 if (!window.dataSdk || !window.dataSdk.create) {
   window.dataSdk = {
     _handler: null,
@@ -218,7 +246,23 @@ if (!window.dataSdk || !window.dataSdk.create) {
           localStorage.setItem('korat_pittaya_docs', JSON.stringify(localData));
           if(this._handler) this._handler.onDataChanged(localData);
           resolve({ isOk: true, data: record });
-        }, 800); // จำลองการอัปโหลดแป๊บเดียวเสร็จ
+        }, 800);
+      });
+    },
+    delete: async function(id) {
+      return new Promise((resolve) => {
+        let localData = JSON.parse(localStorage.getItem('korat_pittaya_docs') || '[]');
+        localData = localData.filter(item => item.id !== id);
+        localStorage.setItem('korat_pittaya_docs', JSON.stringify(localData));
+        if(this._handler) this._handler.onDataChanged(localData);
+        resolve({ isOk: true });
+      });
+    },
+    clearAll: async function() {
+      return new Promise((resolve) => {
+        localStorage.removeItem('korat_pittaya_docs');
+        if(this._handler) this._handler.onDataChanged([]);
+        resolve({ isOk: true });
       });
     }
   };
@@ -232,6 +276,9 @@ if (!window.elementSdk) {
 const ROOMS = ["ม.1/1", "ม.2/1", "ม.3/1", "ม.3/2", "ม.4/1", "ม.4/2", "ม.5/1", "ม.5/2", "ม.6/1", "ม.6/2"];
 const DOC_TYPES = ["แบบ ปพ.", "แผนการจัดการเรียนรู้", "รายงานแผนปฏิบัติการสอน"];
 const ROUNDS = ["ครั้งที่ 1", "ครั้งที่ 2", "ครั้งที่ 3"];
+
+// ตัวแปรเก็บสถานะการล็อกอินของ Admin
+let isAdminAuthenticated = false;
 
 // Build dynamic reference items based on requirements
 const referenceItems = [];
@@ -249,7 +296,6 @@ let submissions = [];
 const selRoom = document.getElementById('sel-room');
 ROOMS.forEach(r => { const o = document.createElement('option'); o.textContent = r; selRoom.appendChild(o); });
 
-// Dynamic Dropdown Based on Document Type
 function handleDocTypeChange() {
   const docType = document.getElementById('sel-doc').value;
   const selRound = document.getElementById('sel-round');
@@ -263,7 +309,6 @@ function handleDocTypeChange() {
   });
 }
 
-// Drag and Drop File Logic
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('input-file');
 
@@ -333,18 +378,52 @@ const toBase64 = file => new Promise((resolve, reject) => {
   reader.onerror = error => reject(error);
 });
 
-// Tabs
+// ฟังก์ชันออกจากระบบ
+function logoutAdmin() {
+  if(confirm('คุณต้องการออกจากระบบผู้ดูแลระบบใช่หรือไม่?')) {
+    isAdminAuthenticated = false;
+    switchTab('dashboard');
+    alert('ออกจากระบบเรียบร้อยแล้ว');
+  }
+}
+
 function switchTab(tab) {
+  if (tab === 'admin' && !isAdminAuthenticated) {
+    const password = prompt('กรุณาใส่รหัสผ่านเพื่อเข้าสู่ระบบผู้ดูแลระบบ (Admin):');
+    if (password === 'admin1234') {
+      isAdminAuthenticated = true;
+    } else {
+      if (password !== null) {
+        alert('รหัสผ่านไม่ถูกต้อง!');
+      }
+      return; 
+    }
+  }
+
   document.getElementById('panel-dashboard').classList.toggle('hidden', tab !== 'dashboard');
   document.getElementById('panel-submission').classList.toggle('hidden', tab !== 'submission');
+  document.getElementById('panel-admin').classList.toggle('hidden', tab !== 'admin');
+  
   const dbBtn = document.getElementById('tab-dashboard');
   const subBtn = document.getElementById('tab-submission');
+  const adminBtn = document.getElementById('tab-admin');
+  
+  [dbBtn, subBtn, adminBtn].forEach(btn => {
+    btn.classList.remove('text-indigo-900', 'border-indigo-900', 'text-red-600', 'border-red-600', 'text-gray-400', 'border-transparent');
+  });
+
   if (tab === 'dashboard') {
-    dbBtn.className = 'pb-3 px-2 text-sm font-bold text-indigo-900 border-b-2 border-indigo-900 transition-all';
-    subBtn.className = 'pb-3 px-2 text-sm font-bold text-gray-400 border-b-2 border-transparent transition-all';
+    dbBtn.classList.add('text-indigo-900', 'border-indigo-900');
+    subBtn.classList.add('text-gray-400', 'border-transparent');
+    adminBtn.classList.add('text-gray-400', 'border-transparent');
+  } else if (tab === 'submission') {
+    dbBtn.classList.add('text-gray-400', 'border-transparent');
+    subBtn.classList.add('text-indigo-900', 'border-indigo-900');
+    adminBtn.classList.add('text-gray-400', 'border-transparent');
   } else {
-    dbBtn.className = 'pb-3 px-2 text-sm font-bold text-gray-400 border-b-2 border-transparent transition-all';
-    subBtn.className = 'pb-3 px-2 text-sm font-bold text-indigo-900 border-b-2 border-indigo-900 transition-all';
+    dbBtn.classList.add('text-gray-400', 'border-transparent');
+    subBtn.classList.add('text-gray-400', 'border-transparent');
+    adminBtn.classList.add('text-red-600', 'border-red-600');
   }
 }
 
@@ -494,6 +573,67 @@ function renderLog() {
   lucide.createIcons();
 }
 
+function renderAdminTable() {
+  const tbody = document.getElementById('admin-table-body');
+  if (!submissions || submissions.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">ยังไม่มีข้อมูลในระบบ</td></tr>';
+    return;
+  }
+  
+  const sorted = [...submissions].sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
+  
+  tbody.innerHTML = sorted.map(rec => {
+    const d = new Date(rec.submitted_at);
+    const timeStr = d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+    
+    const fileAction = rec.filedata 
+      ? `<button onclick="downloadFile('${rec.id}')" class="text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded font-semibold inline-flex items-center gap-1 transition-colors"><i data-lucide="download" class="w-3 h-3"></i> โหลดไฟล์</button>`
+      : `<span class="text-gray-400 italic">ไม่มีไฟล์แนบ</span>`;
+
+    return `
+      <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+        <td class="px-4 py-3 text-gray-500">${timeStr}</td>
+        <td class="px-4 py-3 font-bold text-indigo-900">${rec.room}</td>
+        <td class="px-4 py-3 font-semibold text-gray-700">${rec.doc_type}</td>
+        <td class="px-4 py-3 text-gray-600">${rec.round}</td>
+        <td class="px-4 py-3 truncate max-w-[200px]" title="${rec.filename || ''}">${fileAction} <span class="text-[10px] text-gray-400 ml-1">${rec.filename || ''}</span></td>
+        <td class="px-4 py-3 text-center">
+          <button onclick="deleteRecord('${rec.id}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded transition-colors" title="ลบข้อมูลนี้">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+  lucide.createIcons();
+}
+
+function downloadFile(id) {
+  const rec = submissions.find(s => s.id === id);
+  if (rec && rec.filedata) {
+    const a = document.createElement('a');
+    a.href = rec.filedata;
+    a.download = rec.filename || `document_${rec.room}_${rec.doc_type}.file`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } else {
+    alert('ไม่พบข้อมูลไฟล์');
+  }
+}
+
+async function deleteRecord(id) {
+  if(confirm('คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลรายการนี้?')) {
+    await window.dataSdk.delete(id);
+  }
+}
+
+async function clearAllData() {
+  if(confirm('🚨 คำเตือน: คุณต้องการล้างข้อมูลการส่งเอกสารทั้งหมดในระบบใช่หรือไม่?\n(การกระทำนี้ไม่สามารถย้อนกลับได้)')) {
+    await window.dataSdk.clearAll();
+  }
+}
+
 async function handleSubmit(e) {
   e.preventDefault();
   const room = document.getElementById('sel-room').value;
@@ -542,9 +682,8 @@ async function handleSubmit(e) {
   lucide.createIcons();
 
   if (result.isOk) {
-    showFeedback('success', `บันทึกสำเร็จ: ${doc_type} (${round}) ห้อง ${room}`);
+    showFeedback('success', `บันทึกและนำส่งไฟล์สำเร็จ: ${doc_type} (${round}) ห้อง ${room}`);
     clearFile();
-    // สลับหน้ากลับไปดูแดชบอร์ดหลังบันทึกสำเร็จ
     setTimeout(() => { switchTab('dashboard'); }, 1000);
   } else {
     showFeedback('error', 'เกิดข้อผิดพลาด กรุณาลองอีกครั้ง');
@@ -560,17 +699,16 @@ function showFeedback(type, msg) {
   setTimeout(() => { el.className = 'hidden'; }, 4000);
 }
 
-// Data SDK
 const dataHandler = {
   onDataChanged(data) {
     submissions = data || [];
     renderMetrics();
     renderTable();
     renderLog();
+    renderAdminTable(); 
   }
 };
 
-// Element SDK
 const defaultConfig = {
   system_title: 'ระบบสารสนเทศติดตามการส่งเอกสารวิชาการ',
   department_name: 'กลุ่มบริหารวิชาการ โรงเรียนโคราชพิทยาคม',
