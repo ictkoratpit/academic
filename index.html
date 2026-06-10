@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="th" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบติดตามการส่งเอกสารวิชาการ - โรงเรียนโคราชพิทยาคม</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/telemetry_sdk.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&amp;family=Noto+Sans+Thai:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Sarabun', 'Noto Sans Thai', sans-serif; }
+    .gold-border { border-color: #B8860B; }
+    .navy-bg { background: linear-gradient(135deg, #0F1B4C 0%, #1a237e 100%); }
+    .gold-accent { color: #B8860B; }
+    .garuda-pattern {
+      background-image: linear-gradient(135deg, rgba(184,134,11,0.03) 0%, transparent 50%), radial-gradient(circle at 100% 0%, rgba(184,134,11,0.02) 0%, transparent 50%);
+    }
+    .status-badge-pending { background: #FEF3C7; color: #92400E; border: 1px solid #FBBF24; }
+    .status-badge-done { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
+    .table-row:hover { background: #F0F4FF; }
+    .card-shadow { box-shadow: 0 1px 3px rgba(26,35,126,0.12); }
+    .seal-box { border-left: 4px solid #B8860B; background: linear-gradient(to right, rgba(184,134,11,0.02), transparent); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.4s ease-out; }
+    .divider-gold { background: linear-gradient(to right, transparent, #B8860B, transparent); height: 2px; }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+ </head>
+ <body class="h-full bg-gray-50">
+  <div id="app" class="h-full w-full overflow-auto">
+   <header id="main-header" class="navy-bg text-white py-4 px-8 border-b-2 border-amber-400">
+    <div class="max-w-7xl mx-auto">
+     <div class="flex items-center justify-between">
+      <div>
+       <h1 id="header-title" class="text-xl font-bold">ระบบสารสนเทศติดตามการส่งเอกสารวิชาการ</h1>
+       <p id="header-subtitle" class="text-blue-200 text-xs font-semibold mt-1">กลุ่มบริหารวิชาการ โรงเรียนโคราชพิทยาคม ประจำปีการศึกษา 2569</p>
+      </div>
+      <div class="text-right text-xs text-blue-100">
+       <div id="current-date" class="font-semibold"></div>
+       <div id="current-time" class="text-amber-300 font-semibold"></div>
+      </div>
+     </div>
+    </div>
+   </header>
+
+   <div class="max-w-7xl mx-auto px-6 pt-4">
+    <div class="flex gap-6 border-b border-gray-200">
+     <button onclick="switchTab('dashboard')" id="tab-dashboard" class="pb-3 px-2 text-sm font-bold text-indigo-900 border-b-2 border-indigo-900 transition-all"> ส่วนควบคุมและสรุปผล </button> 
+     <button onclick="switchTab('submission')" id="tab-submission" class="pb-3 px-2 text-sm font-bold text-gray-400 border-b-2 border-transparent transition-all"> แบบฟอร์มนำส่งเอกสาร </button>
+    </div>
+   </div>
+
+   <div id="panel-dashboard" class="max-w-7xl mx-auto px-6 py-6 fade-in">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+     <div class="bg-white rounded-lg p-5 card-shadow border-l-4 border-indigo-900 flex flex-col justify-between">
+      <div>
+       <p class="text-xs text-gray-500 font-semibold uppercase">รายการเอกสารทั้งหมด</p>
+       <p id="metric-total" class="text-3xl font-bold text-indigo-900 mt-1">50</p>
+      </div>
+      <div class="mt-3 text-[11px] text-gray-500 font-medium">จากจำนวนทั้งหมด 10 ห้องเรียน</div>
+     </div>
+     
+     <div class="bg-white rounded-lg p-5 card-shadow border-l-4 border-emerald-600 flex flex-col justify-between">
+      <div>
+       <p class="text-xs text-gray-500 font-semibold uppercase">ห้องที่ส่งครบทุกรายการแล้ว</p>
+       <p id="metric-rooms-completed" class="text-3xl font-bold text-emerald-700 mt-1">0</p>
+      </div>
+      <div class="mt-3 text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-1.5 rounded" id="list-rooms-completed">ยังไม่มีห้องที่ส่งครบ</div>
+     </div>
+     
+     <div class="bg-white rounded-lg p-5 card-shadow border-l-4 border-amber-500 flex flex-col justify-between">
+      <div>
+       <p class="text-xs text-gray-500 font-semibold uppercase">ห้องที่ยังค้างส่ง</p>
+       <p id="metric-rooms-pending" class="text-3xl font-bold text-amber-700 mt-1">10</p>
+      </div>
+      <div class="mt-3 text-xs font-medium text-amber-700 bg-amber-50 px-2 py-1.5 rounded leading-relaxed" id="list-rooms-pending">-</div>
+     </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+     <div class="lg:col-span-3 bg-white rounded-lg card-shadow overflow-hidden flex flex-col">
+      <div class="p-4 bg-indigo-900 text-white flex items-center justify-between">
+       <h2 class="font-bold text-sm">ตารางสถานะการนำส่ง</h2>
+       <select id="filter-doc" onchange="renderTable()" class="text-xs bg-indigo-800 text-white border border-indigo-600 rounded px-2 py-1.5 focus:outline-none"> 
+        <option value="all">แสดงทั้งหมด</option> 
+        <option value="แบบ ปพ.">แบบ ปพ.</option> 
+        <option value="แผนการจัดการเรียนรู้">แผนการจัดการเรียนรู้</option> 
+        <option value="รายงานแผนปฏิบัติการสอน">รายงานแผนปฏิบัติการสอน</option> 
+       </select>
+      </div>
+      
+      <div class="p-3 bg-slate-50 border-b border-gray-200 text-xs text-gray-700 leading-relaxed">
+        <div class="flex items-start mb-1.5">
+          <span class="font-bold text-emerald-700 min-w-[70px] mt-0.5">ส่งครบแล้ว:</span>
+          <span id="summary-completed" class="font-medium text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">-</span>
+        </div>
+        <div class="flex items-start">
+          <span class="font-bold text-amber-600 min-w-[70px] mt-0.5">ยังค้างส่ง:</span>
+          <span id="summary-pending" class="font-medium text-amber-800 bg-amber-100 px-2 py-0.5 rounded">-</span>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto overflow-y-auto" style="max-height: 400px;">
+       <table class="w-full text-xs">
+        <thead class="bg-gray-100 sticky top-0 shadow-sm">
+         <tr>
+          <th class="text-left px-3 py-2 font-bold text-gray-700">ระดับชั้น/ห้อง</th>
+          <th class="text-left px-3 py-2 font-bold text-gray-700">ประเภทเอกสาร</th>
+          <th class="text-center px-3 py-2 font-bold text-gray-700">ครั้งที่ 1</th>
+          <th class="text-center px-3 py-2 font-bold text-gray-700">ครั้งที่ 2</th>
+          <th class="text-center px-3 py-2 font-bold text-gray-700">ครั้งที่ 3</th>
+         </tr>
+        </thead>
+        <tbody id="status-table-body"></tbody>
+       </table>
+      </div>
+     </div>
+
+     <div class="lg:col-span-2 bg-white rounded-lg card-shadow overflow-hidden">
+      <div class="p-4 bg-indigo-900 text-white">
+       <h2 class="font-bold text-sm">ประวัติการทำรายการ</h2>
+      </div>
+      <div id="log-container" class="p-3 overflow-y-auto" style="max-height: 460px;">
+       <p class="text-gray-400 text-xs text-center py-6">ยังไม่มีข้อมูลการทำรายการ</p>
+      </div>
+     </div>
+    </div>
+   </div>
+
+   <div id="panel-submission" class="max-w-7xl mx-auto px-6 py-6 hidden fade-in">
+    <div class="max-w-2xl mx-auto bg-white rounded-lg card-shadow overflow-hidden">
+     <div class="navy-bg px-6 py-4">
+      <h2 class="text-white font-semibold flex items-center gap-2"><i data-lucide="upload" class="w-5 h-5"></i> แบบฟอร์มบันทึกการส่งเอกสารวิชาการ</h2>
+      <p class="text-blue-200 text-xs mt-1">กรุณาระบุข้อมูลและแนบไฟล์ให้ครบถ้วนก่อนทำการบันทึก</p>
+     </div>
+     <form id="submission-form" class="p-6 space-y-5" onsubmit="handleSubmit(event)">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+       <div>
+        <label for="sel-room" class="block text-sm font-medium text-gray-700 mb-1">ระดับชั้น/ห้องเรียน</label> 
+        <select id="sel-room" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"></select>
+       </div>
+       <div>
+        <label for="sel-doc" class="block text-sm font-medium text-gray-700 mb-1">ประเภทเอกสารวิชาการ</label> 
+        <select id="sel-doc" onchange="handleDocTypeChange()" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"> 
+         <option>แบบ ปพ.</option> 
+         <option>แผนการจัดการเรียนรู้</option> 
+         <option>รายงานแผนปฏิบัติการสอน</option> 
+        </select>
+       </div>
+       <div>
+        <label for="sel-round" class="block text-sm font-medium text-gray-700 mb-1">รอบการนำส่ง</label> 
+        <select id="sel-round" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"> 
+         <option>ครั้งที่ 1</option> 
+         <option>ครั้งที่ 2</option> 
+         <option>ครั้งที่ 3</option> 
+        </select>
+       </div>
+       
+       <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">แนบไฟล์เอกสารวิชาการ</label>
+        <div id="dropzone" class="border-2 border-dashed border-gray-300 rounded-xl p-5 text-center hover:border-indigo-500 transition-colors cursor-pointer bg-gray-50 group relative">
+         <input type="file" id="input-file" class="hidden" accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.jpg,.jpeg,.png">
+         
+         <div id="dropzone-prompt" class="space-y-2 py-2">
+          <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto text-gray-400 group-hover:text-indigo-600 transition-colors"></i>
+          <p class="text-xs font-semibold text-gray-700">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p>
+          <p class="text-[11px] text-gray-400">รองรับไฟล์ PDF, Word, Excel, PPT หรือรูปภาพ (ไม่เกิน 10MB)</p>
+         </div>
+         
+         <div id="file-info" class="hidden items-center justify-between bg-indigo-50 border border-indigo-100 rounded-lg p-3 text-left">
+          <div class="flex items-center gap-3 min-w-0">
+           <div class="p-2 bg-indigo-900 text-white rounded-lg flex-shrink-0">
+            <i data-lucide="file-text" class="w-5 h-5"></i>
+           </div>
+           <div class="min-w-0">
+            <p id="info-filename" class="text-xs font-bold text-gray-800 truncate"></p>
+            <p id="info-filesize" class="text-[11px] text-gray-500 mt-0.5"></p>
+           </div>
+          </div>
+          <button type="button" onclick="clearFile(event)" class="text-gray-400 hover:text-red-500 p-1.5 transition-colors rounded-full hover:bg-gray-200">
+           <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+         </div>
+        </div>
+       </div>
+      </div>
+      
+      <div class="pt-2">
+       <button type="submit" id="submit-btn" class="w-full navy-bg text-white py-3 rounded-lg font-semibold hover:bg-indigo-800 transition-colors flex items-center justify-center gap-2"> 
+        <i data-lucide="save" class="w-4 h-4"></i> บันทึกข้อมูลการนำส่ง 
+       </button>
+       <div id="submit-feedback" class="hidden"></div>
+      </div>
+     </form>
+    </div>
+   </div>
+
+  <script>
+// Data
+const ROOMS = ["ม.1/1", "ม.2/1", "ม.3/1", "ม.3/2", "ม.4/1", "ม.4/2", "ม.5/1", "ม.5/2", "ม.6/1", "ม.6/2"];
+const DOC_TYPES = ["แบบ ปพ.", "แผนการจัดการเรียนรู้", "รายงานแผนปฏิบัติการสอน"];
+const ROUNDS = ["ครั้งที่ 1", "ครั้งที่ 2", "ครั้งที่ 3"];
+
+// Build dynamic reference items based on requirements
+const referenceItems = [];
+ROOMS.forEach(room => {
+  DOC_TYPES.forEach(doc => {
+    const activeRounds = (doc === "แบบ ปพ.") ? ROUNDS : ["ครั้งที่ 1"];
+    activeRounds.forEach(round => {
+      referenceItems.push({ room, doc_type: doc, round });
+    });
+  });
+});
+
+let submissions = [];
+
+const selRoom = document.getElementById('sel-room');
+ROOMS.forEach(r => { const o = document.createElement('option'); o.textContent = r; selRoom.appendChild(o); });
+
+// Dynamic Dropdown Based on Document Type
+function handleDocTypeChange() {
+  const docType = document.getElementById('sel-doc').value;
+  const selRound = document.getElementById('sel-round');
+  selRound.innerHTML = '';
+  
+  const availableRounds = (docType === "แบบ ปพ.") ? ROUNDS : ["ครั้งที่ 1"];
+  availableRounds.forEach(round => {
+    const o = document.createElement('option');
+    o.textContent = round;
+    selRound.appendChild(o);
+  });
+}
+
+// Drag and Drop File Logic
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('input-file');
+
+dropzone.addEventListener('click', () => {
+  if (document.getElementById('file-info').classList.contains('hidden')) {
+    fileInput.click();
+  }
+});
+
+fileInput.addEventListener('change', handleFileSelect);
+
+dropzone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropzone.classList.add('border-indigo-500', 'bg-indigo-50');
+});
+
+dropzone.addEventListener('dragleave', () => {
+  dropzone.classList.remove('border-indigo-500', 'bg-indigo-50');
+});
+
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('border-indigo-500', 'bg-indigo-50');
+  if (e.dataTransfer.files.length) {
+    fileInput.files = e.dataTransfer.files;
+    handleFileSelect();
+  }
+});
+
+function handleFileSelect() {
+  const file = fileInput.files[0];
+  if (file) {
+    if (file.size > 10 * 1024 * 1024) {
+      alert('ไฟล์มีขนาดใหญ่เกินไป กรุณาเลือกไฟล์ที่มีขนาดไม่เกิน 10MB');
+      clearFile();
+      return;
+    }
+    document.getElementById('dropzone-prompt').classList.add('hidden');
+    const info = document.getElementById('file-info');
+    info.classList.remove('hidden');
+    info.classList.add('flex');
+    document.getElementById('info-filename').textContent = file.name;
+    document.getElementById('info-filesize').textContent = formatBytes(file.size);
+  }
+}
+
+function clearFile(e) {
+  if (e) e.stopPropagation();
+  fileInput.value = '';
+  document.getElementById('file-info').classList.remove('flex');
+  document.getElementById('file-info').classList.add('hidden');
+  document.getElementById('dropzone-prompt').classList.remove('hidden');
+}
+
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+const toBase64 = file => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = error => reject(error);
+});
+
+// Tabs
+function switchTab(tab) {
+  document.getElementById('panel-dashboard').classList.toggle('hidden', tab !== 'dashboard');
+  document.getElementById('panel-submission').classList.toggle('hidden', tab !== 'submission');
+  const dbBtn = document.getElementById('tab-dashboard');
+  const subBtn = document.getElementById('tab-submission');
+  if (tab === 'dashboard') {
+    dbBtn.className = 'pb-3 px-2 text-sm font-bold text-indigo-900 border-b-2 border-indigo-900 transition-all';
+    subBtn.className = 'pb-3 px-2 text-sm font-bold text-gray-400 border-b-2 border-transparent transition-all';
+  } else {
+    dbBtn.className = 'pb-3 px-2 text-sm font-bold text-gray-400 border-b-2 border-transparent transition-all';
+    subBtn.className = 'pb-3 px-2 text-sm font-bold text-indigo-900 border-b-2 border-indigo-900 transition-all';
+  }
+}
+
+function updateClock() {
+  const now = new Date();
+  const opts = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+  document.getElementById('current-date').textContent = now.toLocaleDateString('th-TH', opts);
+  document.getElementById('current-time').textContent = now.toLocaleTimeString('th-TH');
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+function buildLookup(data) {
+  const map = {};
+  data.forEach(rec => {
+    const key = `${rec.room}|${rec.doc_type}|${rec.round}`;
+    map[key] = rec;
+  });
+  return map;
+}
+
+// ปรับปรุงฟังก์ชันคำนวณและแสดงผลความคืบหน้ารายห้องเรียนบนแผงควบคุม
+function renderMetrics() {
+  const totalTasks = referenceItems.length;
+  const lookup = buildLookup(submissions);
+
+  let fullyCompletedRooms = [];
+  let pendingRooms = [];
+
+  ROOMS.forEach(room => {
+    let isRoomComplete = true;
+    const roomItems = referenceItems.filter(item => item.room === room);
+    roomItems.forEach(item => {
+      if (!lookup[`${room}|${item.doc_type}|${item.round}`]) {
+        isRoomComplete = false;
+      }
+    });
+
+    if (isRoomComplete) {
+      fullyCompletedRooms.push(room);
+    } else {
+      pendingRooms.push(room);
+    }
+  });
+
+  document.getElementById('metric-total').textContent = totalTasks;
+  
+  document.getElementById('metric-rooms-completed').textContent = fullyCompletedRooms.length;
+  document.getElementById('list-rooms-completed').textContent = fullyCompletedRooms.length > 0 
+    ? fullyCompletedRooms.join(', ') 
+    : 'ยังไม่มีห้องที่ส่งครบ';
+  
+  document.getElementById('metric-rooms-pending').textContent = pendingRooms.length;
+  document.getElementById('list-rooms-pending').textContent = pendingRooms.length > 0 
+    ? pendingRooms.join(', ') 
+    : 'ส่งครบทุกห้องแล้ว 🎉';
+}
+
+function renderTable() {
+  const filter = document.getElementById('filter-doc').value;
+  const lookup = buildLookup(submissions);
+  const tbody = document.getElementById('status-table-body');
+  tbody.innerHTML = '';
+
+  const summaryCompleted = [];
+  const summaryPending = [];
+  const targetDocs = filter === 'all' ? DOC_TYPES : [filter];
+
+  ROOMS.forEach(room => {
+    let isRoomCompleteForFilter = true;
+    
+    targetDocs.forEach(doc => {
+      const activeRounds = (doc === "แบบ ปพ.") ? ROUNDS : ["ครั้งที่ 1"];
+      activeRounds.forEach(round => {
+        if (!lookup[`${room}|${doc}|${round}`]) {
+          isRoomCompleteForFilter = false;
+        }
+      });
+    });
+
+    if (isRoomCompleteForFilter) {
+      summaryCompleted.push(room);
+    } else {
+      summaryPending.push(room);
+    }
+
+    targetDocs.forEach(doc => {
+      const tr = document.createElement('tr');
+      tr.className = 'table-row border-b border-gray-100 hover:bg-gray-50';
+      let cells = `<td class="px-3 py-2 font-bold text-gray-800 text-xs">${room}</td><td class="px-3 py-2 text-gray-600 font-semibold text-xs">${doc}</td>`;
+      
+      ROUNDS.forEach(round => {
+        const isRoundRequired = (doc === "แบบ ปพ.") || (round === "ครั้งที่ 1");
+        
+        if (!isRoundRequired) {
+          cells += `<td class="px-3 py-2 text-center text-gray-300 font-medium">—</td>`;
+        } else {
+          const k = `${room}|${doc}|${round}`;
+          const rec = lookup[k];
+          if (rec) {
+            cells += `<td class="px-3 py-2 text-center"><span class="status-badge-done text-xs px-2 py-1 rounded-full inline-block font-semibold shadow-sm">✓ นำส่ง</span></td>`;
+          } else {
+            cells += `<td class="px-3 py-2 text-center"><span class="status-badge-pending text-xs px-2 py-1 rounded-full inline-block font-semibold shadow-sm">รอ</span></td>`;
+          }
+        }
+      });
+      tr.innerHTML = cells;
+      tbody.appendChild(tr);
+    });
+  });
+
+  document.getElementById('summary-completed').textContent = summaryCompleted.length > 0 ? summaryCompleted.join(', ') : 'ยังไม่มีห้องที่ส่งครบ';
+  document.getElementById('summary-completed').className = summaryCompleted.length > 0 
+    ? 'font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded shadow-sm' 
+    : 'font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded';
+
+  document.getElementById('summary-pending').textContent = summaryPending.length > 0 ? summaryPending.join(', ') : 'ส่งครบทุกห้องแล้ว 🎉';
+  document.getElementById('summary-pending').className = summaryPending.length > 0 
+    ? 'font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded shadow-sm' 
+    : 'font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded shadow-sm';
+}
+
+function renderLog() {
+  const container = document.getElementById('log-container');
+  if (submissions.length === 0) {
+    container.innerHTML = '<p class="text-gray-400 text-xs text-center py-6">ยังไม่มีข้อมูลการทำรายการ</p>';
+    return;
+  }
+  const sorted = [...submissions].sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
+  container.innerHTML = sorted.slice(0, 20).map(rec => {
+    const d = new Date(rec.submitted_at);
+    const timeStr = d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+    const sizeBadge = rec.filesize ? ` (${rec.filesize})` : '';
+    return `<div class="flex items-start gap-2 py-2 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
+      <div class="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-xs font-bold text-gray-800">${rec.room} — ${rec.doc_type}</p>
+        <p class="text-xs text-gray-500 font-semibold mt-0.5 flex items-center gap-1 truncate">
+          <i data-lucide="paperclip" class="w-3 h-3 text-gray-400 flex-shrink-0"></i>
+          <span class="truncate">${rec.round} · ${rec.filename || 'ไม่มีเอกสาร'}</span><span class="text-gray-400 font-normal text-[10px] flex-shrink-0">${sizeBadge}</span>
+        </p>
+        <p class="text-[11px] text-gray-400 mt-0.5">${timeStr}</p>
+      </div>
+    </div>`;
+  }).join('');
+  lucide.createIcons();
+}
+
+async function handleSubmit(e) {
+  e.preventDefault();
+  const room = document.getElementById('sel-room').value;
+  const doc_type = document.getElementById('sel-doc').value;
+  const round = document.getElementById('sel-round').value;
+  const file = fileInput.files[0];
+
+  if (submissions.length >= 999) {
+    showFeedback('error', 'ข้อมูลเต็มจำนวนสูงสุดแล้ว (999 รายการ)');
+    return;
+  }
+
+  const key = `${room}|${doc_type}|${round}`;
+  const lookup = buildLookup(submissions);
+  if (lookup[key]) {
+    showFeedback('warning', `รายการนี้ถูกบันทึกแล้ว (${room} - ${doc_type} - ${round})`);
+    return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="animate-pulse">กำลังอัปโหลดและบันทึก...</span>';
+
+  let filename = 'บันทึกสถานะ (ไม่แนบไฟล์)';
+  let filesize = '';
+  let filedata = null;
+
+  if (file) {
+    filename = file.name;
+    filesize = formatBytes(file.size);
+    try {
+      filedata = await toBase64(file);
+    } catch (err) {
+      console.error("File conversion error:", err);
+    }
+  }
+
+  const result = await window.dataSdk.create({
+    room, doc_type, round, filename, filesize, filedata,
+    status: 'submitted',
+    submitted_at: new Date().toISOString()
+  });
+
+  btn.disabled = false;
+  btn.innerHTML = 'บันทึกข้อมูลการนำส่ง';
+  lucide.createIcons();
+
+  if (result.isOk) {
+    showFeedback('success', `บันทึกและนำส่งไฟล์สำเร็จ: ${doc_type} (${round}) สำหรับห้อง ${room}`);
+    clearFile();
+  } else {
+    showFeedback('error', 'เกิดข้อผิดพลาด กรุณาลองอีกครั้ง');
+  }
+}
+
+function showFeedback(type, msg) {
+  const el = document.getElementById('submit-feedback');
+  const colors = { success: 'bg-emerald-50 text-emerald-800 border-emerald-300', error: 'bg-red-50 text-red-800 border-red-300', warning: 'bg-amber-50 text-amber-800 border-amber-300' };
+  el.className = `${colors[type]} border rounded-lg px-3 py-2 text-xs mt-3 fade-in font-semibold`;
+  el.textContent = msg;
+  setTimeout(() => { el.className = 'hidden'; }, 4000);
+}
+
+// Data SDK
+const dataHandler = {
+  onDataChanged(data) {
+    submissions = data;
+    renderMetrics();
+    renderTable();
+    renderLog();
+  }
+};
+
+// Element SDK
+const defaultConfig = {
+  system_title: 'ระบบสารสนเทศติดตามการส่งเอกสารวิชาการ',
+  department_name: 'กลุ่มบริหารวิชาการ โรงเรียนโคราชพิทยาคม',
+  academic_year: '2569',
+  background_color: '#F9FAFB',
+  header_color: '#1a237e',
+  text_color: '#1F2937',
+  accent_color: '#B8860B',
+  button_color: '#1a237e',
+  font_family: 'Sarabun',
+  font_size: 14
+};
+
+window.elementSdk.init({
+  defaultConfig,
+  onConfigChange: async (config) => {
+    const title = config.system_title || defaultConfig.system_title;
+    const dept = config.department_name || defaultConfig.department_name;
+    const year = config.academic_year || defaultConfig.academic_year;
+    const bg = config.background_color || defaultConfig.background_color;
+    const hdr = config.header_color || defaultConfig.header_color;
+    const txt = config.text_color || defaultConfig.text_color;
+    const acc = config.accent_color || defaultConfig.accent_color;
+    const btn = config.button_color || defaultConfig.button_color;
+    const font = config.font_family || defaultConfig.font_family;
+    const size = config.font_size || defaultConfig.font_size;
+
+    document.getElementById('header-title').textContent = title;
+    document.getElementById('header-subtitle').textContent = `${dept} ประจำปีการศึกษา ${year}`;
+    document.body.style.backgroundColor = bg;
+    document.getElementById('main-header').style.backgroundColor = hdr;
+    document.body.style.color = txt;
+    document.body.style.fontFamily = `${font}, Sarabun, sans-serif`;
+    document.body.style.fontSize = `${size}px`;
+
+    document.querySelectorAll('.navy-bg').forEach(el => el.style.backgroundColor = hdr);
+    document.querySelectorAll('.gold-accent').forEach(el => el.style.color = acc);
+  },
+  mapToCapabilities: (config) => ({
+    recolorables: [
+      { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+      { get: () => config.header_color || defaultConfig.header_color, set: (v) => { config.header_color = v; window.elementSdk.setConfig({ header_color: v }); } },
+      { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+      { get: () => config.accent_color || defaultConfig.accent_color, set: (v) => { config.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); } },
+      { get: () => config.button_color || defaultConfig.button_color, set: (v) => { config.button_color = v; window.elementSdk.setConfig({ button_color: v }); } }
+    ],
+    borderables: [],
+    fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
+    fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } }
+  }),
+  mapToEditPanelValues: (config) => new Map([
+    ['system_title', config.system_title || defaultConfig.system_title],
+    ['department_name', config.department_name || defaultConfig.department_name],
+    ['academic_year', config.academic_year || defaultConfig.academic_year]
+  ])
+});
+
+(async () => {
+  const r = await window.dataSdk.init(dataHandler);
+  if (!r.isOk) console.error('Data SDK init failed');
+})();
+
+// Initialize dynamic dropdown settings
+handleDocTypeChange();
+lucide.createIcons();
+  </script>
+ </div>
+ </body>
+</html>
