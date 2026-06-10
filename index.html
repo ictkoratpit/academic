@@ -9,7 +9,7 @@
   <script src="/_sdk/telemetry_sdk.js"></script>
   <script src="/_sdk/element_sdk.js"></script>
   <script src="/_sdk/data_sdk.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&amp;family=Noto+Sans+Thai:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { font-family: 'Sarabun', 'Noto Sans Thai', sans-serif; }
     .gold-border { border-color: #B8860B; }
@@ -26,19 +26,23 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     .fade-in { animation: fadeIn 0.4s ease-out; }
     .divider-gold { background: linear-gradient(to right, transparent, #B8860B, transparent); height: 2px; }
+    
+    /* ซ่อน Scrollbar สำหรับแท็บเมนูบนมือถือ */
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
   <style>body { box-sizing: border-box; }</style>
  </head>
- <body class="h-full bg-gray-50">
+ <body class="h-full bg-gray-50 text-gray-800">
   <div id="app" class="h-full w-full overflow-auto">
-   <header id="main-header" class="navy-bg text-white py-4 px-8 border-b-2 border-amber-400">
+   <header id="main-header" class="navy-bg text-white py-4 px-4 md:px-8 border-b-2 border-amber-400">
     <div class="max-w-7xl mx-auto">
-     <div class="flex items-center justify-between">
+     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
-       <h1 id="header-title" class="text-xl font-bold">ระบบสารสนเทศติดตามการส่งเอกสารวิชาการ</h1>
-       <p id="header-subtitle" class="text-blue-200 text-xs font-semibold mt-1">กลุ่มบริหารวิชาการ โรงเรียนโคราชพิทยาคม ประจำปีการศึกษา 2569</p>
+       <h1 id="header-title" class="text-lg md:text-xl font-bold">ระบบสารสนเทศติดตามการส่งเอกสารวิชาการ</h1>
+       <p id="header-subtitle" class="text-blue-200 text-[11px] md:text-xs font-semibold mt-1">กลุ่มบริหารวิชาการ โรงเรียนโคราชพิทยาคม ประจำปีการศึกษา 2569</p>
       </div>
-      <div class="text-right text-xs text-blue-100">
+      <div class="text-left sm:text-right text-[11px] md:text-xs text-blue-100 flex flex-row sm:flex-col justify-between sm:justify-start gap-1 sm:gap-0">
        <div id="current-date" class="font-semibold"></div>
        <div id="current-time" class="text-amber-300 font-semibold"></div>
       </div>
@@ -46,46 +50,46 @@
     </div>
    </header>
 
-   <div class="max-w-7xl mx-auto px-6 pt-4">
-    <div class="flex gap-6 border-b border-gray-200 overflow-x-auto whitespace-nowrap">
-     <button onclick="switchTab('dashboard')" id="tab-dashboard" class="pb-3 px-2 text-sm font-bold text-indigo-900 border-b-2 border-indigo-900 transition-all"> ส่วนควบคุมและสรุปผล </button> 
-     <button onclick="switchTab('submission')" id="tab-submission" class="pb-3 px-2 text-sm font-bold text-gray-400 border-b-2 border-transparent transition-all"> แบบฟอร์มนำส่งเอกสาร </button>
-     <button onclick="switchTab('admin')" id="tab-admin" class="pb-3 px-2 text-sm font-bold text-red-600 border-b-2 border-transparent transition-all flex items-center gap-1"> <i data-lucide="shield" class="w-4 h-4"></i> ส่วนจัดการข้อมูล (แอดมิน) </button>
+   <div class="max-w-7xl mx-auto px-4 md:px-6 pt-4">
+    <div class="flex gap-4 md:gap-6 border-b border-gray-200 overflow-x-auto whitespace-nowrap hide-scrollbar pb-1">
+     <button onclick="switchTab('dashboard')" id="tab-dashboard" class="pb-2 px-2 text-sm md:text-base font-bold text-indigo-900 border-b-2 border-indigo-900 transition-all shrink-0"> ส่วนควบคุมและสรุปผล </button> 
+     <button onclick="switchTab('submission')" id="tab-submission" class="pb-2 px-2 text-sm md:text-base font-bold text-gray-400 border-b-2 border-transparent transition-all shrink-0"> แบบฟอร์มนำส่งเอกสาร </button>
+     <button onclick="switchTab('admin')" id="tab-admin" class="pb-2 px-2 text-sm md:text-base font-bold text-red-600 border-b-2 border-transparent transition-all flex items-center gap-1 shrink-0"> <i data-lucide="shield" class="w-4 h-4"></i> ส่วนจัดการข้อมูล (แอดมิน) </button>
     </div>
    </div>
 
-   <div id="panel-dashboard" class="max-w-7xl mx-auto px-6 py-6 fade-in">
+   <div id="panel-dashboard" class="max-w-7xl mx-auto px-4 md:px-6 py-6 fade-in">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-     <div class="bg-white rounded-lg p-5 card-shadow border-l-4 border-indigo-900 flex flex-col justify-between">
+     <div class="bg-white rounded-lg p-4 md:p-5 card-shadow border-l-4 border-indigo-900 flex flex-col justify-between">
       <div>
        <p class="text-xs text-gray-500 font-semibold uppercase">รายการเอกสารทั้งหมด</p>
-       <p id="metric-total" class="text-3xl font-bold text-indigo-900 mt-1">50</p>
+       <p id="metric-total" class="text-2xl md:text-3xl font-bold text-indigo-900 mt-1">50</p>
       </div>
-      <div class="mt-3 text-[11px] text-gray-500 font-medium">จากจำนวนทั้งหมด 10 ห้องเรียน</div>
+      <div class="mt-2 md:mt-3 text-[11px] text-gray-500 font-medium">จากจำนวนทั้งหมด 10 ห้องเรียน</div>
      </div>
      
-     <div class="bg-white rounded-lg p-5 card-shadow border-l-4 border-emerald-600 flex flex-col justify-between">
+     <div class="bg-white rounded-lg p-4 md:p-5 card-shadow border-l-4 border-emerald-600 flex flex-col justify-between">
       <div>
        <p class="text-xs text-gray-500 font-semibold uppercase">ห้องที่ส่งครบทุกรายการแล้ว</p>
-       <p id="metric-rooms-completed" class="text-3xl font-bold text-emerald-700 mt-1">0</p>
+       <p id="metric-rooms-completed" class="text-2xl md:text-3xl font-bold text-emerald-700 mt-1">0</p>
       </div>
-      <div class="mt-3 text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-1.5 rounded" id="list-rooms-completed">ยังไม่มีห้องที่ส่งครบ</div>
+      <div class="mt-2 md:mt-3 text-[11px] md:text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-1.5 rounded" id="list-rooms-completed">ยังไม่มีห้องที่ส่งครบ</div>
      </div>
      
-     <div class="bg-white rounded-lg p-5 card-shadow border-l-4 border-amber-500 flex flex-col justify-between">
+     <div class="bg-white rounded-lg p-4 md:p-5 card-shadow border-l-4 border-amber-500 flex flex-col justify-between">
       <div>
        <p class="text-xs text-gray-500 font-semibold uppercase">ห้องที่ยังค้างส่ง</p>
-       <p id="metric-rooms-pending" class="text-3xl font-bold text-amber-700 mt-1">10</p>
+       <p id="metric-rooms-pending" class="text-2xl md:text-3xl font-bold text-amber-700 mt-1">10</p>
       </div>
-      <div class="mt-3 text-xs font-medium text-amber-700 bg-amber-50 px-2 py-1.5 rounded leading-relaxed" id="list-rooms-pending">-</div>
+      <div class="mt-2 md:mt-3 text-[11px] md:text-xs font-medium text-amber-700 bg-amber-50 px-2 py-1.5 rounded leading-relaxed" id="list-rooms-pending">-</div>
      </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
      <div class="lg:col-span-3 bg-white rounded-lg card-shadow overflow-hidden flex flex-col">
-      <div class="p-4 bg-indigo-900 text-white flex items-center justify-between">
+      <div class="p-4 bg-indigo-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
        <h2 class="font-bold text-sm">ตารางสถานะการนำส่ง</h2>
-       <select id="filter-doc" onchange="renderTable()" class="text-xs bg-indigo-800 text-white border border-indigo-600 rounded px-2 py-1.5 focus:outline-none"> 
+       <select id="filter-doc" onchange="renderTable()" class="text-xs bg-indigo-800 text-white border border-indigo-600 rounded px-2 py-2 sm:py-1.5 focus:outline-none w-full sm:w-auto"> 
         <option value="all">แสดงทั้งหมด</option> 
         <option value="แบบ ปพ.">แบบ ปพ.</option> 
         <option value="แผนการจัดการเรียนรู้">แผนการจัดการเรียนรู้</option> 
@@ -93,26 +97,26 @@
        </select>
       </div>
       
-      <div class="p-3 bg-slate-50 border-b border-gray-200 text-xs text-gray-700 leading-relaxed">
+      <div class="p-3 bg-slate-50 border-b border-gray-200 text-[11px] md:text-xs text-gray-700 leading-relaxed">
         <div class="flex items-start mb-1.5">
-          <span class="font-bold text-emerald-700 min-w-[70px] mt-0.5">ส่งครบแล้ว:</span>
-          <span id="summary-completed" class="font-medium text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">-</span>
+          <span class="font-bold text-emerald-700 min-w-[65px] md:min-w-[70px] mt-0.5">ส่งครบแล้ว:</span>
+          <span id="summary-completed" class="font-medium text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded flex-1">-</span>
         </div>
         <div class="flex items-start">
-          <span class="font-bold text-amber-600 min-w-[70px] mt-0.5">ยังค้างส่ง:</span>
-          <span id="summary-pending" class="font-medium text-amber-800 bg-amber-100 px-2 py-0.5 rounded">-</span>
+          <span class="font-bold text-amber-600 min-w-[65px] md:min-w-[70px] mt-0.5">ยังค้างส่ง:</span>
+          <span id="summary-pending" class="font-medium text-amber-800 bg-amber-100 px-2 py-0.5 rounded flex-1">-</span>
         </div>
       </div>
 
       <div class="overflow-x-auto overflow-y-auto" style="max-height: 400px;">
-       <table class="w-full text-xs">
+       <table class="w-full text-[11px] md:text-xs">
         <thead class="bg-gray-100 sticky top-0 shadow-sm">
          <tr>
-          <th class="text-left px-3 py-2 font-bold text-gray-700">ระดับชั้น/ห้อง</th>
-          <th class="text-left px-3 py-2 font-bold text-gray-700">ประเภทเอกสาร</th>
-          <th class="text-center px-3 py-2 font-bold text-gray-700">ครั้งที่ 1</th>
-          <th class="text-center px-3 py-2 font-bold text-gray-700">ครั้งที่ 2</th>
-          <th class="text-center px-3 py-2 font-bold text-gray-700">ครั้งที่ 3</th>
+          <th class="text-left px-2 md:px-3 py-2 font-bold text-gray-700 whitespace-nowrap">ระดับชั้น/ห้อง</th>
+          <th class="text-left px-2 md:px-3 py-2 font-bold text-gray-700 whitespace-nowrap">ประเภทเอกสาร</th>
+          <th class="text-center px-2 md:px-3 py-2 font-bold text-gray-700 whitespace-nowrap">ครั้งที่ 1</th>
+          <th class="text-center px-2 md:px-3 py-2 font-bold text-gray-700 whitespace-nowrap">ครั้งที่ 2</th>
+          <th class="text-center px-2 md:px-3 py-2 font-bold text-gray-700 whitespace-nowrap">ครั้งที่ 3</th>
          </tr>
         </thead>
         <tbody id="status-table-body"></tbody>
@@ -122,7 +126,7 @@
 
      <div class="lg:col-span-2 bg-white rounded-lg card-shadow overflow-hidden">
       <div class="p-4 bg-indigo-900 text-white">
-       <h2 class="font-bold text-sm">ประวัติการทำรายการ</h2>
+       <h2 class="font-bold text-sm">ประวัติการทำรายการล่าสุด</h2>
       </div>
       <div id="log-container" class="p-3 overflow-y-auto" style="max-height: 460px;">
        <p class="text-gray-400 text-xs text-center py-6">ยังไม่มีข้อมูลการทำรายการ</p>
@@ -131,29 +135,29 @@
     </div>
    </div>
 
-   <div id="panel-submission" class="max-w-7xl mx-auto px-6 py-6 hidden fade-in">
+   <div id="panel-submission" class="max-w-7xl mx-auto px-4 md:px-6 py-6 hidden fade-in">
     <div class="max-w-2xl mx-auto bg-white rounded-lg card-shadow overflow-hidden">
-     <div class="navy-bg px-6 py-4">
-      <h2 class="text-white font-semibold flex items-center gap-2"><i data-lucide="upload" class="w-5 h-5"></i> แบบฟอร์มบันทึกการส่งเอกสารวิชาการ</h2>
-      <p class="text-blue-200 text-xs mt-1">กรุณาระบุข้อมูลและแนบไฟล์ให้ครบถ้วนก่อนทำการบันทึก</p>
+     <div class="navy-bg px-4 md:px-6 py-4">
+      <h2 class="text-white font-semibold flex items-center gap-2 text-sm md:text-base"><i data-lucide="upload" class="w-5 h-5"></i> แบบฟอร์มบันทึกการส่งเอกสารวิชาการ</h2>
+      <p class="text-blue-200 text-[11px] md:text-xs mt-1">กรุณาระบุข้อมูลและแนบไฟล์ให้ครบถ้วนก่อนทำการบันทึก</p>
      </div>
-     <form id="submission-form" class="p-6 space-y-5" onsubmit="handleSubmit(event)">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+     <form id="submission-form" class="p-4 md:p-6 space-y-4 md:space-y-5" onsubmit="handleSubmit(event)">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
        <div>
-        <label for="sel-room" class="block text-sm font-medium text-gray-700 mb-1">ระดับชั้น/ห้องเรียน</label> 
-        <select id="sel-room" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"></select>
+        <label for="sel-room" class="block text-[13px] md:text-sm font-medium text-gray-700 mb-1">ระดับชั้น/ห้องเรียน</label> 
+        <select id="sel-room" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[13px] md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"></select>
        </div>
        <div>
-        <label for="sel-doc" class="block text-sm font-medium text-gray-700 mb-1">ประเภทเอกสารวิชาการ</label> 
-        <select id="sel-doc" onchange="handleDocTypeChange()" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"> 
+        <label for="sel-doc" class="block text-[13px] md:text-sm font-medium text-gray-700 mb-1">ประเภทเอกสารวิชาการ</label> 
+        <select id="sel-doc" onchange="handleDocTypeChange()" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[13px] md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"> 
          <option>แบบ ปพ.</option> 
          <option>แผนการจัดการเรียนรู้</option> 
          <option>รายงานแผนปฏิบัติการสอน</option> 
         </select>
        </div>
        <div>
-        <label for="sel-round" class="block text-sm font-medium text-gray-700 mb-1">รอบการนำส่ง</label> 
-        <select id="sel-round" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"> 
+        <label for="sel-round" class="block text-[13px] md:text-sm font-medium text-gray-700 mb-1">รอบการนำส่ง</label> 
+        <select id="sel-round" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[13px] md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"> 
          <option>ครั้งที่ 1</option> 
          <option>ครั้งที่ 2</option> 
          <option>ครั้งที่ 3</option> 
@@ -161,27 +165,27 @@
        </div>
        
        <div class="md:col-span-2">
-        <label class="block text-sm font-medium text-gray-700 mb-1.5">แนบไฟล์เอกสารวิชาการ</label>
-        <div id="dropzone" class="border-2 border-dashed border-gray-300 rounded-xl p-5 text-center hover:border-indigo-500 transition-colors cursor-pointer bg-gray-50 group relative">
+        <label class="block text-[13px] md:text-sm font-medium text-gray-700 mb-1.5">แนบไฟล์เอกสารวิชาการ</label>
+        <div id="dropzone" class="border-2 border-dashed border-gray-300 rounded-xl p-4 md:p-5 text-center hover:border-indigo-500 transition-colors cursor-pointer bg-gray-50 group relative">
          <input type="file" id="input-file" class="hidden" accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.jpg,.jpeg,.png">
          
          <div id="dropzone-prompt" class="space-y-2 py-2">
           <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto text-gray-400 group-hover:text-indigo-600 transition-colors"></i>
-          <p class="text-xs font-semibold text-gray-700">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p>
-          <p class="text-[11px] text-gray-400">รองรับไฟล์ PDF, Word, Excel, PPT หรือรูปภาพ (ไม่เกิน 10MB)</p>
+          <p class="text-xs md:text-sm font-semibold text-gray-700">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p>
+          <p class="text-[10px] md:text-[11px] text-gray-400 px-4">รองรับไฟล์ PDF, Word, Excel, PPT หรือรูปภาพ (ไม่เกิน 10MB)</p>
          </div>
          
-         <div id="file-info" class="hidden items-center justify-between bg-indigo-50 border border-indigo-100 rounded-lg p-3 text-left">
+         <div id="file-info" class="hidden items-center justify-between bg-indigo-50 border border-indigo-100 rounded-lg p-2.5 md:p-3 text-left">
           <div class="flex items-center gap-3 min-w-0">
            <div class="p-2 bg-indigo-900 text-white rounded-lg flex-shrink-0">
-            <i data-lucide="file-text" class="w-5 h-5"></i>
+            <i data-lucide="file-text" class="w-4 h-4 md:w-5 md:h-5"></i>
            </div>
            <div class="min-w-0">
-            <p id="info-filename" class="text-xs font-bold text-gray-800 truncate"></p>
-            <p id="info-filesize" class="text-[11px] text-gray-500 mt-0.5"></p>
+            <p id="info-filename" class="text-[11px] md:text-xs font-bold text-gray-800 truncate"></p>
+            <p id="info-filesize" class="text-[10px] md:text-[11px] text-gray-500 mt-0.5"></p>
            </div>
           </div>
-          <button type="button" onclick="clearFile(event)" class="text-gray-400 hover:text-red-500 p-1.5 transition-colors rounded-full hover:bg-gray-200">
+          <button type="button" onclick="clearFile(event)" class="text-gray-400 hover:text-red-500 p-1.5 transition-colors rounded-full hover:bg-gray-200 shrink-0">
            <i data-lucide="x" class="w-4 h-4"></i>
           </button>
          </div>
@@ -190,8 +194,8 @@
       </div>
       
       <div class="pt-2">
-       <button type="submit" id="submit-btn" class="w-full navy-bg text-white py-3 rounded-lg font-semibold hover:bg-indigo-800 transition-colors flex items-center justify-center gap-2"> 
-        <i data-lucide="save" class="w-4 h-4"></i> บันทึกข้อมูลการนำส่ง 
+       <button type="submit" id="submit-btn" class="w-full navy-bg text-white py-3 rounded-lg font-semibold hover:bg-indigo-800 transition-colors flex items-center justify-center gap-2 text-sm md:text-base"> 
+        <i data-lucide="save" class="w-4 h-4 md:w-5 md:h-5"></i> บันทึกข้อมูลการนำส่ง 
        </button>
        <div id="submit-feedback" class="hidden"></div>
       </div>
@@ -199,25 +203,25 @@
     </div>
    </div>
 
-   <div id="panel-admin" class="max-w-7xl mx-auto px-6 py-6 hidden fade-in">
+   <div id="panel-admin" class="max-w-7xl mx-auto px-4 md:px-6 py-6 hidden fade-in">
     <div class="bg-white rounded-lg card-shadow overflow-hidden">
-     <div class="p-4 bg-red-900 text-white flex justify-between items-center border-b-2 border-red-500 flex-wrap gap-2">
-      <h2 class="font-bold text-sm flex items-center gap-2"><i data-lucide="database" class="w-4 h-4"></i> ระบบจัดการฐานข้อมูลสำหรับผู้ดูแลระบบ</h2>
-      <div class="flex items-center gap-2">
-       <button onclick="clearAllData()" class="text-xs bg-red-800 hover:bg-red-700 px-3 py-1.5 rounded transition-colors border border-red-600 flex items-center gap-1"><i data-lucide="trash-2" class="w-3 h-3"></i> ล้างข้อมูลทั้งหมด</button>
-       <button onclick="logoutAdmin()" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded transition-colors border border-gray-600 flex items-center gap-1"><i data-lucide="log-out" class="w-3 h-3"></i> ออกจากระบบ</button>
+     <div class="p-4 bg-red-900 text-white flex flex-col sm:flex-row justify-between sm:items-center border-b-2 border-red-500 gap-3">
+      <h2 class="font-bold text-sm md:text-base flex items-center gap-2"><i data-lucide="database" class="w-4 h-4"></i> ระบบจัดการฐานข้อมูล (Admin)</h2>
+      <div class="flex flex-row items-center gap-2 w-full sm:w-auto">
+       <button onclick="clearAllData()" class="flex-1 sm:flex-none justify-center text-[11px] md:text-xs bg-red-800 hover:bg-red-700 px-3 py-2 sm:py-1.5 rounded transition-colors border border-red-600 flex items-center gap-1"><i data-lucide="trash-2" class="w-3 h-3"></i> ล้างข้อมูล</button>
+       <button onclick="logoutAdmin()" class="flex-1 sm:flex-none justify-center text-[11px] md:text-xs bg-gray-800 hover:bg-gray-700 px-3 py-2 sm:py-1.5 rounded transition-colors border border-gray-600 flex items-center gap-1"><i data-lucide="log-out" class="w-3 h-3"></i> ออกจากระบบ</button>
       </div>
      </div>
      <div class="overflow-x-auto">
-      <table class="w-full text-xs">
+      <table class="w-full text-[11px] md:text-xs">
        <thead class="bg-gray-50">
         <tr>
-         <th class="text-left px-4 py-3 font-bold text-gray-700">วันที่/เวลา</th>
-         <th class="text-left px-4 py-3 font-bold text-gray-700">ห้อง</th>
-         <th class="text-left px-4 py-3 font-bold text-gray-700">ประเภทเอกสาร</th>
-         <th class="text-left px-4 py-3 font-bold text-gray-700">รอบนำส่ง</th>
-         <th class="text-left px-4 py-3 font-bold text-gray-700">ไฟล์ที่แนบมา</th>
-         <th class="text-center px-4 py-3 font-bold text-gray-700">จัดการ</th>
+         <th class="text-left px-3 py-3 font-bold text-gray-700 whitespace-nowrap">วันที่/เวลา</th>
+         <th class="text-left px-3 py-3 font-bold text-gray-700 whitespace-nowrap">ห้อง</th>
+         <th class="text-left px-3 py-3 font-bold text-gray-700 whitespace-nowrap">ประเภทเอกสาร</th>
+         <th class="text-left px-3 py-3 font-bold text-gray-700 whitespace-nowrap">รอบนำส่ง</th>
+         <th class="text-left px-3 py-3 font-bold text-gray-700 whitespace-nowrap">ไฟล์ที่แนบมา</th>
+         <th class="text-center px-3 py-3 font-bold text-gray-700 whitespace-nowrap">จัดการ</th>
         </tr>
        </thead>
        <tbody id="admin-table-body">
@@ -228,6 +232,7 @@
    </div>
 
   <script>
+// --- Data SDK Mock for Standalone Setup ---
 if (!window.dataSdk || !window.dataSdk.create) {
   window.dataSdk = {
     _handler: null,
@@ -272,15 +277,13 @@ if (!window.elementSdk) {
   window.elementSdk = { init: () => {} };
 }
 
-// Data
+// Data Sets
 const ROOMS = ["ม.1/1", "ม.2/1", "ม.3/1", "ม.3/2", "ม.4/1", "ม.4/2", "ม.5/1", "ม.5/2", "ม.6/1", "ม.6/2"];
 const DOC_TYPES = ["แบบ ปพ.", "แผนการจัดการเรียนรู้", "รายงานแผนปฏิบัติการสอน"];
 const ROUNDS = ["ครั้งที่ 1", "ครั้งที่ 2", "ครั้งที่ 3"];
 
-// ตัวแปรเก็บสถานะการล็อกอินของ Admin
 let isAdminAuthenticated = false;
 
-// Build dynamic reference items based on requirements
 const referenceItems = [];
 ROOMS.forEach(room => {
   DOC_TYPES.forEach(doc => {
@@ -309,6 +312,7 @@ function handleDocTypeChange() {
   });
 }
 
+// Dropzone Logic
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('input-file');
 
@@ -378,7 +382,7 @@ const toBase64 = file => new Promise((resolve, reject) => {
   reader.onerror = error => reject(error);
 });
 
-// ฟังก์ชันออกจากระบบ
+// Navigation Logic
 function logoutAdmin() {
   if(confirm('คุณต้องการออกจากระบบผู้ดูแลระบบใช่หรือไม่?')) {
     isAdminAuthenticated = false;
@@ -445,6 +449,7 @@ function buildLookup(data) {
   return map;
 }
 
+// Rendering Logic
 function renderMetrics() {
   const totalTasks = referenceItems.length;
   const lookup = buildLookup(submissions);
@@ -512,20 +517,20 @@ function renderTable() {
     targetDocs.forEach(doc => {
       const tr = document.createElement('tr');
       tr.className = 'table-row border-b border-gray-100 hover:bg-gray-50';
-      let cells = `<td class="px-3 py-2 font-bold text-gray-800 text-xs">${room}</td><td class="px-3 py-2 text-gray-600 font-semibold text-xs">${doc}</td>`;
+      let cells = `<td class="px-2 md:px-3 py-2 font-bold text-gray-800 whitespace-nowrap">${room}</td><td class="px-2 md:px-3 py-2 text-gray-600 font-semibold whitespace-nowrap">${doc}</td>`;
       
       ROUNDS.forEach(round => {
         const isRoundRequired = (doc === "แบบ ปพ.") || (round === "ครั้งที่ 1");
         
         if (!isRoundRequired) {
-          cells += `<td class="px-3 py-2 text-center text-gray-300 font-medium">—</td>`;
+          cells += `<td class="px-2 md:px-3 py-2 text-center text-gray-300 font-medium">—</td>`;
         } else {
           const k = `${room}|${doc}|${round}`;
           const rec = lookup[k];
           if (rec) {
-            cells += `<td class="px-3 py-2 text-center"><span class="status-badge-done text-xs px-2 py-1 rounded-full inline-block font-semibold shadow-sm">✓ นำส่ง</span></td>`;
+            cells += `<td class="px-2 md:px-3 py-2 text-center"><span class="status-badge-done text-[10px] md:text-xs px-2 py-1 rounded-full inline-block font-semibold shadow-sm">✓ นำส่ง</span></td>`;
           } else {
-            cells += `<td class="px-3 py-2 text-center"><span class="status-badge-pending text-xs px-2 py-1 rounded-full inline-block font-semibold shadow-sm">รอ</span></td>`;
+            cells += `<td class="px-2 md:px-3 py-2 text-center"><span class="status-badge-pending text-[10px] md:text-xs px-2 py-1 rounded-full inline-block font-semibold shadow-sm">รอ</span></td>`;
           }
         }
       });
@@ -536,13 +541,13 @@ function renderTable() {
 
   document.getElementById('summary-completed').textContent = summaryCompleted.length > 0 ? summaryCompleted.join(', ') : 'ยังไม่มีห้องที่ส่งครบ';
   document.getElementById('summary-completed').className = summaryCompleted.length > 0 
-    ? 'font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded shadow-sm' 
-    : 'font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded';
+    ? 'font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded shadow-sm flex-1' 
+    : 'font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded flex-1';
 
   document.getElementById('summary-pending').textContent = summaryPending.length > 0 ? summaryPending.join(', ') : 'ส่งครบทุกห้องแล้ว 🎉';
   document.getElementById('summary-pending').className = summaryPending.length > 0 
-    ? 'font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded shadow-sm' 
-    : 'font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded shadow-sm';
+    ? 'font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded shadow-sm flex-1' 
+    : 'font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded shadow-sm flex-1';
 }
 
 function renderLog() {
@@ -557,16 +562,16 @@ function renderLog() {
     const timeStr = d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
     const sizeBadge = rec.filesize ? ` (${rec.filesize})` : '';
     return `<div class="flex items-start gap-2 py-2 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
-      <div class="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+      <div class="w-6 h-6 md:w-7 md:h-7 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <svg class="w-3 h-3 md:w-4 md:h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
       </div>
       <div class="flex-1 min-w-0">
-        <p class="text-xs font-bold text-gray-800">${rec.room} — ${rec.doc_type}</p>
-        <p class="text-xs text-gray-500 font-semibold mt-0.5 flex items-center gap-1 truncate">
+        <p class="text-[11px] md:text-xs font-bold text-gray-800">${rec.room} — ${rec.doc_type}</p>
+        <p class="text-[10px] md:text-xs text-gray-500 font-semibold mt-0.5 flex items-center gap-1 truncate">
           <i data-lucide="paperclip" class="w-3 h-3 text-gray-400 flex-shrink-0"></i>
-          <span class="truncate">${rec.round} · ${rec.filename || 'ไม่มีเอกสาร'}</span><span class="text-gray-400 font-normal text-[10px] flex-shrink-0">${sizeBadge}</span>
+          <span class="truncate">${rec.round} · ${rec.filename || 'ไม่มีเอกสาร'}</span><span class="text-gray-400 font-normal text-[9px] md:text-[10px] flex-shrink-0">${sizeBadge}</span>
         </p>
-        <p class="text-[11px] text-gray-400 mt-0.5">${timeStr}</p>
+        <p class="text-[10px] md:text-[11px] text-gray-400 mt-0.5">${timeStr}</p>
       </div>
     </div>`;
   }).join('');
@@ -587,17 +592,22 @@ function renderAdminTable() {
     const timeStr = d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
     
     const fileAction = rec.filedata 
-      ? `<button onclick="downloadFile('${rec.id}')" class="text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded font-semibold inline-flex items-center gap-1 transition-colors"><i data-lucide="download" class="w-3 h-3"></i> โหลดไฟล์</button>`
-      : `<span class="text-gray-400 italic">ไม่มีไฟล์แนบ</span>`;
+      ? `<button onclick="downloadFile('${rec.id}')" class="text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded font-semibold inline-flex items-center gap-1 transition-colors whitespace-nowrap"><i data-lucide="download" class="w-3 h-3"></i> โหลดไฟล์</button>`
+      : `<span class="text-gray-400 italic whitespace-nowrap">ไม่มีไฟล์แนบ</span>`;
 
     return `
       <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-        <td class="px-4 py-3 text-gray-500">${timeStr}</td>
-        <td class="px-4 py-3 font-bold text-indigo-900">${rec.room}</td>
-        <td class="px-4 py-3 font-semibold text-gray-700">${rec.doc_type}</td>
-        <td class="px-4 py-3 text-gray-600">${rec.round}</td>
-        <td class="px-4 py-3 truncate max-w-[200px]" title="${rec.filename || ''}">${fileAction} <span class="text-[10px] text-gray-400 ml-1">${rec.filename || ''}</span></td>
-        <td class="px-4 py-3 text-center">
+        <td class="px-3 py-3 text-gray-500 whitespace-nowrap">${timeStr}</td>
+        <td class="px-3 py-3 font-bold text-indigo-900 whitespace-nowrap">${rec.room}</td>
+        <td class="px-3 py-3 font-semibold text-gray-700 whitespace-nowrap">${rec.doc_type}</td>
+        <td class="px-3 py-3 text-gray-600 whitespace-nowrap">${rec.round}</td>
+        <td class="px-3 py-3 max-w-[150px] md:max-w-[200px]" title="${rec.filename || ''}">
+          <div class="flex items-center gap-1 truncate">
+            ${fileAction} 
+            <span class="text-[10px] text-gray-400 truncate hidden md:inline-block">${rec.filename || ''}</span>
+          </div>
+        </td>
+        <td class="px-3 py-3 text-center">
           <button onclick="deleteRecord('${rec.id}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded transition-colors" title="ลบข้อมูลนี้">
             <i data-lucide="trash-2" class="w-4 h-4"></i>
           </button>
@@ -608,6 +618,7 @@ function renderAdminTable() {
   lucide.createIcons();
 }
 
+// Action Logic
 function downloadFile(id) {
   const rec = submissions.find(s => s.id === id);
   if (rec && rec.filedata) {
@@ -678,11 +689,11 @@ async function handleSubmit(e) {
   });
 
   btn.disabled = false;
-  btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i> บันทึกข้อมูลการนำส่ง';
+  btn.innerHTML = '<i data-lucide="save" class="w-4 h-4 md:w-5 md:h-5"></i> บันทึกข้อมูลการนำส่ง';
   lucide.createIcons();
 
   if (result.isOk) {
-    showFeedback('success', `บันทึกและนำส่งไฟล์สำเร็จ: ${doc_type} (${round}) ห้อง ${room}`);
+    showFeedback('success', `บันทึกสำเร็จ: ${doc_type} (${round}) ห้อง ${room}`);
     clearFile();
     setTimeout(() => { switchTab('dashboard'); }, 1000);
   } else {
@@ -693,12 +704,13 @@ async function handleSubmit(e) {
 function showFeedback(type, msg) {
   const el = document.getElementById('submit-feedback');
   const colors = { success: 'bg-emerald-50 text-emerald-800 border-emerald-300', error: 'bg-red-50 text-red-800 border-red-300', warning: 'bg-amber-50 text-amber-800 border-amber-300' };
-  el.className = `${colors[type]} border rounded-lg px-3 py-2 text-xs mt-3 fade-in font-semibold`;
+  el.className = `${colors[type]} border rounded-lg px-3 py-2 text-[11px] md:text-xs mt-3 fade-in font-semibold`;
   el.textContent = msg;
   el.classList.remove('hidden');
   setTimeout(() => { el.className = 'hidden'; }, 4000);
 }
 
+// SDK Handlers
 const dataHandler = {
   onDataChanged(data) {
     submissions = data || [];
