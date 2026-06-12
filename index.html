@@ -212,6 +212,28 @@
        <button onclick="logoutAdmin()" class="flex-1 sm:flex-none justify-center text-[11px] md:text-xs bg-gray-800 hover:bg-gray-700 px-3 py-2 sm:py-1.5 rounded transition-colors border border-gray-600 flex items-center gap-1"><i data-lucide="log-out" class="w-3 h-3"></i> ออกจากระบบ</button>
       </div>
      </div>
+
+     <!-- เพิ่มส่วนตัวเลือกห้องและหมวดงานสำหรับแอดมิน -->
+     <div class="p-4 bg-slate-50 border-b border-gray-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+       <div class="flex items-center gap-2">
+        <label for="admin-filter-room" class="text-xs font-bold text-gray-700 whitespace-nowrap">เลือกห้อง:</label>
+        <select id="admin-filter-room" onchange="renderAdminTable()" class="text-xs bg-white border border-gray-300 rounded px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-red-500 w-full sm:w-36">
+         <option value="all">ทั้งหมด</option>
+        </select>
+       </div>
+       <div class="flex items-center gap-2">
+        <label for="admin-filter-doc" class="text-xs font-bold text-gray-700 whitespace-nowrap">หมวดงาน:</label>
+        <select id="admin-filter-doc" onchange="renderAdminTable()" class="text-xs bg-white border border-gray-300 rounded px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-red-500 w-full sm:w-48">
+         <option value="all">ทั้งหมด</option>
+        </select>
+       </div>
+      </div>
+      <button onclick="downloadFilteredFiles()" class="w-full sm:w-auto justify-center text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded transition-colors flex items-center gap-1.5 shadow-sm">
+       <i data-lucide="download-cloud" class="w-4 h-4"></i> ดาวน์โหลดไฟล์ตามตัวเลือก
+      </button>
+     </div>
+
      <div class="overflow-x-auto">
       <table class="w-full text-[11px] md:text-xs">
        <thead class="bg-gray-50">
@@ -298,6 +320,13 @@ let submissions = [];
 
 const selRoom = document.getElementById('sel-room');
 ROOMS.forEach(r => { const o = document.createElement('option'); o.textContent = r; selRoom.appendChild(o); });
+
+// สร้างตัวเลือก (Options) ในส่วนค้นหาของ Admin
+const adminFilterRoom = document.getElementById('admin-filter-room');
+ROOMS.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; adminFilterRoom.appendChild(o); });
+
+const adminFilterDoc = document.getElementById('admin-filter-doc');
+DOC_TYPES.forEach(d => { const o = document.createElement('option'); o.value = d; o.textContent = d; adminFilterDoc.appendChild(o); });
 
 function handleDocTypeChange() {
   const docType = document.getElementById('sel-doc').value;
@@ -578,6 +607,7 @@ function renderLog() {
   lucide.createIcons();
 }
 
+// ปรับปรุงฟังก์ชันตาราง Admin ให้รองรับการกรองข้อมูล (Filter)
 function renderAdminTable() {
   const tbody = document.getElementById('admin-table-body');
   if (!submissions || submissions.length === 0) {
@@ -585,7 +615,24 @@ function renderAdminTable() {
     return;
   }
   
-  const sorted = [...submissions].sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
+  const roomFilter = document.getElementById('admin-filter-room').value;
+  const docFilter = document.getElementById('admin-filter-doc').value;
+
+  // กรองข้อมูลตามที่เลือก
+  let filteredData = [...submissions];
+  if (roomFilter !== 'all') {
+    filteredData = filteredData.filter(rec => rec.room === roomFilter);
+  }
+  if (docFilter !== 'all') {
+    filteredData = filteredData.filter(rec => rec.doc_type === docFilter);
+  }
+
+  if (filteredData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500 italic">ไม่พบข้อมูลไฟล์เอกสารตามเงื่อนไขที่เลือก</td></tr>';
+    return;
+  }
+  
+  const sorted = filteredData.sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
   
   tbody.innerHTML = sorted.map(rec => {
     const d = new Date(rec.submitted_at);
@@ -630,6 +677,41 @@ function downloadFile(id) {
     document.body.removeChild(a);
   } else {
     alert('ไม่พบข้อมูลไฟล์');
+  }
+}
+
+// เพิ่มฟังก์ชันดาวน์โหลดไฟล์แบบกลุ่ม (Batch Download) ตามเงื่อนไขที่เลือกไว้
+function downloadFilteredFiles() {
+  const roomFilter = document.getElementById('admin-filter-room').value;
+  const docFilter = document.getElementById('admin-filter-doc').value;
+
+  // ค้นหารายการที่มีไฟล์แนบจริง (มี filedata) และตรงตาม Filter
+  let targets = submissions.filter(rec => rec.filedata);
+  if (roomFilter !== 'all') {
+    targets = targets.filter(rec => rec.room === roomFilter);
+  }
+  if (docFilter !== 'all') {
+    targets = targets.filter(rec => rec.doc_type === docFilter);
+  }
+
+  if (targets.length === 0) {
+    alert('ไม่พบไฟล์เอกสารสำหรับดาวน์โหลดตามเงื่อนไขที่คุณเลือก');
+    return;
+  }
+
+  const confirmMsg = `คุณต้องการดาวน์โหลดไฟล์ทั้งหมดจำนวน ${targets.length} รายการใช่หรือไม่?\n(กรุณากด 'อนุญาตให้ดาวน์โหลดหลายไฟล์' บนเบราว์เซอร์ของคุณหากมีข้อความแจ้งเตือนขึ้น)`;
+  if (confirm(confirmMsg)) {
+    targets.forEach((rec, idx) => {
+      // หน่วงเวลาสั้น ๆ เพื่อช่วยไม่ให้เบราว์เซอร์มองว่าเป็นสแปมและบล็อกคำสั่งดาวน์โหลดอัตโนมัติ
+      setTimeout(() => {
+        const a = document.createElement('a');
+        a.href = rec.filedata;
+        a.download = rec.filename || `document_${rec.room}_${rec.doc_type}.file`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }, idx * 250); 
+    });
   }
 }
 
