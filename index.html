@@ -43,11 +43,26 @@
    <header id="main-header" class="navy-bg text-white py-4 px-4 md:px-8 border-b-2 border-amber-400">
     <div class="max-w-7xl mx-auto">
      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-      <div>
-       <h1 id="header-title" class="text-lg md:text-xl font-bold">ระบบสารสนเทศติดตามการส่งเอกสารวิชาการ</h1>
-       <p id="header-subtitle" class="text-blue-200 text-[11px] md:text-xs font-semibold mt-1">กลุ่มบริหารวิชาการ โรงเรียนโคราชพิทยาคม ประจำปีการศึกษา 2569</p>
+      
+      <!-- ส่วนแสดงโลโก้ที่ได้รับการแก้ไข -->
+      <div class="flex items-center gap-3 md:gap-4">
+       <div class="bg-white p-1 md:p-1.5 rounded-full shrink-0 shadow-md border-2 border-amber-400 w-14 h-14 md:w-16 md:h-16 flex items-center justify-center overflow-hidden">
+         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3jZlVdxgEm6Vdo61ZcVRBBOPF4ga-xhdbiE71PP3dDqBHPc5YJ8BG7D8&s=10" 
+              alt="โลโก้โรงเรียนโคราชพิทยาคม" 
+              class="w-full h-full object-contain block"
+              onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden'); this.nextElementSibling.classList.add('flex');">
+         <!-- ไอคอนสำรองที่จะแสดงขึ้นมาทันทีหากโหลดรูปภาพไม่สำเร็จ -->
+         <div class="hidden items-center justify-center w-full h-full text-indigo-900 bg-gray-50">
+           <i data-lucide="school" class="w-7 h-7 md:w-8 md:h-8"></i>
+         </div>
+       </div>
+       <div>
+        <h1 id="header-title" class="text-lg md:text-xl font-bold">ระบบสารสนเทศติดตามการส่งเอกสารวิชาการ</h1>
+        <p id="header-subtitle" class="text-blue-200 text-[11px] md:text-xs font-semibold mt-1">กลุ่มบริหารวิชาการ โรงเรียนโคราชพิทยาคม ประจำปีการศึกษา 2569</p>
+       </div>
       </div>
-      <div class="text-left sm:text-right text-[11px] md:text-xs text-blue-100 flex flex-row sm:flex-col justify-between sm:justify-start gap-1 sm:gap-0">
+      
+      <div class="text-left sm:text-right text-[11px] md:text-xs text-blue-100 flex flex-row sm:flex-col justify-between sm:justify-start gap-1 sm:gap-0 mt-2 sm:mt-0">
        <div id="current-date" class="font-semibold"></div>
        <div id="current-time" class="text-amber-300 font-semibold"></div>
       </div>
@@ -169,7 +184,7 @@
         </select>
        </div>
        
-       <!-- เริ่ม: ส่วนดาวน์โหลดไฟล์ต้นฉบับ -->
+       <!-- ส่วนดาวน์โหลดไฟล์ต้นฉบับ -->
        <div id="master-file-container" class="hidden md:col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-3 flex justify-between items-center transition-all mt-2">
          <div class="flex items-center gap-2 min-w-0">
            <div class="p-2 bg-blue-100 text-blue-700 rounded-lg shrink-0">
@@ -184,7 +199,6 @@
            ดาวน์โหลด
          </button>
        </div>
-       <!-- จบ: ส่วนดาวน์โหลดไฟล์ต้นฉบับ -->
 
        <div class="md:col-span-2">
         <label class="block text-[13px] md:text-sm font-medium text-gray-700 mb-1.5">แนบไฟล์เอกสารวิชาการ</label>
@@ -273,7 +287,7 @@
      </div>
     </div>
     
-    <!-- เริ่ม: ส่วนจัดการไฟล์ต้นฉบับของแอดมิน -->
+    <!-- ส่วนจัดการไฟล์ต้นฉบับของแอดมิน -->
     <div class="mt-6 bg-white rounded-lg card-shadow overflow-hidden">
       <div class="p-4 bg-indigo-900 text-white flex flex-col sm:flex-row justify-between sm:items-center border-b-2 border-indigo-500 gap-3">
         <h2 class="font-bold text-sm md:text-base flex items-center gap-2"><i data-lucide="file-up" class="w-4 h-4"></i> จัดการไฟล์ต้นฉบับ (Master Files)</h2>
@@ -316,7 +330,6 @@
         </table>
       </div>
     </div>
-    <!-- จบ: ส่วนจัดการไฟล์ต้นฉบับของแอดมิน -->
 
    </div>
 
@@ -333,7 +346,6 @@ const firebaseConfig = {
   measurementId: "G-YTMQ1581J1"
 };
 
-// เริ่มต้นระบบ Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const collectionRef = db.collection("academic_documents");
@@ -342,7 +354,6 @@ window.dataSdk = {
   _handler: null,
   init: async function(handler) {
     this._handler = handler;
-    // อ่านข้อมูลแบบ Real-time ข้ามเครื่องและแสดงผลทันที
     collectionRef.orderBy("submitted_at", "desc").onSnapshot((snapshot) => {
       const liveData = [];
       snapshot.forEach((doc) => {
@@ -356,7 +367,6 @@ window.dataSdk = {
   },
   create: async function(record) {
     try {
-      // ตั้งค่าวันเวลาที่ส่งก่อนเซฟขึ้น Cloud
       if (!record.submitted_at) {
          record.submitted_at = new Date().toISOString();
       }
@@ -397,7 +407,6 @@ if (!window.elementSdk) {
   window.elementSdk = { init: () => {} };
 }
 
-// Data Sets
 const ROOMS = ["ม.1/1", "ม.2/1", "ม.3/1", "ม.3/2", "ม.4/1", "ม.4/2", "ม.5/1", "ม.5/2", "ม.6/1", "ม.6/2"];
 const DOC_TYPES = ["แบบ ปพ.", "แผนการจัดการเรียนรู้", "รายงานแผนปฏิบัติการสอน"];
 const ROUNDS = ["ครั้งที่ 1", "ครั้งที่ 2", "ครั้งที่ 3"];
@@ -419,7 +428,6 @@ let submissions = [];
 const selRoom = document.getElementById('sel-room');
 ROOMS.forEach(r => { const o = document.createElement('option'); o.textContent = r; selRoom.appendChild(o); });
 
-// สร้างตัวเลือก (Options) ในส่วนค้นหาของ Admin
 const adminFilterRoom = document.getElementById('admin-filter-room');
 ROOMS.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; adminFilterRoom.appendChild(o); });
 
@@ -513,7 +521,6 @@ const toBase64 = file => new Promise((resolve, reject) => {
   reader.onerror = error => reject(error);
 });
 
-// Navigation Logic
 function logoutAdmin() {
   if(confirm('คุณต้องการออกจากระบบผู้ดูแลระบบใช่หรือไม่?')) {
     isAdminAuthenticated = false;
@@ -580,7 +587,6 @@ function buildLookup(data) {
   return map;
 }
 
-// Rendering Logic
 function renderMetrics() {
   const totalTasks = referenceItems.length;
   const lookup = buildLookup(submissions);
@@ -605,7 +611,6 @@ function renderMetrics() {
   });
 
   document.getElementById('metric-total').textContent = totalTasks;
-  
   document.getElementById('metric-rooms-completed').textContent = fullyCompletedRooms.length;
   document.getElementById('list-rooms-completed').textContent = fullyCompletedRooms.length > 0 
     ? fullyCompletedRooms.join(', ') 
@@ -719,7 +724,6 @@ function renderAdminTable() {
   const roomFilter = document.getElementById('admin-filter-room').value;
   const docFilter = document.getElementById('admin-filter-doc').value;
 
-  // กรองข้อมูลตามที่เลือก
   let filteredData = [...submissions];
   if (roomFilter !== 'all') {
     filteredData = filteredData.filter(rec => rec.room === roomFilter);
@@ -766,7 +770,6 @@ function renderAdminTable() {
   lucide.createIcons();
 }
 
-// Action Logic
 function downloadFile(id) {
   const rec = submissions.find(s => s.id === id);
   if (rec && rec.filedata) {
@@ -781,12 +784,10 @@ function downloadFile(id) {
   }
 }
 
-// เพิ่มฟังก์ชันดาวน์โหลดไฟล์แบบกลุ่ม (Batch Download) ตามเงื่อนไขที่เลือกไว้
 function downloadFilteredFiles() {
   const roomFilter = document.getElementById('admin-filter-room').value;
   const docFilter = document.getElementById('admin-filter-doc').value;
 
-  // ค้นหารายการที่มีไฟล์แนบจริง (มี filedata) และตรงตาม Filter
   let targets = submissions.filter(rec => rec.filedata);
   if (roomFilter !== 'all') {
     targets = targets.filter(rec => rec.room === roomFilter);
@@ -803,7 +804,6 @@ function downloadFilteredFiles() {
   const confirmMsg = `คุณต้องการดาวน์โหลดไฟล์ทั้งหมดจำนวน ${targets.length} รายการใช่หรือไม่?\n(กรุณากด 'อนุญาตให้ดาวน์โหลดหลายไฟล์' บนเบราว์เซอร์ของคุณหากมีข้อความแจ้งเตือนขึ้น)`;
   if (confirm(confirmMsg)) {
     targets.forEach((rec, idx) => {
-      // หน่วงเวลาสั้น ๆ เพื่อช่วยไม่ให้เบราว์เซอร์มองว่าเป็นสแปมและบล็อกคำสั่งดาวน์โหลดอัตโนมัติ
       setTimeout(() => {
         const a = document.createElement('a');
         a.href = rec.filedata;
@@ -893,7 +893,6 @@ function showFeedback(type, msg) {
   setTimeout(() => { el.className = 'hidden'; }, 4000);
 }
 
-// SDK Handlers
 const dataHandler = {
   onDataChanged(data) {
     submissions = data || [];
@@ -947,7 +946,6 @@ window.elementSdk.init({
 const masterCollectionRef = db.collection("master_files");
 let masterFilesData = [];
 
-// ดึงข้อมูล Master File แบบ Real-time
 masterCollectionRef.onSnapshot((snapshot) => {
   masterFilesData = [];
   snapshot.forEach((doc) => {
@@ -959,14 +957,12 @@ masterCollectionRef.onSnapshot((snapshot) => {
   console.error("Master Files Sync Error:", error);
 });
 
-// เตรียม Dropdown สำหรับฟอร์มอัปโหลดของแอดมิน
 const masterSelRoom = document.getElementById('master-sel-room');
 ROOMS.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; masterSelRoom.appendChild(o); });
 
 const masterSelDoc = document.getElementById('master-sel-doc');
 DOC_TYPES.forEach(d => { const o = document.createElement('option'); o.value = d; o.textContent = d; masterSelDoc.appendChild(o); });
 
-// ฟังก์ชันอัปโหลดไฟล์ต้นฉบับโดยแอดมิน
 async function handleMasterFileUpload(e) {
   e.preventDefault();
   const room = document.getElementById('master-sel-room').value;
@@ -1002,7 +998,6 @@ async function handleMasterFileUpload(e) {
   lucide.createIcons();
 }
 
-// ฟังก์ชันแสดงผลตาราง Master File ในหน้าแอดมิน
 function renderMasterAdminTable() {
   const tbody = document.getElementById('master-table-body');
   if (masterFilesData.length === 0) {
@@ -1033,7 +1028,6 @@ function renderMasterAdminTable() {
   lucide.createIcons();
 }
 
-// ฟังก์ชันลบไฟล์ต้นฉบับ
 async function deleteMasterFile(id) {
   if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบไฟล์ต้นฉบับนี้? (คุณครูจะไม่สามารถดาวน์โหลดไฟล์นี้ได้อีก)')) {
     try {
@@ -1045,14 +1039,12 @@ async function deleteMasterFile(id) {
   }
 }
 
-// ตรวจสอบว่ามีไฟล์ให้โหลดหรือไม่เมื่อเปลี่ยน Dropdown ของผู้ใช้งาน
 function checkAvailableMasterFile() {
   const currentRoom = document.getElementById('sel-room').value;
   const currentDoc = document.getElementById('sel-doc').value;
   const container = document.getElementById('master-file-container');
   const nameEl = document.getElementById('master-file-name');
 
-  // ค้นหาไฟล์ที่ตรงกับเงื่อนไข: (ห้องตรงกัน หรือ ตั้งเป็นทั้งหมด) และ ประเภทเอกสารตรงกัน
   const matchedFile = masterFilesData.find(m => 
     (m.room === currentRoom || m.room === 'all') && m.doc_type === currentDoc
   );
@@ -1067,7 +1059,6 @@ function checkAvailableMasterFile() {
   }
 }
 
-// ฟังก์ชันดาวน์โหลดไฟล์ต้นฉบับฝั่งผู้ใช้งาน
 function downloadCurrentMasterFile() {
   const id = document.getElementById('master-file-container').dataset.fileId;
   const rec = masterFilesData.find(m => m.id === id);
@@ -1083,7 +1074,6 @@ function downloadCurrentMasterFile() {
   }
 }
 
-// ผูก Event Listener เมื่อผู้ใช้เปลี่ยนการเลือกห้อง
 document.getElementById('sel-room').addEventListener('change', checkAvailableMasterFile);
 
 (async () => {
