@@ -169,6 +169,23 @@
         </select>
        </div>
        
+       <!-- เริ่ม: ส่วนดาวน์โหลดไฟล์ต้นฉบับ -->
+       <div id="master-file-container" class="hidden md:col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-3 flex justify-between items-center transition-all mt-2">
+         <div class="flex items-center gap-2 min-w-0">
+           <div class="p-2 bg-blue-100 text-blue-700 rounded-lg shrink-0">
+             <i data-lucide="download-cloud" class="w-4 h-4 md:w-5 md:h-5"></i>
+           </div>
+           <div class="min-w-0">
+             <p class="text-[12px] md:text-sm font-bold text-blue-900 truncate">ไฟล์ต้นฉบับสำหรับดาวน์โหลด:</p>
+             <p id="master-file-name" class="text-[11px] md:text-xs text-blue-700 truncate"></p>
+           </div>
+         </div>
+         <button type="button" onclick="downloadCurrentMasterFile()" class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 shadow-sm transition-colors shrink-0">
+           ดาวน์โหลด
+         </button>
+       </div>
+       <!-- จบ: ส่วนดาวน์โหลดไฟล์ต้นฉบับ -->
+
        <div class="md:col-span-2">
         <label class="block text-[13px] md:text-sm font-medium text-gray-700 mb-1.5">แนบไฟล์เอกสารวิชาการ</label>
         <div id="dropzone" class="border-2 border-dashed border-gray-300 rounded-xl p-4 md:p-5 text-center hover:border-indigo-500 transition-colors cursor-pointer bg-gray-50 group relative">
@@ -255,6 +272,52 @@
       </table>
      </div>
     </div>
+    
+    <!-- เริ่ม: ส่วนจัดการไฟล์ต้นฉบับของแอดมิน -->
+    <div class="mt-6 bg-white rounded-lg card-shadow overflow-hidden">
+      <div class="p-4 bg-indigo-900 text-white flex flex-col sm:flex-row justify-between sm:items-center border-b-2 border-indigo-500 gap-3">
+        <h2 class="font-bold text-sm md:text-base flex items-center gap-2"><i data-lucide="file-up" class="w-4 h-4"></i> จัดการไฟล์ต้นฉบับ (Master Files)</h2>
+      </div>
+      <div class="p-4 bg-slate-50 border-b border-gray-200">
+        <form id="master-file-form" onsubmit="handleMasterFileUpload(event)" class="flex flex-col md:flex-row gap-3 items-end">
+          <div class="w-full md:w-auto">
+            <label class="block text-xs font-bold text-gray-700 mb-1">เลือกห้องเป้าหมาย</label>
+            <select id="master-sel-room" class="w-full text-xs border border-gray-300 rounded px-2.5 py-2 focus:ring-1 focus:ring-indigo-500">
+              <option value="all">ทุกห้อง (ใช้ไฟล์ร่วมกัน)</option>
+            </select>
+          </div>
+          <div class="w-full md:w-auto">
+            <label class="block text-xs font-bold text-gray-700 mb-1">ประเภทเอกสาร</label>
+            <select id="master-sel-doc" class="w-full text-xs border border-gray-300 rounded px-2.5 py-2 focus:ring-1 focus:ring-indigo-500">
+            </select>
+          </div>
+          <div class="w-full flex-1">
+            <label class="block text-xs font-bold text-gray-700 mb-1">แนบไฟล์ต้นฉบับ</label>
+            <input type="file" id="master-input-file" required class="w-full text-xs border border-gray-300 rounded px-2.5 py-1.5 bg-white cursor-pointer" accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt">
+          </div>
+          <button type="submit" id="master-submit-btn" class="w-full md:w-auto text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded flex items-center justify-center gap-1.5 shadow-sm transition-colors">
+            <i data-lucide="upload" class="w-4 h-4"></i> อัปโหลดต้นฉบับ
+          </button>
+        </form>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-[11px] md:text-xs">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="text-left px-3 py-3 font-bold text-gray-700 whitespace-nowrap">ห้องที่ระบุ</th>
+              <th class="text-left px-3 py-3 font-bold text-gray-700 whitespace-nowrap">ประเภทเอกสาร</th>
+              <th class="text-left px-3 py-3 font-bold text-gray-700 whitespace-nowrap">ชื่อไฟล์</th>
+              <th class="text-center px-3 py-3 font-bold text-gray-700 whitespace-nowrap">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="master-table-body">
+            <tr><td colspan="4" class="text-center py-6 text-gray-500">กำลังโหลดข้อมูล...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- จบ: ส่วนจัดการไฟล์ต้นฉบับของแอดมิน -->
+
    </div>
 
   <script>
@@ -374,6 +437,10 @@ function handleDocTypeChange() {
     o.textContent = round;
     selRound.appendChild(o);
   });
+  
+  if (typeof checkAvailableMasterFile === 'function') {
+    checkAvailableMasterFile();
+  }
 }
 
 // Dropzone Logic
@@ -875,6 +942,149 @@ window.elementSdk.init({
     document.querySelectorAll('.gold-accent').forEach(el => el.style.color = acc);
   }
 });
+
+// --- ระบบจัดการไฟล์ต้นฉบับ (Master Files) ---
+const masterCollectionRef = db.collection("master_files");
+let masterFilesData = [];
+
+// ดึงข้อมูล Master File แบบ Real-time
+masterCollectionRef.onSnapshot((snapshot) => {
+  masterFilesData = [];
+  snapshot.forEach((doc) => {
+    masterFilesData.push({ id: doc.id, ...doc.data() });
+  });
+  renderMasterAdminTable();
+  checkAvailableMasterFile();
+}, (error) => {
+  console.error("Master Files Sync Error:", error);
+});
+
+// เตรียม Dropdown สำหรับฟอร์มอัปโหลดของแอดมิน
+const masterSelRoom = document.getElementById('master-sel-room');
+ROOMS.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; masterSelRoom.appendChild(o); });
+
+const masterSelDoc = document.getElementById('master-sel-doc');
+DOC_TYPES.forEach(d => { const o = document.createElement('option'); o.value = d; o.textContent = d; masterSelDoc.appendChild(o); });
+
+// ฟังก์ชันอัปโหลดไฟล์ต้นฉบับโดยแอดมิน
+async function handleMasterFileUpload(e) {
+  e.preventDefault();
+  const room = document.getElementById('master-sel-room').value;
+  const doc_type = document.getElementById('master-sel-doc').value;
+  const fileInput = document.getElementById('master-input-file');
+  const file = fileInput.files[0];
+
+  if (!file) return alert('กรุณาเลือกไฟล์เพื่ออัปโหลด');
+  if (file.size > 10 * 1024 * 1024) return alert('ไฟล์ใหญ่เกินไป (ไม่เกิน 10MB)');
+
+  const btn = document.getElementById('master-submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="animate-pulse">กำลังอัปโหลด...</span>';
+
+  try {
+    const filedata = await toBase64(file);
+    await masterCollectionRef.add({
+      room,
+      doc_type,
+      filename: file.name,
+      filedata,
+      uploaded_at: new Date().toISOString()
+    });
+    alert('อัปโหลดไฟล์ต้นฉบับสำเร็จ');
+    fileInput.value = '';
+  } catch(err) {
+    console.error(err);
+    alert('เกิดข้อผิดพลาดในการอัปโหลดไฟล์');
+  }
+  
+  btn.disabled = false;
+  btn.innerHTML = '<i data-lucide="upload" class="w-4 h-4"></i> อัปโหลดต้นฉบับ';
+  lucide.createIcons();
+}
+
+// ฟังก์ชันแสดงผลตาราง Master File ในหน้าแอดมิน
+function renderMasterAdminTable() {
+  const tbody = document.getElementById('master-table-body');
+  if (masterFilesData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-gray-500 italic">ยังไม่มีไฟล์ต้นฉบับในระบบ</td></tr>';
+    return;
+  }
+
+  const sorted = masterFilesData.sort((a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at));
+  
+  tbody.innerHTML = sorted.map(rec => {
+    const roomBadge = rec.room === 'all' 
+      ? '<span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-[10px] font-bold">ทุกห้อง</span>' 
+      : `<span class="font-bold text-gray-800">${rec.room}</span>`;
+
+    return `
+      <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+        <td class="px-3 py-3 whitespace-nowrap">${roomBadge}</td>
+        <td class="px-3 py-3 font-semibold text-gray-700 whitespace-nowrap">${rec.doc_type}</td>
+        <td class="px-3 py-3 max-w-[150px] md:max-w-[250px] text-gray-600 truncate" title="${rec.filename}">${rec.filename}</td>
+        <td class="px-3 py-3 text-center">
+          <button onclick="deleteMasterFile('${rec.id}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded transition-colors" title="ลบไฟล์ต้นฉบับ">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+  lucide.createIcons();
+}
+
+// ฟังก์ชันลบไฟล์ต้นฉบับ
+async function deleteMasterFile(id) {
+  if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบไฟล์ต้นฉบับนี้? (คุณครูจะไม่สามารถดาวน์โหลดไฟล์นี้ได้อีก)')) {
+    try {
+      await masterCollectionRef.doc(id).delete();
+    } catch (error) {
+      console.error("Error deleting master file:", error);
+      alert('เกิดข้อผิดพลาดในการลบข้อมูล');
+    }
+  }
+}
+
+// ตรวจสอบว่ามีไฟล์ให้โหลดหรือไม่เมื่อเปลี่ยน Dropdown ของผู้ใช้งาน
+function checkAvailableMasterFile() {
+  const currentRoom = document.getElementById('sel-room').value;
+  const currentDoc = document.getElementById('sel-doc').value;
+  const container = document.getElementById('master-file-container');
+  const nameEl = document.getElementById('master-file-name');
+
+  // ค้นหาไฟล์ที่ตรงกับเงื่อนไข: (ห้องตรงกัน หรือ ตั้งเป็นทั้งหมด) และ ประเภทเอกสารตรงกัน
+  const matchedFile = masterFilesData.find(m => 
+    (m.room === currentRoom || m.room === 'all') && m.doc_type === currentDoc
+  );
+
+  if (matchedFile) {
+    container.classList.remove('hidden');
+    nameEl.textContent = matchedFile.filename;
+    container.dataset.fileId = matchedFile.id;
+  } else {
+    container.classList.add('hidden');
+    container.dataset.fileId = '';
+  }
+}
+
+// ฟังก์ชันดาวน์โหลดไฟล์ต้นฉบับฝั่งผู้ใช้งาน
+function downloadCurrentMasterFile() {
+  const id = document.getElementById('master-file-container').dataset.fileId;
+  const rec = masterFilesData.find(m => m.id === id);
+  if (rec && rec.filedata) {
+    const a = document.createElement('a');
+    a.href = rec.filedata;
+    a.download = `ต้นฉบับ_${rec.doc_type}_${rec.filename}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } else {
+    alert('ไม่พบไฟล์ต้นฉบับ');
+  }
+}
+
+// ผูก Event Listener เมื่อผู้ใช้เปลี่ยนการเลือกห้อง
+document.getElementById('sel-room').addEventListener('change', checkAvailableMasterFile);
 
 (async () => {
   const r = await window.dataSdk.init(dataHandler);
