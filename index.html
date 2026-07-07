@@ -3,338 +3,471 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบติดตามการส่งเอกสารวิชาการ - โรงเรียนโคราชพิทยาคม</title>
+  <title>ระบบบริหารงานวิชาการและปฏิทินกิจกรรม - โรงเรียนโคราชพิทยาคม</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
-  <script src="/_sdk/telemetry_sdk.js"></script>
-  <script src="/_sdk/element_sdk.js"></script>
-  <script src="/_sdk/data_sdk.js"></script>
   
-  <!-- เพิ่ม Firebase SDK เพื่อรองรับการทำ Real-time Database -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { font-family: 'Sarabun', 'Noto Sans Thai', sans-serif; }
-    .gold-border { border-color: #B8860B; }
     .navy-bg { background: linear-gradient(135deg, #0F1B4C 0%, #1a237e 100%); }
-    .gold-accent { color: #B8860B; }
-    .garuda-pattern {
-      background-image: linear-gradient(135deg, rgba(184,134,11,0.03) 0%, transparent 50%), radial-gradient(circle at 100% 0%, rgba(184,134,11,0.02) 0%, transparent 50%);
-    }
-    .status-badge-pending { background: #FEF3C7; color: #92400E; border: 1px solid #FBBF24; }
-    .status-badge-done { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
-    .table-row:hover { background: #F0F4FF; }
-    .card-shadow { box-shadow: 0 1px 3px rgba(26,35,126,0.12); }
-    .seal-box { border-left: 4px solid #B8860B; background: linear-gradient(to right, rgba(184,134,11,0.02), transparent); }
+    .card-shadow { box-shadow: 0 4px 20px -2px rgba(26,35,126,0.08), 0 2px 6px -1px rgba(26,35,126,0.04); }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     .fade-in { animation: fadeIn 0.4s ease-out; }
-    .divider-gold { background: linear-gradient(to right, transparent, #B8860B, transparent); height: 2px; }
-    
-    /* ซ่อน Scrollbar สำหรับแท็บเมนูบนมือถือ */
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* สไตล์สำหรับอนิเมชันของวงกลมกราฟ */
+    .chart-circle { transition: stroke-dashoffset 0.6s ease-in-out; transform: rotate(-90deg); transform-origin: 50% 50%; }
   </style>
-  <style>body { box-sizing: border-box; }</style>
  </head>
- <body class="h-full bg-gray-50 text-gray-800">
-  <div id="app" class="h-full w-full overflow-auto">
-   <header id="main-header" class="navy-bg text-white py-4 px-4 md:px-8 border-b-2 border-amber-400">
-    <div class="max-w-7xl mx-auto">
-     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+ <body class="h-full bg-slate-50 text-gray-800 flex flex-col">
+
+  <div id="login-screen" class="fixed inset-0 navy-bg z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full space-y-6 fade-in border-t-4 border-amber-400 relative overflow-hidden">
+      <div class="absolute -top-10 -right-10 opacity-5 w-32 h-32 bg-indigo-900 rounded-full"></div>
       
-      <!-- ส่วนแสดงโลโก้ที่ได้รับการแก้ไข -->
-      <div class="flex items-center gap-3 md:gap-4">
-       <div class="bg-white p-1 md:p-1.5 rounded-full shrink-0 shadow-md border-2 border-amber-400 w-14 h-14 md:w-16 md:h-16 flex items-center justify-center overflow-hidden">
-         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3jZlVdxgEm6Vdo61ZcVRBBOPF4ga-xhdbiE71PP3dDqBHPc5YJ8BG7D8&s=10" 
-              alt="โลโก้โรงเรียนโคราชพิทยาคม" 
-              class="w-full h-full object-contain block"
-              onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden'); this.nextElementSibling.classList.add('flex');">
-         <!-- ไอคอนสำรองที่จะแสดงขึ้นมาทันทีหากโหลดรูปภาพไม่สำเร็จ -->
-         <div class="hidden items-center justify-center w-full h-full text-indigo-900 bg-gray-50">
-           <i data-lucide="school" class="w-7 h-7 md:w-8 md:h-8"></i>
-         </div>
-       </div>
-       <div>
-        <h1 id="header-title" class="text-lg md:text-xl font-bold">ระบบสารสนเทศติดตามการส่งเอกสารวิชาการ</h1>
-        <p id="header-subtitle" class="text-blue-200 text-[11px] md:text-xs font-semibold mt-1">กลุ่มบริหารวิชาการ โรงเรียนโคราชพิทยาคม ประจำปีการศึกษา 2569</p>
-       </div>
+      <div class="text-center space-y-2 relative z-10">
+        <div class="w-16 h-16 bg-amber-50 rounded-full mx-auto flex items-center justify-center border-2 border-amber-400 shadow-sm">
+          <i data-lucide="graduation-cap" class="w-8 h-8 text-amber-600"></i>
+        </div>
+        <h2 class="text-lg font-bold text-gray-900">เข้าสู่ระบบบริการงานวิชาการ</h2>
+        <p class="text-xs text-gray-500">โรงเรียนโคราชพิทยาคม</p>
       </div>
-      
-      <div class="text-left sm:text-right text-[11px] md:text-xs text-blue-100 flex flex-row sm:flex-col justify-between sm:justify-start gap-1 sm:gap-0 mt-2 sm:mt-0">
-       <div id="current-date" class="font-semibold"></div>
-       <div id="current-time" class="text-amber-300 font-semibold"></div>
+
+      <form id="login-form" onsubmit="handleTeacherLogin(event)" class="space-y-4 relative z-10">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">รหัสประจำตัวคุณครู / บัญชีผู้ใช้</label>
+          <input type="text" id="login-user" required class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-300 focus:outline-none bg-gray-50" placeholder="ระบุ Username ของท่าน">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">รหัสผ่าน (Password)</label>
+          <input type="password" id="login-pass" required class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-300 focus:outline-none bg-gray-50" placeholder="••••••••">
+        </div>
+        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-lg text-sm transition-all shadow-md hover:shadow-lg">
+          เข้าสู่ระบบ (สำหรับคุณครู)
+        </button>
+      </form>
+
+      <div class="relative flex py-2 items-center">
+          <div class="flex-grow border-t border-gray-200"></div>
+          <span class="flex-shrink-0 mx-4 text-gray-400 text-[10px] font-bold uppercase tracking-wider">หรือ</span>
+          <div class="flex-grow border-t border-gray-200"></div>
       </div>
-     </div>
+
+      <button type="button" onclick="handleAdminDirectLogin()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-lg text-xs transition-all shadow flex justify-center items-center gap-2 relative z-10 group border border-slate-700">
+        <i data-lucide="shield-check" class="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform"></i> เข้าสู่ระบบสำหรับผู้ดูแลระบบ (Admin)
+      </button>
+    </div>
+  </div>
+
+  <div id="main-app" class="hidden flex-1 flex flex-col overflow-hidden">
+   <header class="navy-bg text-white py-3 px-4 md:px-8 border-b border-amber-400 shrink-0">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div class="flex items-center gap-3">
+        <div class="bg-white p-1 rounded-full w-12 h-12 flex items-center justify-center overflow-hidden border border-amber-400 shadow-md">
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3jZlVdxgEm6Vdo61ZcVRBBOPF4ga-xhdbiE71PP3dDqBHPc5YJ8BG7D8&s=10" alt="Logo" class="w-full h-full object-contain">
+        </div>
+        <div>
+          <h1 class="text-base font-bold">ระบบงานวิชาการและปฏิทินแบบบูรณาการ</h1>
+          <p class="text-blue-200 text-[10px] font-medium">โรงเรียนโคราชพิทยาคม | ผู้ใช้ปัจจุบัน: <span id="current-user-display" class="text-amber-300 font-bold">-</span></p>
+        </div>
+      </div>
+      <div class="flex items-center justify-between sm:justify-end gap-4 text-[11px] text-blue-100">
+       <div id="clock-display" class="font-medium text-amber-300"></div>
+       <button onclick="handleLogout()" class="bg-red-700/80 hover:bg-red-600 px-3 py-1.5 rounded border border-red-500 text-white font-bold transition-all flex items-center gap-1.5 shadow-sm">
+         <i data-lucide="log-out" class="w-3.5 h-3.5"></i> ออกจากระบบ
+       </button>
+      </div>
     </div>
    </header>
 
-   <div class="max-w-7xl mx-auto px-4 md:px-6 pt-4">
-    <div class="flex gap-4 md:gap-6 border-b border-gray-200 overflow-x-auto whitespace-nowrap hide-scrollbar pb-1">
-     <button onclick="switchTab('dashboard')" id="tab-dashboard" class="pb-2 px-2 text-sm md:text-base font-bold text-indigo-900 border-b-2 border-indigo-900 transition-all shrink-0"> ส่วนควบคุมและสรุปผล </button> 
-     <button onclick="switchTab('submission')" id="tab-submission" class="pb-2 px-2 text-sm md:text-base font-bold text-gray-400 border-b-2 border-transparent transition-all shrink-0"> แบบฟอร์มนำส่งเอกสาร </button>
-     <button onclick="switchTab('admin')" id="tab-admin" class="pb-2 px-2 text-sm md:text-base font-bold text-red-600 border-b-2 border-transparent transition-all flex items-center gap-1 shrink-0"> <i data-lucide="shield" class="w-4 h-4"></i> ส่วนจัดการข้อมูล (แอดมิน) </button>
-    </div>
-   </div>
-
-   <div id="panel-dashboard" class="max-w-7xl mx-auto px-4 md:px-6 py-6 fade-in">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-     <div class="bg-white rounded-lg p-4 md:p-5 card-shadow border-l-4 border-indigo-900 flex flex-col justify-between">
-      <div>
-       <p class="text-xs text-gray-500 font-semibold uppercase">รายการเอกสารทั้งหมด</p>
-       <p id="metric-total" class="text-2xl md:text-3xl font-bold text-indigo-900 mt-1">50</p>
-      </div>
-      <div class="mt-2 md:mt-3 text-[11px] text-gray-500 font-medium">จากจำนวนทั้งหมด 10 ห้องเรียน</div>
-     </div>
-     
-     <div class="bg-white rounded-lg p-4 md:p-5 card-shadow border-l-4 border-emerald-600 flex flex-col justify-between">
-      <div>
-       <p class="text-xs text-gray-500 font-semibold uppercase">ห้องที่ส่งครบทุกรายการแล้ว</p>
-       <p id="metric-rooms-completed" class="text-2xl md:text-3xl font-bold text-emerald-700 mt-1">0</p>
-      </div>
-      <div class="mt-2 md:mt-3 text-[11px] md:text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-1.5 rounded" id="list-rooms-completed">ยังไม่มีห้องที่ส่งครบ</div>
-     </div>
-     
-     <div class="bg-white rounded-lg p-4 md:p-5 card-shadow border-l-4 border-amber-500 flex flex-col justify-between">
-      <div>
-       <p class="text-xs text-gray-500 font-semibold uppercase">ห้องที่ยังค้างส่ง</p>
-       <p id="metric-rooms-pending" class="text-2xl md:text-3xl font-bold text-amber-700 mt-1">10</p>
-      </div>
-      <div class="mt-2 md:mt-3 text-[11px] md:text-xs font-medium text-amber-700 bg-amber-50 px-2 py-1.5 rounded leading-relaxed" id="list-rooms-pending">-</div>
-     </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-     <div class="lg:col-span-3 bg-white rounded-lg card-shadow overflow-hidden flex flex-col">
-      <div class="p-4 bg-indigo-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-       <h2 class="font-bold text-sm">ตารางสถานะการนำส่ง</h2>
-       <select id="filter-doc" onchange="renderTable()" class="text-xs bg-indigo-800 text-white border border-indigo-600 rounded px-2 py-2 sm:py-1.5 focus:outline-none w-full sm:w-auto"> 
-        <option value="all">แสดงทั้งหมด</option> 
-        <option value="แบบ ปพ.">แบบ ปพ.</option> 
-        <option value="แผนการจัดการเรียนรู้">แผนการจัดการเรียนรู้</option> 
-        <option value="รายงานแผนปฏิบัติการสอน">รายงานแผนปฏิบัติการสอน</option> 
-       </select>
-      </div>
-      
-      <div class="p-3 bg-slate-50 border-b border-gray-200 text-[11px] md:text-xs text-gray-700 leading-relaxed">
-        <div class="flex items-start mb-1.5">
-          <span class="font-bold text-emerald-700 min-w-[65px] md:min-w-[70px] mt-0.5">ส่งครบแล้ว:</span>
-          <span id="summary-completed" class="font-medium text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded flex-1">-</span>
-        </div>
-        <div class="flex items-start">
-          <span class="font-bold text-amber-600 min-w-[65px] md:min-w-[70px] mt-0.5">ยังค้างส่ง:</span>
-          <span id="summary-pending" class="font-medium text-amber-800 bg-amber-100 px-2 py-0.5 rounded flex-1">-</span>
-        </div>
-      </div>
-
-      <div class="overflow-x-auto overflow-y-auto" style="max-height: 400px;">
-       <table class="w-full text-[11px] md:text-xs">
-        <thead class="bg-gray-100 sticky top-0 shadow-sm">
-         <tr>
-          <th class="text-left px-2 md:px-3 py-2 font-bold text-gray-700 whitespace-nowrap">ระดับชั้น/ห้อง</th>
-          <th class="text-left px-2 md:px-3 py-2 font-bold text-gray-700 whitespace-nowrap">ประเภทเอกสาร</th>
-          <th class="text-center px-2 md:px-3 py-2 font-bold text-gray-700 whitespace-nowrap">ครั้งที่ 1</th>
-          <th class="text-center px-2 md:px-3 py-2 font-bold text-gray-700 whitespace-nowrap">ครั้งที่ 2</th>
-          <th class="text-center px-2 md:px-3 py-2 font-bold text-gray-700 whitespace-nowrap">ครั้งที่ 3</th>
-         </tr>
-        </thead>
-        <tbody id="status-table-body"></tbody>
-       </table>
-      </div>
-     </div>
-
-     <div class="lg:col-span-2 bg-white rounded-lg card-shadow overflow-hidden">
-      <div class="p-4 bg-indigo-900 text-white">
-       <h2 class="font-bold text-sm">ประวัติการทำรายการล่าสุด</h2>
-      </div>
-      <div id="log-container" class="p-3 overflow-y-auto" style="max-height: 460px;">
-       <p class="text-gray-400 text-xs text-center py-6">ยังไม่มีข้อมูลการทำรายการ</p>
-      </div>
-     </div>
-    </div>
-   </div>
-
-   <div id="panel-submission" class="max-w-7xl mx-auto px-4 md:px-6 py-6 hidden fade-in">
-    <div class="max-w-2xl mx-auto bg-white rounded-lg card-shadow overflow-hidden">
-     <div class="navy-bg px-4 md:px-6 py-4">
-      <h2 class="text-white font-semibold flex items-center gap-2 text-sm md:text-base"><i data-lucide="upload" class="w-5 h-5"></i> แบบฟอร์มบันทึกการส่งเอกสารวิชาการ</h2>
-      <p class="text-blue-200 text-[11px] md:text-xs mt-1">กรุณาระบุข้อมูลและแนบไฟล์ให้ครบถ้วนก่อนทำการบันทึก</p>
-     </div>
-     <form id="submission-form" class="p-4 md:p-6 space-y-4 md:space-y-5" onsubmit="handleSubmit(event)">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
-       <div>
-        <label for="sel-room" class="block text-[13px] md:text-sm font-medium text-gray-700 mb-1">ระดับชั้น/ห้องเรียน</label> 
-        <select id="sel-room" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[13px] md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"></select>
-       </div>
-       <div>
-        <label for="sel-doc" class="block text-[13px] md:text-sm font-medium text-gray-700 mb-1">ประเภทเอกสารวิชาการ</label> 
-        <select id="sel-doc" onchange="handleDocTypeChange()" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[13px] md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"> 
-         <option>แบบ ปพ.</option> 
-         <option>แผนการจัดการเรียนรู้</option> 
-         <option>รายงานแผนปฏิบัติการสอน</option> 
-        </select>
-       </div>
-       <div>
-        <label for="sel-round" class="block text-[13px] md:text-sm font-medium text-gray-700 mb-1">รอบการนำส่ง</label> 
-        <select id="sel-round" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-[13px] md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"> 
-         <option>ครั้งที่ 1</option> 
-         <option>ครั้งที่ 2</option> 
-         <option>ครั้งที่ 3</option> 
-        </select>
-       </div>
+   <div class="bg-white border-b border-gray-200 shrink-0 shadow-sm z-10 relative">
+    <div class="max-w-7xl mx-auto px-4 md:px-6">
+     <div class="flex gap-2 sm:gap-4 overflow-x-auto whitespace-nowrap hide-scrollbar pt-3 pb-2 items-center">
+       <button onclick="switchTab('dashboard')" id="tab-dashboard" class="pb-1 px-2 text-xs md:text-sm font-bold text-indigo-900 border-b-2 border-indigo-900 transition-all hover:text-indigo-700">สรุปผลส่งงาน</button> 
+       <button onclick="switchTab('submission')" id="tab-submission" class="pb-1 px-2 text-xs md:text-sm font-bold text-gray-400 border-b-2 border-transparent transition-all hover:text-indigo-600">ส่งแผนงาน/ปพ.5</button>
+       <button onclick="switchTab('booking')" id="tab-booking" class="pb-1 px-2 text-xs md:text-sm font-bold text-gray-400 border-b-2 border-transparent transition-all hover:text-indigo-600">ปฏิทินจองกิจกรรม</button>
+       <button onclick="switchTab('grades')" id="tab-grades" class="pb-1 px-2 text-xs md:text-sm font-bold text-gray-400 border-b-2 border-transparent transition-all hover:text-indigo-600">บันทึกผล 0,ร,มส,มผ</button>
        
-       <!-- ส่วนดาวน์โหลดไฟล์ต้นฉบับ -->
-       <div id="master-file-container" class="hidden md:col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-3 flex justify-between items-center transition-all mt-2">
-         <div class="flex items-center gap-2 min-w-0">
-           <div class="p-2 bg-blue-100 text-blue-700 rounded-lg shrink-0">
-             <i data-lucide="download-cloud" class="w-4 h-4 md:w-5 md:h-5"></i>
-           </div>
-           <div class="min-w-0">
-             <p class="text-[12px] md:text-sm font-bold text-blue-900 truncate">ไฟล์ต้นฉบับสำหรับดาวน์โหลด:</p>
-             <p id="master-file-name" class="text-[11px] md:text-xs text-blue-700 truncate"></p>
-           </div>
-         </div>
-         <button type="button" onclick="downloadCurrentMasterFile()" class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 shadow-sm transition-colors shrink-0">
-           ดาวน์โหลด
-         </button>
-       </div>
+       <div class="flex-1 min-w-[20px]"></div>
 
-       <div class="md:col-span-2">
-        <label class="block text-[13px] md:text-sm font-medium text-gray-700 mb-1.5">แนบไฟล์เอกสารวิชาการ</label>
-        <div id="dropzone" class="border-2 border-dashed border-gray-300 rounded-xl p-4 md:p-5 text-center hover:border-indigo-500 transition-colors cursor-pointer bg-gray-50 group relative">
-         <input type="file" id="input-file" class="hidden" accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.jpg,.jpeg,.png">
-         
-         <div id="dropzone-prompt" class="space-y-2 py-2">
-          <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto text-gray-400 group-hover:text-indigo-600 transition-colors"></i>
-          <p class="text-xs md:text-sm font-semibold text-gray-700">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p>
-          <p class="text-[10px] md:text-[11px] text-gray-400 px-4">รองรับไฟล์ PDF, Word, Excel, PPT หรือรูปภาพ (ไม่เกิน 10MB)</p>
-         </div>
-         
-         <div id="file-info" class="hidden items-center justify-between bg-indigo-50 border border-indigo-100 rounded-lg p-2.5 md:p-3 text-left">
-          <div class="flex items-center gap-3 min-w-0">
-           <div class="p-2 bg-indigo-900 text-white rounded-lg flex-shrink-0">
-            <i data-lucide="file-text" class="w-4 h-4 md:w-5 md:h-5"></i>
-           </div>
-           <div class="min-w-0">
-            <p id="info-filename" class="text-[11px] md:text-xs font-bold text-gray-800 truncate"></p>
-            <p id="info-filesize" class="text-[10px] md:text-[11px] text-gray-500 mt-0.5"></p>
-           </div>
-          </div>
-          <button type="button" onclick="clearFile(event)" class="text-gray-400 hover:text-red-500 p-1.5 transition-colors rounded-full hover:bg-gray-200 shrink-0">
-           <i data-lucide="x" class="w-4 h-4"></i>
-          </button>
-         </div>
-        </div>
-       </div>
-      </div>
-      
-      <div class="pt-2">
-       <button type="submit" id="submit-btn" class="w-full navy-bg text-white py-3 rounded-lg font-semibold hover:bg-indigo-800 transition-colors flex items-center justify-center gap-2 text-sm md:text-base"> 
-        <i data-lucide="save" class="w-4 h-4 md:w-5 md:h-5"></i> บันทึกข้อมูลการนำส่ง 
+       <button onclick="switchTab('admin')" id="tab-admin" class="px-4 py-1.5 text-[11px] md:text-xs font-bold text-white bg-gradient-to-r from-slate-600 to-slate-800 rounded-full shadow hover:shadow-md transition-all flex items-center gap-1.5 border border-slate-700 shrink-0 opacity-90 hover:opacity-100">
+         <i data-lucide="shield" class="w-3.5 h-3.5 text-amber-400"></i> ระบบผู้ดูแล
        </button>
-       <div id="submit-feedback" class="hidden"></div>
-      </div>
-     </form>
+     </div>
     </div>
    </div>
 
-   <div id="panel-admin" class="max-w-7xl mx-auto px-4 md:px-6 py-6 hidden fade-in">
-    <div class="bg-white rounded-lg card-shadow overflow-hidden">
-     <div class="p-4 bg-red-900 text-white flex flex-col sm:flex-row justify-between sm:items-center border-b-2 border-red-500 gap-3">
-      <h2 class="font-bold text-sm md:text-base flex items-center gap-2"><i data-lucide="database" class="w-4 h-4"></i> ระบบจัดการฐานข้อมูล (Admin)</h2>
-      <div class="flex flex-row items-center gap-2 w-full sm:w-auto">
-       <button onclick="clearAllData()" class="flex-1 sm:flex-none justify-center text-[11px] md:text-xs bg-red-800 hover:bg-red-700 px-3 py-2 sm:py-1.5 rounded transition-colors border border-red-600 flex items-center gap-1"><i data-lucide="trash-2" class="w-3 h-3"></i> ล้างข้อมูล</button>
-       <button onclick="logoutAdmin()" class="flex-1 sm:flex-none justify-center text-[11px] md:text-xs bg-gray-800 hover:bg-gray-700 px-3 py-2 sm:py-1.5 rounded transition-colors border border-gray-600 flex items-center gap-1"><i data-lucide="log-out" class="w-3 h-3"></i> ออกจากระบบ</button>
-      </div>
-     </div>
-
-     <div class="p-4 bg-slate-50 border-b border-gray-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-       <div class="flex items-center gap-2">
-        <label for="admin-filter-room" class="text-xs font-bold text-gray-700 whitespace-nowrap">เลือกห้อง:</label>
-        <select id="admin-filter-room" onchange="renderAdminTable()" class="text-xs bg-white border border-gray-300 rounded px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-red-500 w-full sm:w-36">
-         <option value="all">ทั้งหมด</option>
-        </select>
+   <div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/50">
+     
+     <div id="panel-dashboard" class="max-w-7xl mx-auto space-y-6 fade-in">
+       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+         <div class="bg-white rounded-xl p-5 card-shadow border-l-4 border-indigo-900">
+           <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">เอกสารวิชาการที่ส่งเข้าระบบ</p>
+           <p id="metric-total" class="text-3xl font-black text-indigo-900 mt-1">0</p>
+         </div>
+         <div class="bg-white rounded-xl p-5 card-shadow border-l-4 border-emerald-500">
+           <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">ห้องที่ส่งครบแล้ว</p>
+           <p id="metric-rooms-completed" class="text-3xl font-black text-emerald-600 mt-1">0</p>
+           <p id="list-rooms-completed" class="text-[10px] text-gray-400 mt-1 truncate">-</p>
+         </div>
+         <div class="bg-white rounded-xl p-5 card-shadow border-l-4 border-amber-500">
+           <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">ห้องที่ยังค้างส่ง</p>
+           <p id="metric-rooms-pending" class="text-3xl font-black text-amber-600 mt-1">0</p>
+           <p id="list-rooms-pending" class="text-[10px] text-gray-400 mt-1 truncate">-</p>
+         </div>
        </div>
-       <div class="flex items-center gap-2">
-        <label for="admin-filter-doc" class="text-xs font-bold text-gray-700 whitespace-nowrap">หมวดงาน:</label>
-        <select id="admin-filter-doc" onchange="renderAdminTable()" class="text-xs bg-white border border-gray-300 rounded px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-red-500 w-full sm:w-48">
-         <option value="all">ทั้งหมด</option>
-        </select>
+
+       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+         
+         <div class="bg-white rounded-xl card-shadow p-5 flex flex-col items-center justify-center min-h-[340px]">
+           <div class="w-full flex items-center justify-between border-b pb-3 mb-4">
+              <h3 class="font-bold text-sm text-slate-800 flex items-center gap-1.5"><i data-lucide="pie-chart" class="w-4 h-4 text-indigo-600"></i> สัดส่วนความคืบหน้างานวิชาการ</h3>
+              <span class="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold">Real-time</span>
+           </div>
+           
+           <div class="relative w-44 h-44 flex items-center justify-center">
+              <svg class="w-full h-full" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" fill="transparent" stroke="#fee2e2" stroke-width="12"></circle>
+                <circle id="chart-progress-bar" class="chart-circle" cx="50" cy="50" r="40" fill="transparent" stroke="#10b981" stroke-width="12" stroke-dasharray="251.2" stroke-dashoffset="251.2" stroke-linecap="round"></circle>
+              </svg>
+              <div class="absolute text-center">
+                <span id="chart-percentage" class="text-3xl font-black text-slate-800">0%</span>
+                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">ภาพรวมที่เสร็จ</p>
+              </div>
+           </div>
+
+           <div class="grid grid-cols-2 gap-6 w-full max-w-xs mt-6 text-xs font-semibold">
+              <div class="flex items-center gap-2 justify-center bg-emerald-50/50 p-2 rounded-lg border border-emerald-100">
+                 <div class="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                 <div class="text-center">
+                    <p class="text-gray-500 text-[10px]">ส่งแล้ว</p>
+                    <p id="chart-lbl-success" class="font-bold text-emerald-700 text-sm">0 รายการ</p>
+                 </div>
+              </div>
+              <div class="flex items-center gap-2 justify-center bg-red-50/50 p-2 rounded-lg border border-red-100">
+                 <div class="w-3 h-3 bg-red-400 rounded-full"></div>
+                 <div class="text-center">
+                    <p class="text-gray-500 text-[10px]">ค้างส่ง</p>
+                    <p id="chart-lbl-pending" class="font-bold text-red-600 text-sm">0 รายการ</p>
+                 </div>
+              </div>
+           </div>
+         </div>
+
+         <div class="bg-white rounded-xl card-shadow overflow-hidden flex flex-col lg:col-span-2">
+           <div class="p-4 bg-indigo-900 text-white flex items-center justify-between">
+             <h2 class="font-bold text-sm">สถานะการส่งเล่มรายงานวิชาการ</h2>
+             <select id="filter-doc" onchange="renderTable()" class="text-xs bg-indigo-800 text-white border border-indigo-700 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400">
+               <option value="all">แสดงเอกสารทั้งหมด</option>
+               <option value="ปพ.5">ปพ.5 (ส่ง 3 ครั้ง)</option>
+               <option value="แผนการสอน">แผนการสอน (ส่งเล่มสมบูรณ์)</option>
+               <option value="แผนการปฏิบัติงาน">แผนการปฏิบัติงาน (ส่งเล่มสมบูรณ์)</option>
+             </select>
+           </div>
+           <div class="overflow-x-auto flex-1 max-h-[380px]">
+             <table class="w-full text-xs text-left">
+               <thead class="bg-gray-50 font-bold border-b text-gray-600 sticky top-0 z-10">
+                 <tr>
+                   <th class="p-3 bg-gray-50">ห้องเรียน</th>
+                   <th class="p-3 bg-gray-50">ประเภทเอกสาร</th>
+                   <th class="p-3 text-center bg-gray-50">รอบนำส่งที่กำหนด / ผลงาน</th>
+                 </tr>
+               </thead>
+               <tbody id="status-table-body"></tbody>
+             </table>
+           </div>
+         </div>
        </div>
-      </div>
-      <button onclick="downloadFilteredFiles()" class="w-full sm:w-auto justify-center text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded transition-colors flex items-center gap-1.5 shadow-sm">
-       <i data-lucide="download-cloud" class="w-4 h-4"></i> ดาวน์โหลดไฟล์ตามตัวเลือก
-      </button>
+
+       <div class="bg-white rounded-xl card-shadow overflow-hidden">
+          <div class="p-4 bg-slate-800 text-white font-bold text-sm flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-amber-400"></i> ประวัติการอัปโหลดไฟล์เข้าระบบล่าสุด</div>
+          <div id="log-container" class="p-2 divide-y text-xs max-h-[220px] overflow-y-auto"></div>
+       </div>
      </div>
 
-     <div class="overflow-x-auto">
-      <table class="w-full text-[11px] md:text-xs">
-       <thead class="bg-gray-50">
-        <tr>
-         <th class="text-left px-3 py-3 font-bold text-gray-700 whitespace-nowrap">วันที่/เวลา</th>
-         <th class="text-left px-3 py-3 font-bold text-gray-700 whitespace-nowrap">ห้อง</th>
-         <th class="text-left px-3 py-3 font-bold text-gray-700 whitespace-nowrap">ประเภทเอกสาร</th>
-         <th class="text-left px-3 py-3 font-bold text-gray-700 whitespace-nowrap">รอบนำส่ง</th>
-         <th class="text-left px-3 py-3 font-bold text-gray-700 whitespace-nowrap">ไฟล์ที่แนบมา</th>
-         <th class="text-center px-3 py-3 font-bold text-gray-700 whitespace-nowrap">จัดการ</th>
-        </tr>
-       </thead>
-       <tbody id="admin-table-body">
-        </tbody>
-      </table>
-     </div>
-    </div>
-    
-    <!-- ส่วนจัดการไฟล์ต้นฉบับของแอดมิน -->
-    <div class="mt-6 bg-white rounded-lg card-shadow overflow-hidden">
-      <div class="p-4 bg-indigo-900 text-white flex flex-col sm:flex-row justify-between sm:items-center border-b-2 border-indigo-500 gap-3">
-        <h2 class="font-bold text-sm md:text-base flex items-center gap-2"><i data-lucide="file-up" class="w-4 h-4"></i> จัดการไฟล์ต้นฉบับ (Master Files)</h2>
-      </div>
-      <div class="p-4 bg-slate-50 border-b border-gray-200">
-        <form id="master-file-form" onsubmit="handleMasterFileUpload(event)" class="flex flex-col md:flex-row gap-3 items-end">
-          <div class="w-full md:w-auto">
-            <label class="block text-xs font-bold text-gray-700 mb-1">เลือกห้องเป้าหมาย</label>
-            <select id="master-sel-room" class="w-full text-xs border border-gray-300 rounded px-2.5 py-2 focus:ring-1 focus:ring-indigo-500">
-              <option value="all">ทุกห้อง (ใช้ไฟล์ร่วมกัน)</option>
-            </select>
-          </div>
-          <div class="w-full md:w-auto">
-            <label class="block text-xs font-bold text-gray-700 mb-1">ประเภทเอกสาร</label>
-            <select id="master-sel-doc" class="w-full text-xs border border-gray-300 rounded px-2.5 py-2 focus:ring-1 focus:ring-indigo-500">
-            </select>
-          </div>
-          <div class="w-full flex-1">
-            <label class="block text-xs font-bold text-gray-700 mb-1">แนบไฟล์ต้นฉบับ</label>
-            <input type="file" id="master-input-file" required class="w-full text-xs border border-gray-300 rounded px-2.5 py-1.5 bg-white cursor-pointer" accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt">
-          </div>
-          <button type="submit" id="master-submit-btn" class="w-full md:w-auto text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded flex items-center justify-center gap-1.5 shadow-sm transition-colors">
-            <i data-lucide="upload" class="w-4 h-4"></i> อัปโหลดต้นฉบับ
-          </button>
-        </form>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-[11px] md:text-xs">
-          <thead class="bg-gray-100">
-            <tr>
-              <th class="text-left px-3 py-3 font-bold text-gray-700 whitespace-nowrap">ห้องที่ระบุ</th>
-              <th class="text-left px-3 py-3 font-bold text-gray-700 whitespace-nowrap">ประเภทเอกสาร</th>
-              <th class="text-left px-3 py-3 font-bold text-gray-700 whitespace-nowrap">ชื่อไฟล์</th>
-              <th class="text-center px-3 py-3 font-bold text-gray-700 whitespace-nowrap">จัดการ</th>
-            </tr>
-          </thead>
-          <tbody id="master-table-body">
-            <tr><td colspan="4" class="text-center py-6 text-gray-500">กำลังโหลดข้อมูล...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+     <div id="panel-submission" class="max-w-xl mx-auto bg-white rounded-xl card-shadow overflow-hidden hidden fade-in border border-gray-100">
+       <div class="navy-bg p-5 text-white">
+         <h2 class="font-bold text-base flex items-center gap-2"><i data-lucide="upload-cloud"></i> แบบฟอร์มจัดส่งเอกสารวิชาการ</h2>
+         <p class="text-xs text-blue-200 mt-1">อัปโหลดไฟล์หลักฐานส่งเข้าคลังข้อมูลโรงเรียน</p>
+       </div>
+       <form id="submission-form" onsubmit="handleSubmit(event)" class="p-6 space-y-5">
+         <div class="grid grid-cols-2 gap-4">
+           <div>
+             <label class="block text-xs font-bold text-gray-700 mb-1.5">ห้องเรียน</label>
+             <select id="sel-room" onchange="checkMasterTemplate()" class="w-full border border-gray-300 rounded-lg p-2.5 text-xs bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-300 focus:outline-none"></select>
+           </div>
+           <div>
+             <label class="block text-xs font-bold text-gray-700 mb-1.5">ประเภทเอกสาร</label>
+             <select id="sel-doc" onchange="handleDocTypeChange()" class="w-full border border-gray-300 rounded-lg p-2.5 text-xs bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+               <option value="ปพ.5">ปพ.5</option>
+               <option value="แผนการสอน">แผนการสอน</option>
+               <option value="แผนการปฏิบัติงาน">แผนการปฏิบัติงาน</option>
+             </select>
+           </div>
+         </div>
+         <div>
+           <label class="block text-xs font-bold text-gray-700 mb-1.5">รอบการนำส่ง</label>
+           <select id="sel-round" class="w-full border border-gray-300 rounded-lg p-2.5 text-xs bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+             <option>ครั้งที่ 1</option><option>ครั้งที่ 2</option><option>ครั้งที่ 3</option>
+           </select>
+         </div>
 
+         <div id="master-template-box" class="hidden p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between text-xs text-amber-800 shadow-sm">
+           <div class="flex items-center gap-2">
+             <i data-lucide="file-check-2" class="w-4 h-4 text-amber-600"></i>
+             <span>มีไฟล์ตัวอย่าง: <strong id="master-filename-display" class="underline underline-offset-2"></strong></span>
+           </div>
+           <button type="button" onclick="downloadMasterTemplate()" class="bg-amber-600 text-white font-bold px-3 py-1.5 rounded-md text-[11px] hover:bg-amber-700 transition-colors shadow-sm">ดาวน์โหลด</button>
+         </div>
+
+         <div id="dropzone" class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center bg-gray-50 cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-colors">
+           <input type="file" id="input-file" class="hidden">
+           <div id="dropzone-prompt" class="space-y-2">
+             <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm border border-gray-200">
+               <i data-lucide="file-up" class="w-6 h-6 text-indigo-400"></i>
+             </div>
+             <p class="text-xs font-bold text-gray-700">คลิกที่นี่เพื่อแนบไฟล์หลักฐานเอกสาร</p>
+             <p class="text-[10px] text-gray-500">ขนาดไฟล์ไม่เกิน 10MB (.pdf, .docx, .xlsx)</p>
+           </div>
+           <div id="file-info" class="hidden items-center justify-between bg-white border border-indigo-200 shadow-sm p-3 rounded-lg text-left mt-2">
+             <div class="flex items-center gap-2">
+               <i data-lucide="file" class="w-4 h-4 text-indigo-600"></i>
+               <span id="info-filename" class="text-xs font-bold text-indigo-900 truncate max-w-[200px]"></span>
+             </div>
+             <button type="button" onclick="clearFile(event)" class="text-red-500 text-xs font-bold hover:underline bg-red-50 px-2 py-1 rounded">ลบไฟล์</button>
+           </div>
+         </div>
+         <button type="submit" id="submit-btn" class="w-full navy-bg text-white py-3 rounded-lg font-bold text-sm hover:opacity-90 flex items-center justify-center gap-2 shadow-md">
+           <i data-lucide="check-circle" class="w-4 h-4"></i> บันทึกรายการส่งเอกสารวิชาการ
+         </button>
+       </form>
+     </div>
+
+     <div id="panel-booking" class="max-w-7xl mx-auto hidden fade-in space-y-6">
+       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+         <div class="bg-white rounded-xl card-shadow p-5 border-t-4 border-indigo-900 space-y-4">
+           <h2 class="font-bold text-sm text-indigo-900 flex items-center gap-1.5 uppercase"><i data-lucide="calendar-plus" class="w-4 h-4"></i> ทำการจองกิจกรรม / ห้อง</h2>
+           <form id="booking-form" onsubmit="handleBookingSubmit(event)" class="space-y-4">
+             <div>
+               <label class="block text-[11px] font-bold text-gray-600 mb-1">หัวข้อกิจกรรม/เรื่องที่ประชุม</label>
+               <input type="text" id="book-title" required class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white" placeholder="ระบุหัวข้อ">
+             </div>
+             <div>
+               <label class="block text-[11px] font-bold text-gray-600 mb-1">ห้อง/สถานที่</label>
+               <select id="book-resource" class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white">
+                 <option>ห้องประชุมหลานย่าโม</option>
+                 <option>ห้องโสตทัศนศึกษา</option>
+                 <option>ห้องคอมพิวเตอร์หลัก</option>
+                 <option>หอประชุมใหญ่โรงเรียน</option>
+               </select>
+             </div>
+             <div class="grid grid-cols-2 gap-3">
+               <div>
+                 <label class="block text-[11px] font-bold text-gray-600 mb-1">วันที่จัด</label>
+                 <input type="date" id="book-date" required class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white">
+               </div>
+               <div>
+                 <label class="block text-[11px] font-bold text-gray-600 mb-1">เวลา (09:00-12:00)</label>
+                 <input type="text" id="book-time" required class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white" placeholder="เวลา">
+               </div>
+             </div>
+             <button type="submit" class="w-full bg-emerald-600 text-white font-bold p-2.5 rounded-lg text-xs hover:bg-emerald-700 shadow-sm">บันทึกส่งข้อมูลขอจอง</button>
+           </form>
+         </div>
+
+         <div class="lg:col-span-2 bg-white rounded-xl card-shadow p-5 space-y-4">
+           <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+             <div class="flex items-center gap-2">
+               <button onclick="changeMonth(-1)" class="p-1.5 border rounded-lg hover:bg-gray-100"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+               <h3 id="calendar-month-year" class="font-bold text-sm text-gray-800 min-w-[120px] text-center"></h3>
+               <button onclick="changeMonth(1)" class="p-1.5 border rounded-lg hover:bg-gray-100"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+             </div>
+             <span class="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-1 rounded font-bold border border-indigo-100">ปฏิทินภาพรวม</span>
+           </div>
+           <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-gray-500 border-b border-gray-100 pb-2">
+             <div class="text-red-500">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div class="text-blue-500">ส</div>
+           </div>
+           <div id="calendar-grid" class="grid grid-cols-7 gap-1.5 min-h-[220px]"></div>
+         </div>
+       </div>
+
+       <div class="bg-white rounded-xl card-shadow overflow-hidden">
+         <div class="p-4 bg-gray-50 font-bold text-xs text-gray-700 border-b">ลำดับคิวการจองกิจกรรมในระบบทั้งหมด</div>
+         <div class="overflow-x-auto">
+           <table class="w-full text-xs text-left">
+             <thead class="bg-white font-bold border-b text-gray-500">
+               <tr><th class="p-3">วันที่</th><th class="p-3">เวลา</th><th class="p-3">สถานที่</th><th class="p-3">เรื่อง/กิจกรรม</th><th class="p-3">ผู้จอง</th></tr>
+             </thead>
+             <tbody id="booking-table-body"></tbody>
+           </table>
+         </div>
+       </div>
+     </div>
+
+     <div id="panel-grades" class="max-w-7xl mx-auto hidden fade-in space-y-4">
+       <div class="bg-white rounded-xl card-shadow overflow-hidden">
+         <div class="p-4 bg-amber-600 text-white flex justify-between items-center">
+           <h2 class="font-bold text-sm flex items-center gap-2"><i data-lucide="alert-triangle" class="w-4 h-4"></i> ติดตามและตรวจสอบผล 0, ร, มส, มผ</h2>
+           <button onclick="openGradeModal()" class="bg-white text-amber-700 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-amber-50 shadow-sm flex items-center gap-1">
+             <i data-lucide="plus" class="w-3.5 h-3.5"></i> เพิ่มรายชื่อ
+           </button>
+         </div>
+         <div class="overflow-x-auto p-2">
+           <table class="w-full text-xs text-left border-collapse">
+             <thead class="bg-gray-50 font-bold border-b text-gray-600 rounded-lg">
+               <tr><th class="p-3">ห้อง</th><th class="p-3">ชื่อนักเรียน</th><th class="p-3">รายวิชา</th><th class="p-3 text-center">ประเภทผล</th><th class="p-3">ครูประจำวิชา</th><th class="p-3 text-center">สถานะ</th><th class="p-3 text-center">คำสั่ง</th></tr>
+             </thead>
+             <tbody id="grades-table-body"></tbody>
+           </table>
+         </div>
+       </div>
+     </div>
+
+     <div id="panel-admin" class="max-w-7xl mx-auto hidden fade-in space-y-6">
+       <div class="flex gap-2 border-b border-gray-200 pb-1 overflow-x-auto hide-scrollbar">
+         <button id="btn-admin-docs" onclick="switchAdminSub('docs')" class="px-4 py-2 text-xs font-bold border-b-2 border-red-600 text-red-700 transition-colors">จัดการไฟล์ครูที่ส่ง</button>
+         <button id="btn-admin-teachers" onclick="switchAdminSub('teachers')" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors">จัดการรหัสครูและสร้างบัญชี</button>
+         <button id="btn-admin-masters" onclick="switchAdminSub('masters')" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors">อัปโหลดไฟล์ตัวอย่าง ปพ.5</button>
+       </div>
+
+       <div id="admin-sub-docs" class="bg-white rounded-xl card-shadow overflow-hidden">
+         <div class="p-4 bg-gradient-to-r from-red-800 to-red-900 text-white font-bold text-sm flex justify-between items-center">
+           <div class="flex items-center gap-2"><i data-lucide="folder-kanban" class="w-4 h-4"></i> คลังรวมไฟล์จัดส่งฐานข้อมูล</div>
+           <button onclick="clearAllSubmissions()" class="bg-red-950/50 border border-red-400/30 px-3 py-1.5 rounded-lg text-[11px] hover:bg-red-950 transition-colors flex items-center gap-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> ล้างฐานข้อมูลไฟล์ส่งทั้งหมด</button>
+         </div>
+         <div class="overflow-x-auto p-2">
+           <table class="w-full text-xs text-left">
+             <thead class="bg-gray-50 font-bold border-b text-gray-600">
+               <tr><th class="p-3">วันเวลา</th><th class="p-3">ห้อง</th><th class="p-3">ประเภท</th><th class="p-3">รอบ</th><th class="p-3">ไฟล์ดาวน์โหลด</th><th class="p-3 text-center">คำสั่งลบ</th></tr>
+             </thead>
+             <tbody id="admin-docs-table-body"></tbody>
+           </table>
+         </div>
+       </div>
+
+       <div id="admin-sub-teachers" class="grid grid-cols-1 lg:grid-cols-3 gap-6 hidden">
+         <div class="bg-white rounded-xl card-shadow p-5 border-t-4 border-blue-600 space-y-4 h-fit">
+           <h3 class="font-bold text-sm text-blue-900 uppercase flex items-center gap-2"><i data-lucide="user-plus" class="w-4 h-4"></i> ฟอร์มสร้างบัญชีครูใหม่</h3>
+           <form onsubmit="handleCreateTeacher(event)" class="space-y-4">
+             <div>
+               <label class="block text-[11px] font-bold text-gray-600 mb-1">รหัสครู / Username (ใช้ล็อกอิน)</label>
+               <input type="text" id="teacher-username" required class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white" placeholder="เช่น th001">
+             </div>
+             <div>
+               <label class="block text-[11px] font-bold text-gray-600 mb-1">ชื่อ-นามสกุลคุณครู</label>
+               <input type="text" id="teacher-fullname" required class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white" placeholder="ระบุชื่อ">
+             </div>
+             <div>
+               <label class="block text-[11px] font-bold text-gray-600 mb-1">กลุ่มสาระการเรียนรู้</label>
+               <input type="text" id="teacher-dept" required class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white" placeholder="เช่น ภาษาไทย">
+             </div>
+             <div>
+               <label class="block text-[11px] font-bold text-gray-600 mb-1">กำหนดรหัสผ่าน (Password)</label>
+               <input type="text" id="teacher-password" required class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white" placeholder="กำหนดรหัสผ่าน">
+             </div>
+             <button type="submit" class="w-full bg-blue-600 text-white font-bold p-2.5 rounded-lg text-xs hover:bg-blue-700 shadow-sm">เพิ่มบัญชีผู้ใช้ใหม่</button>
+           </form>
+         </div>
+         <div class="lg:col-span-2 bg-white rounded-xl card-shadow overflow-hidden">
+           <div class="p-4 bg-blue-900 text-white font-bold text-sm flex items-center gap-2"><i data-lucide="users" class="w-4 h-4"></i> รายชื่อคุณครูในระบบ</div>
+           <div class="p-2 overflow-x-auto">
+             <table class="w-full text-xs text-left">
+               <thead class="bg-gray-50 border-b font-bold text-gray-600">
+                 <tr><th class="p-3">Username</th><th class="p-3">ชื่อคุณครู</th><th class="p-3">กลุ่มสาระ</th><th class="p-3">รหัสผ่าน</th><th class="p-3 text-center">จัดการ</th></tr>
+               </thead>
+               <tbody id="admin-teachers-table-body"></tbody>
+             </table>
+           </div>
+         </div>
+       </div>
+
+       <div id="admin-sub-masters" class="grid grid-cols-1 lg:grid-cols-3 gap-6 hidden">
+         <div class="bg-white rounded-xl card-shadow p-5 border-t-4 border-amber-500 space-y-4 h-fit">
+           <h3 class="font-bold text-sm text-amber-700 uppercase flex items-center gap-2"><i data-lucide="file-up" class="w-4 h-4"></i> เพิ่มไฟล์แม่แบบประจำระบบ</h3>
+           <form onsubmit="handleMasterTemplateSubmit(event)" class="space-y-4">
+             <div>
+               <label class="block text-[11px] font-bold text-gray-600 mb-1">สำหรับห้องเรียน</label>
+               <select id="master-room" class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white">
+                 <option value="all">ทุกห้อง (Global Template)</option>
+               </select>
+             </div>
+             <div>
+               <label class="block text-[11px] font-bold text-gray-600 mb-1">ประเภทเอกสาร</label>
+               <select id="master-doc" class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white">
+                 <option value="ปพ.5">ปพ.5</option><option value="แผนการสอน">แผนการสอน</option><option value="แผนการปฏิบัติงาน">แผนการปฏิบัติงาน</option>
+               </select>
+             </div>
+             <div>
+               <label class="block text-[11px] font-bold text-gray-600 mb-1">เลือกไฟล์ตัวอย่าง</label>
+               <input type="file" id="master-file-input" required class="w-full text-xs border rounded-lg p-1.5 bg-gray-50">
+             </div>
+             <button type="submit" class="w-full bg-amber-500 text-white font-bold p-2.5 rounded-lg text-xs hover:bg-amber-600 shadow-sm">อัปโหลดไฟล์ต้นแบบ</button>
+           </form>
+         </div>
+         <div class="lg:col-span-2 bg-white rounded-xl card-shadow overflow-hidden">
+           <div class="p-4 bg-amber-700 text-white font-bold text-sm flex items-center gap-2"><i data-lucide="files" class="w-4 h-4"></i> รายการไฟล์แม่แบบในระบบ</div>
+           <div class="p-2 overflow-x-auto">
+             <table class="w-full text-xs text-left">
+               <thead class="bg-gray-50 border-b font-bold text-gray-600">
+                 <tr><th class="p-3">ห้อง</th><th class="p-3">ประเภท</th><th class="p-3">ชื่อไฟล์ต้นแบบ</th><th class="p-3 text-center">คำสั่งลบ</th></tr>
+               </thead>
+               <tbody id="admin-masters-table-body"></tbody>
+             </table>
+           </div>
+         </div>
+       </div>
+     </div>
    </div>
+
+   <div id="grade-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden fade-in border border-gray-100">
+       <div class="p-4 bg-amber-500 text-white font-bold text-sm flex justify-between items-center">
+         <span class="flex items-center gap-2"><i data-lucide="user-plus" class="w-4 h-4"></i> เพิ่มรายชื่อนักเรียนค้างผล</span>
+         <button onclick="closeGradeModal()" class="text-amber-50 hover:text-white bg-amber-600 hover:bg-amber-700 p-1 rounded-lg transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button>
+       </div>
+       <form onsubmit="handleGradeSubmit(event)" class="p-5 space-y-4 bg-gray-50/50">
+         <div>
+           <label class="block text-[11px] font-bold text-gray-700 mb-1">ระดับชั้น/ห้องเรียน</label>
+           <select id="grade-room" class="w-full border rounded-lg p-2.5 text-xs bg-white shadow-sm"></select>
+         </div>
+         <div>
+           <label class="block text-[11px] font-bold text-gray-700 mb-1">ชื่อ-นามสกุลนักเรียน</label>
+           <input type="text" id="grade-student" required class="w-full border rounded-lg p-2.5 text-xs shadow-sm" placeholder="ระบุชื่อ">
+         </div>
+         <div class="grid grid-cols-2 gap-3">
+           <div>
+             <label class="block text-[11px] font-bold text-gray-700 mb-1">รหัสวิชา</label>
+             <input type="text" id="grade-code" required class="w-full border rounded-lg p-2.5 text-xs shadow-sm" placeholder="เช่น ว21101">
+           </div>
+           <div>
+             <label class="block text-[11px] font-bold text-gray-700 mb-1">ชื่อวิชา</label>
+             <input type="text" id="grade-subject" required class="w-full border rounded-lg p-2.5 text-xs shadow-sm" placeholder="เช่น วิทยาศาสตร์">
+           </div>
+         </div>
+         <div class="grid grid-cols-2 gap-3">
+           <div>
+             <label class="block text-[11px] font-bold text-gray-700 mb-1">ประเภทผล</label>
+             <select id="grade-type" class="w-full border rounded-lg p-2.5 text-xs bg-white font-black text-red-600 shadow-sm">
+               <option>0</option><option>ร</option><option>มส</option><option>มผ</option>
+             </select>
+           </div>
+           <div>
+             <label class="block text-[11px] font-bold text-gray-700 mb-1">ครูประจำวิชา</label>
+             <input type="text" id="grade-teacher" required class="w-full border rounded-lg p-2.5 text-xs shadow-sm" placeholder="ชื่อคุณครู">
+           </div>
+         </div>
+         <button type="submit" class="w-full bg-amber-500 text-white font-bold p-3 rounded-lg text-xs hover:bg-amber-600 shadow-md transition-all mt-2">บันทึกข้อมูลเข้าระบบ</button>
+       </form>
+     </div>
+   </div>
+  </div>
 
   <script>
-// --- เชื่อมต่อระบบ Firebase Real-time Database ---
 const firebaseConfig = {
   apiKey: "AIzaSyBjgJSPo26YDUqVv3_L4_Y_enr8zO7GWuM",
   authDomain: "academic-37d71.firebaseapp.com",
@@ -342,748 +475,429 @@ const firebaseConfig = {
   projectId: "academic-37d71",
   storageBucket: "academic-37d71.firebasestorage.app",
   messagingSenderId: "580927803788",
-  appId: "1:580927803788:web:d0ab6542f1897b3505c6a9",
-  measurementId: "G-YTMQ1581J1"
+  appId: "1:580927803788:web:d0ab6542f1897b3505c6a9"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const collectionRef = db.collection("academic_documents");
 
-window.dataSdk = {
-  _handler: null,
-  init: async function(handler) {
-    this._handler = handler;
-    collectionRef.orderBy("submitted_at", "desc").onSnapshot((snapshot) => {
-      const liveData = [];
-      snapshot.forEach((doc) => {
-        liveData.push({ id: doc.id, ...doc.data() });
-      });
-      if(this._handler) this._handler.onDataChanged(liveData);
-    }, (error) => {
-      console.error("Firebase Sync Error:", error);
-    });
-    return { isOk: true };
-  },
-  create: async function(record) {
-    try {
-      if (!record.submitted_at) {
-         record.submitted_at = new Date().toISOString();
-      }
-      const docRef = await collectionRef.add(record);
-      record.id = docRef.id;
-      return { isOk: true, data: record };
-    } catch (error) {
-      console.error("Error creating record:", error);
-      return { isOk: false };
-    }
-  },
-  delete: async function(id) {
-    try {
-      await collectionRef.doc(id).delete();
-      return { isOk: true };
-    } catch (error) {
-      console.error("Error deleting record:", error);
-      return { isOk: false };
-    }
-  },
-  clearAll: async function() {
-    try {
-      const snapshot = await collectionRef.get();
-      const batch = db.batch();
-      snapshot.forEach((doc) => {
-        batch.delete(doc.ref);
-      });
-      await batch.commit();
-      return { isOk: true };
-    } catch (error) {
-      console.error("Error clearing data:", error);
-      return { isOk: false };
-    }
-  }
-};
-
-if (!window.elementSdk) {
-  window.elementSdk = { init: () => {} };
-}
+const docCollection = db.collection("academic_documents");
+const bookingCollection = db.collection("academic_bookings");
+const gradeCollection = db.collection("academic_grades");
+const teacherCollection = db.collection("academic_teachers");
+const masterCollection = db.collection("academic_master_templates");
 
 const ROOMS = ["ม.1/1", "ม.2/1", "ม.3/1", "ม.3/2", "ม.4/1", "ม.4/2", "ม.5/1", "ม.5/2", "ม.6/1", "ม.6/2"];
-const DOC_TYPES = ["แบบ ปพ.", "แผนการจัดการเรียนรู้", "รายงานแผนปฏิบัติการสอน"];
-const ROUNDS = ["ครั้งที่ 1", "ครั้งที่ 2", "ครั้งที่ 3"];
+const DOC_TYPES = ["ปพ.5", "แผนการสอน", "แผนการปฏิบัติงาน"];
 
+let submissions = []; let bookings = []; let grades = []; let teachers = []; let masterTemplates = [];
+let currentUser = null;
 let isAdminAuthenticated = false;
+let currentCalendarDate = new Date();
 
-const referenceItems = [];
-ROOMS.forEach(room => {
-  DOC_TYPES.forEach(doc => {
-    const activeRounds = (doc === "แบบ ปพ.") ? ROUNDS : ["ครั้งที่ 1"];
-    activeRounds.forEach(round => {
-      referenceItems.push({ room, doc_type: doc, round });
-    });
+function initDropdowns() {
+  const selects = ['sel-room', 'grade-room', 'master-room'];
+  selects.forEach(id => {
+    const el = document.getElementById(id); if (!el) return;
+    el.innerHTML = (id === 'master-room') ? '<option value="all">ทุกห้อง (Global)</option>' : '';
+    ROOMS.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; el.appendChild(o); });
   });
-});
+  handleDocTypeChange(); // จัดตั้งค่ากลุ่มรอบนำส่งเริ่มต้น
+}
 
-let submissions = [];
-
-const selRoom = document.getElementById('sel-room');
-ROOMS.forEach(r => { const o = document.createElement('option'); o.textContent = r; selRoom.appendChild(o); });
-
-const adminFilterRoom = document.getElementById('admin-filter-room');
-ROOMS.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; adminFilterRoom.appendChild(o); });
-
-const adminFilterDoc = document.getElementById('admin-filter-doc');
-DOC_TYPES.forEach(d => { const o = document.createElement('option'); o.value = d; o.textContent = d; adminFilterDoc.appendChild(o); });
-
+// อัปเดตรอบนำส่งตามเงื่อนไข (ปพ.5 ส่ง 3 ครั้ง ส่วนประเภทอื่นมีแค่รอบเดียว)
 function handleDocTypeChange() {
   const docType = document.getElementById('sel-doc').value;
-  const selRound = document.getElementById('sel-round');
-  selRound.innerHTML = '';
-  
-  const availableRounds = (docType === "แบบ ปพ.") ? ROUNDS : ["ครั้งที่ 1"];
-  availableRounds.forEach(round => {
-    const o = document.createElement('option');
-    o.textContent = round;
-    selRound.appendChild(o);
-  });
-  
-  if (typeof checkAvailableMasterFile === 'function') {
-    checkAvailableMasterFile();
-  }
-}
+  const roundSelect = document.getElementById('sel-round');
+  roundSelect.innerHTML = '';
 
-// Dropzone Logic
-const dropzone = document.getElementById('dropzone');
-const fileInput = document.getElementById('input-file');
-
-dropzone.addEventListener('click', () => {
-  if (document.getElementById('file-info').classList.contains('hidden')) {
-    fileInput.click();
-  }
-});
-
-fileInput.addEventListener('change', handleFileSelect);
-
-dropzone.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  dropzone.classList.add('border-indigo-500', 'bg-indigo-50');
-});
-
-dropzone.addEventListener('dragleave', () => {
-  dropzone.classList.remove('border-indigo-500', 'bg-indigo-50');
-});
-
-dropzone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  dropzone.classList.remove('border-indigo-500', 'bg-indigo-50');
-  if (e.dataTransfer.files.length) {
-    fileInput.files = e.dataTransfer.files;
-    handleFileSelect();
-  }
-});
-
-function handleFileSelect() {
-  const file = fileInput.files[0];
-  if (file) {
-    if (file.size > 10 * 1024 * 1024) {
-      alert('ไฟล์มีขนาดใหญ่เกินไป กรุณาเลือกไฟล์ที่มีขนาดไม่เกิน 10MB');
-      clearFile();
-      return;
-    }
-    document.getElementById('dropzone-prompt').classList.add('hidden');
-    const info = document.getElementById('file-info');
-    info.classList.remove('hidden');
-    info.classList.add('flex');
-    document.getElementById('info-filename').textContent = file.name;
-    document.getElementById('info-filesize').textContent = formatBytes(file.size);
-  }
-}
-
-function clearFile(e) {
-  if (e) e.stopPropagation();
-  fileInput.value = '';
-  document.getElementById('file-info').classList.remove('flex');
-  document.getElementById('file-info').classList.add('hidden');
-  document.getElementById('dropzone-prompt').classList.remove('hidden');
-}
-
-function formatBytes(bytes) {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-const toBase64 = file => new Promise((resolve, reject) => {
-  const reader = new FileReader();
-  reader.readAsDataURL(file);
-  reader.onload = () => resolve(reader.result);
-  reader.onerror = error => reject(error);
-});
-
-function logoutAdmin() {
-  if(confirm('คุณต้องการออกจากระบบผู้ดูแลระบบใช่หรือไม่?')) {
-    isAdminAuthenticated = false;
-    switchTab('dashboard');
-    alert('ออกจากระบบเรียบร้อยแล้ว');
-  }
-}
-
-function switchTab(tab) {
-  if (tab === 'admin' && !isAdminAuthenticated) {
-    const password = prompt('กรุณาใส่รหัสผ่านเพื่อเข้าสู่ระบบผู้ดูแลระบบ (Admin):');
-    if (password === 'admin1234') {
-      isAdminAuthenticated = true;
-    } else {
-      if (password !== null) {
-        alert('รหัสผ่านไม่ถูกต้อง!');
-      }
-      return; 
-    }
-  }
-
-  document.getElementById('panel-dashboard').classList.toggle('hidden', tab !== 'dashboard');
-  document.getElementById('panel-submission').classList.toggle('hidden', tab !== 'submission');
-  document.getElementById('panel-admin').classList.toggle('hidden', tab !== 'admin');
-  
-  const dbBtn = document.getElementById('tab-dashboard');
-  const subBtn = document.getElementById('tab-submission');
-  const adminBtn = document.getElementById('tab-admin');
-  
-  [dbBtn, subBtn, adminBtn].forEach(btn => {
-    btn.classList.remove('text-indigo-900', 'border-indigo-900', 'text-red-600', 'border-red-600', 'text-gray-400', 'border-transparent');
-  });
-
-  if (tab === 'dashboard') {
-    dbBtn.classList.add('text-indigo-900', 'border-indigo-900');
-    subBtn.classList.add('text-gray-400', 'border-transparent');
-    adminBtn.classList.add('text-gray-400', 'border-transparent');
-  } else if (tab === 'submission') {
-    dbBtn.classList.add('text-gray-400', 'border-transparent');
-    subBtn.classList.add('text-indigo-900', 'border-indigo-900');
-    adminBtn.classList.add('text-gray-400', 'border-transparent');
-  } else {
-    dbBtn.classList.add('text-gray-400', 'border-transparent');
-    subBtn.classList.add('text-gray-400', 'border-transparent');
-    adminBtn.classList.add('text-red-600', 'border-red-600');
-  }
-}
-
-function updateClock() {
-  const now = new Date();
-  const opts = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-  document.getElementById('current-date').textContent = now.toLocaleDateString('th-TH', opts);
-  document.getElementById('current-time').textContent = now.toLocaleTimeString('th-TH');
-}
-updateClock();
-setInterval(updateClock, 1000);
-
-function buildLookup(data) {
-  const map = {};
-  data.forEach(rec => {
-    const key = `${rec.room}|${rec.doc_type}|${rec.round}`;
-    map[key] = rec;
-  });
-  return map;
-}
-
-function renderMetrics() {
-  const totalTasks = referenceItems.length;
-  const lookup = buildLookup(submissions);
-
-  let fullyCompletedRooms = [];
-  let pendingRooms = [];
-
-  ROOMS.forEach(room => {
-    let isRoomComplete = true;
-    const roomItems = referenceItems.filter(item => item.room === room);
-    roomItems.forEach(item => {
-      if (!lookup[`${room}|${item.doc_type}|${item.round}`]) {
-        isRoomComplete = false;
-      }
+  if (docType === 'ปพ.5') {
+    ["ครั้งที่ 1", "ครั้งที่ 2", "ครั้งที่ 3"].forEach(r => {
+      const o = document.createElement('option'); o.value = r; o.textContent = r; roundSelect.appendChild(o);
     });
+  } else {
+    const o = document.createElement('option'); o.value = "ส่งเล่มสมบูรณ์"; o.textContent = "ส่งเล่มสมบูรณ์"; roundSelect.appendChild(o);
+  }
+  checkMasterTemplate();
+}
 
-    if (isRoomComplete) {
-      fullyCompletedRooms.push(room);
-    } else {
-      pendingRooms.push(room);
-    }
+function startRealtimeSync() {
+  docCollection.orderBy("submitted_at", "desc").onSnapshot(snap => {
+    submissions = []; snap.forEach(d => submissions.push({ id: d.id, ...d.data() }));
+    renderTable(); renderAdminDocsTable();
   });
+  bookingCollection.orderBy("date", "asc").onSnapshot(snap => {
+    bookings = []; snap.forEach(d => bookings.push({ id: d.id, ...d.data() }));
+    renderBookingTable(); renderCalendarGrid();
+  });
+  gradeCollection.onSnapshot(snap => {
+    grades = []; snap.forEach(d => grades.push({ id: d.id, ...d.data() }));
+    renderGradesTable();
+  });
+  teacherCollection.onSnapshot(snap => {
+    teachers = []; snap.forEach(d => teachers.push({ id: d.id, ...d.data() }));
+    renderAdminTeachersTable();
+  });
+  masterCollection.onSnapshot(snap => {
+    masterTemplates = []; snap.forEach(d => masterTemplates.push({ id: d.id, ...d.data() }));
+    checkMasterTemplate(); renderAdminMastersTable();
+  });
+}
 
-  document.getElementById('metric-total').textContent = totalTasks;
-  document.getElementById('metric-rooms-completed').textContent = fullyCompletedRooms.length;
-  document.getElementById('list-rooms-completed').textContent = fullyCompletedRooms.length > 0 
-    ? fullyCompletedRooms.join(', ') 
-    : 'ยังไม่มีห้องที่ส่งครบ';
-  
-  document.getElementById('metric-rooms-pending').textContent = pendingRooms.length;
-  document.getElementById('list-rooms-pending').textContent = pendingRooms.length > 0 
-    ? pendingRooms.join(', ') 
-    : 'ส่งครบทุกห้องแล้ว 🎉';
+async function handleTeacherLogin(event) {
+  event.preventDefault();
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value.trim();
+  const matched = teachers.find(t => t.username === user && t.password === pass);
+  if (matched) { currentUser = matched; proceedToApp(); } 
+  else { alert("รหัสผู้ใช้หรือรหัสผ่านคุณครูไม่ถูกต้อง กรุณาติดต่อฝ่ายวิชาการ"); }
+}
+
+function handleAdminDirectLogin() {
+  const pass = prompt("กรุณากรอกรหัสผ่านผู้ดูแลระบบกลาง:");
+  if (pass === "admin1234") {
+    currentUser = { fullname: "ผู้ดูแลระบบกลาง (Admin)", username: "admin" };
+    isAdminAuthenticated = true; proceedToApp();
+  } else if (pass !== null) { alert("รหัสผ่านผู้ดูแลระบบไม่ถูกต้อง!"); }
+}
+
+function proceedToApp() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('main-app').classList.remove('hidden');
+  document.getElementById('current-user-display').textContent = currentUser.fullname;
+  switchTab('dashboard');
+}
+
+function handleLogout() {
+  currentUser = null; isAdminAuthenticated = false;
+  document.getElementById('main-app').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('login-form')?.reset();
 }
 
 function renderTable() {
   const filter = document.getElementById('filter-doc').value;
-  const lookup = buildLookup(submissions);
-  const tbody = document.getElementById('status-table-body');
-  tbody.innerHTML = '';
-
-  const summaryCompleted = [];
-  const summaryPending = [];
-  const targetDocs = filter === 'all' ? DOC_TYPES : [filter];
+  const tbody = document.getElementById('status-table-body'); tbody.innerHTML = '';
+  
+  let totalRequiredTasks = 0;
+  let totalCompletedTasks = 0;
+  let pendingRoomsSet = new Set(), doneRoomsSet = new Set(ROOMS);
 
   ROOMS.forEach(room => {
-    let isRoomCompleteForFilter = true;
-    
-    targetDocs.forEach(doc => {
-      const activeRounds = (doc === "แบบ ปพ.") ? ROUNDS : ["ครั้งที่ 1"];
-      activeRounds.forEach(round => {
-        if (!lookup[`${room}|${doc}|${round}`]) {
-          isRoomCompleteForFilter = false;
-        }
-      });
-    });
-
-    if (isRoomCompleteForFilter) {
-      summaryCompleted.push(room);
-    } else {
-      summaryPending.push(room);
-    }
-
-    targetDocs.forEach(doc => {
-      const tr = document.createElement('tr');
-      tr.className = 'table-row border-b border-gray-100 hover:bg-gray-50';
-      let cells = `<td class="px-2 md:px-3 py-2 font-bold text-gray-800 whitespace-nowrap">${room}</td><td class="px-2 md:px-3 py-2 text-gray-600 font-semibold whitespace-nowrap">${doc}</td>`;
+    DOC_TYPES.forEach(doc => {
+      if (filter !== 'all' && doc !== filter) return;
       
-      ROUNDS.forEach(round => {
-        const isRoundRequired = (doc === "แบบ ปพ.") || (round === "ครั้งที่ 1");
+      const roundsNeeded = (doc === 'ปพ.5') ? ["ครั้งที่ 1", "ครั้งที่ 2", "ครั้งที่ 3"] : ["ส่งเล่มสมบูรณ์"];
+      
+      const tr = document.createElement('tr'); tr.className = "border-b hover:bg-gray-50 transition-colors";
+      tr.innerHTML = `<td class="p-3 font-bold text-indigo-900">${room}</td><td class="p-3 text-gray-600 font-medium">${doc}</td>`;
+      
+      const tdRounds = document.createElement('td'); tdRounds.className = "p-3 flex flex-wrap gap-2 justify-start items-center";
+      
+      roundsNeeded.forEach(round => {
+        totalRequiredTasks++;
+        const hasSent = submissions.find(s => s.room === room && s.doc_type === doc && s.round === round);
         
-        if (!isRoundRequired) {
-          cells += `<td class="px-2 md:px-3 py-2 text-center text-gray-300 font-medium">—</td>`;
+        if (hasSent) {
+          totalCompletedTasks++;
+          tdRounds.innerHTML += `<span class="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-md font-bold border border-emerald-200 flex items-center gap-0.5"><i data-lucide="check" class="w-3 h-3"></i> ${round}: ส่งแล้ว</span>`;
         } else {
-          const k = `${room}|${doc}|${round}`;
-          const rec = lookup[k];
-          if (rec) {
-            cells += `<td class="px-2 md:px-3 py-2 text-center"><span class="status-badge-done text-[10px] md:text-xs px-2 py-1 rounded-full inline-block font-semibold shadow-sm">✓ นำส่ง</span></td>`;
-          } else {
-            cells += `<td class="px-2 md:px-3 py-2 text-center"><span class="status-badge-pending text-[10px] md:text-xs px-2 py-1 rounded-full inline-block font-semibold shadow-sm">รอ</span></td>`;
-          }
+          tdRounds.innerHTML += `<span class="bg-red-50 text-red-600 text-[10px] px-2 py-0.5 rounded-md font-bold border border-red-100 flex items-center gap-0.5"><i data-lucide="x" class="w-3 h-3"></i> ${round}: ค้าง</span>`;
+          pendingRoomsSet.add(room); doneRoomsSet.delete(room);
         }
       });
-      tr.innerHTML = cells;
+      
+      tr.appendChild(tdRounds);
       tbody.appendChild(tr);
     });
   });
 
-  document.getElementById('summary-completed').textContent = summaryCompleted.length > 0 ? summaryCompleted.join(', ') : 'ยังไม่มีห้องที่ส่งครบ';
-  document.getElementById('summary-completed').className = summaryCompleted.length > 0 
-    ? 'font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded shadow-sm flex-1' 
-    : 'font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded flex-1';
-
-  document.getElementById('summary-pending').textContent = summaryPending.length > 0 ? summaryPending.join(', ') : 'ส่งครบทุกห้องแล้ว 🎉';
-  document.getElementById('summary-pending').className = summaryPending.length > 0 
-    ? 'font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded shadow-sm flex-1' 
-    : 'font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded shadow-sm flex-1';
-}
-
-function renderLog() {
-  const container = document.getElementById('log-container');
-  if (!submissions || submissions.length === 0) {
-    container.innerHTML = '<p class="text-gray-400 text-xs text-center py-6">ยังไม่มีข้อมูลการทำรายการ</p>';
-    return;
+  // คำนวณเป็นเปอร์เซ็นต์ความคืบหน้าเพื่อใช้วาดกราฟวงกลม
+  const totalPendingTasks = totalRequiredTasks - totalCompletedTasks;
+  const progressPercent = totalRequiredTasks > 0 ? Math.round((totalCompletedTasks / totalRequiredTasks) * 100) : 0;
+  
+  // ปรับการวาดเอฟเฟกต์ SVG Donut Chart แบบแอนิเมชัน
+  const circle = document.getElementById('chart-progress-bar');
+  if (circle) {
+    const radius = 40;
+    const circumference = 2 * Math.PI * radius; // ประมาณ 251.2
+    const offset = circumference - (progressPercent / 100) * circumference;
+    circle.style.strokeDasharray = `${circumference} ${circumference}`;
+    circle.style.strokeDashoffset = offset;
   }
-  const sorted = [...submissions].sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
-  container.innerHTML = sorted.slice(0, 20).map(rec => {
-    const d = new Date(rec.submitted_at);
-    const timeStr = d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
-    const sizeBadge = rec.filesize ? ` (${rec.filesize})` : '';
-    return `<div class="flex items-start gap-2 py-2 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
-      <div class="w-6 h-6 md:w-7 md:h-7 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <svg class="w-3 h-3 md:w-4 md:h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+  
+  // พ่นตัวเลขสถิติลงกราฟและกล่องแดชบอร์ด
+  document.getElementById('chart-percentage').textContent = `${progressPercent}%`;
+  document.getElementById('chart-lbl-success').textContent = `${totalCompletedTasks} งาน`;
+  document.getElementById('chart-lbl-pending').textContent = `${totalPendingTasks} งาน`;
+
+  document.getElementById('metric-total').textContent = submissions.length;
+  document.getElementById('metric-rooms-pending').textContent = pendingRoomsSet.size;
+  document.getElementById('list-rooms-pending').textContent = pendingRoomsSet.size > 0 ? Array.from(pendingRoomsSet).join(', ') : 'ไม่มีห้องค้างส่ง';
+  document.getElementById('metric-rooms-completed').textContent = doneRoomsSet.size;
+  document.getElementById('list-rooms-completed').textContent = doneRoomsSet.size > 0 ? Array.from(doneRoomsSet).join(', ') : 'ยังไม่มีห้องที่ส่งครบ';
+
+  const logBox = document.getElementById('log-container');
+  logBox.innerHTML = submissions.slice(0, 5).map(s => `
+    <div class="py-2.5 text-[11px] text-gray-700 flex justify-between items-center hover:bg-gray-50 px-2 rounded transition-colors">
+      <div>
+        <strong class="text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">[${s.room}]</strong> 
+        คุณครู ${s.submitted_by} นำส่ง <span class="font-bold text-gray-800">${s.doc_type}</span> <span class="text-indigo-600">(${s.round})</span>
       </div>
-      <div class="flex-1 min-w-0">
-        <p class="text-[11px] md:text-xs font-bold text-gray-800">${rec.room} — ${rec.doc_type}</p>
-        <p class="text-[10px] md:text-xs text-gray-500 font-semibold mt-0.5 flex items-center gap-1 truncate">
-          <i data-lucide="paperclip" class="w-3 h-3 text-gray-400 flex-shrink-0"></i>
-          <span class="truncate">${rec.round} · ${rec.filename || 'ไม่มีเอกสาร'}</span><span class="text-gray-400 font-normal text-[9px] md:text-[10px] flex-shrink-0">${sizeBadge}</span>
-        </p>
-        <p class="text-[10px] md:text-[11px] text-gray-400 mt-0.5">${timeStr}</p>
-      </div>
-    </div>`;
-  }).join('');
+      <span class="text-[9px] text-gray-400 font-medium">${new Date(s.submitted_at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})} น.</span>
+    </div>
+  `).join('');
   lucide.createIcons();
 }
 
-function renderAdminTable() {
-  const tbody = document.getElementById('admin-table-body');
-  if (!submissions || submissions.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">ยังไม่มีข้อมูลในระบบ</td></tr>';
-    return;
-  }
-  
-  const roomFilter = document.getElementById('admin-filter-room').value;
-  const docFilter = document.getElementById('admin-filter-doc').value;
+async function handleSubmit(event) {
+  event.preventDefault();
+  const fileInput = document.getElementById('input-file');
+  if (!fileInput.files.length) return alert('กรุณาแนบไฟล์เพื่อตรวจสอบความถูกต้องก่อนครับ');
 
-  let filteredData = [...submissions];
-  if (roomFilter !== 'all') {
-    filteredData = filteredData.filter(rec => rec.room === roomFilter);
-  }
-  if (docFilter !== 'all') {
-    filteredData = filteredData.filter(rec => rec.doc_type === docFilter);
-  }
-
-  if (filteredData.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500 italic">ไม่พบข้อมูลไฟล์เอกสารตามเงื่อนไขที่เลือก</td></tr>';
-    return;
-  }
-  
-  const sorted = filteredData.sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
-  
-  tbody.innerHTML = sorted.map(rec => {
-    const d = new Date(rec.submitted_at);
-    const timeStr = d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
-    
-    const fileAction = rec.filedata 
-      ? `<button onclick="downloadFile('${rec.id}')" class="text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded font-semibold inline-flex items-center gap-1 transition-colors whitespace-nowrap"><i data-lucide="download" class="w-3 h-3"></i> โหลดไฟล์</button>`
-      : `<span class="text-gray-400 italic whitespace-nowrap">ไม่มีไฟล์แนบ</span>`;
-
-    return `
-      <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-        <td class="px-3 py-3 text-gray-500 whitespace-nowrap">${timeStr}</td>
-        <td class="px-3 py-3 font-bold text-indigo-900 whitespace-nowrap">${rec.room}</td>
-        <td class="px-3 py-3 font-semibold text-gray-700 whitespace-nowrap">${rec.doc_type}</td>
-        <td class="px-3 py-3 text-gray-600 whitespace-nowrap">${rec.round}</td>
-        <td class="px-3 py-3 max-w-[150px] md:max-w-[200px]" title="${rec.filename || ''}">
-          <div class="flex items-center gap-1 truncate">
-            ${fileAction} 
-            <span class="text-[10px] text-gray-400 truncate hidden md:inline-block">${rec.filename || ''}</span>
-          </div>
-        </td>
-        <td class="px-3 py-3 text-center">
-          <button onclick="deleteRecord('${rec.id}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded transition-colors" title="ลบข้อมูลนี้">
-            <i data-lucide="trash-2" class="w-4 h-4"></i>
-          </button>
-        </td>
-      </tr>
-    `;
-  }).join('');
-  lucide.createIcons();
-}
-
-function downloadFile(id) {
-  const rec = submissions.find(s => s.id === id);
-  if (rec && rec.filedata) {
-    const a = document.createElement('a');
-    a.href = rec.filedata;
-    a.download = rec.filename || `document_${rec.room}_${rec.doc_type}.file`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  } else {
-    alert('ไม่พบข้อมูลไฟล์');
-  }
-}
-
-function downloadFilteredFiles() {
-  const roomFilter = document.getElementById('admin-filter-room').value;
-  const docFilter = document.getElementById('admin-filter-doc').value;
-
-  let targets = submissions.filter(rec => rec.filedata);
-  if (roomFilter !== 'all') {
-    targets = targets.filter(rec => rec.room === roomFilter);
-  }
-  if (docFilter !== 'all') {
-    targets = targets.filter(rec => rec.doc_type === docFilter);
-  }
-
-  if (targets.length === 0) {
-    alert('ไม่พบไฟล์เอกสารสำหรับดาวน์โหลดตามเงื่อนไขที่คุณเลือก');
-    return;
-  }
-
-  const confirmMsg = `คุณต้องการดาวน์โหลดไฟล์ทั้งหมดจำนวน ${targets.length} รายการใช่หรือไม่?\n(กรุณากด 'อนุญาตให้ดาวน์โหลดหลายไฟล์' บนเบราว์เซอร์ของคุณหากมีข้อความแจ้งเตือนขึ้น)`;
-  if (confirm(confirmMsg)) {
-    targets.forEach((rec, idx) => {
-      setTimeout(() => {
-        const a = document.createElement('a');
-        a.href = rec.filedata;
-        a.download = rec.filename || `document_${rec.room}_${rec.doc_type}.file`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      }, idx * 250); 
-    });
-  }
-}
-
-async function deleteRecord(id) {
-  if(confirm('คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลรายการนี้?')) {
-    await window.dataSdk.delete(id);
-  }
-}
-
-async function clearAllData() {
-  if(confirm('🚨 คำเตือน: คุณต้องการล้างข้อมูลการส่งเอกสารทั้งหมดในระบบใช่หรือไม่?\n(การกระทำนี้ไม่สามารถย้อนกลับได้)')) {
-    await window.dataSdk.clearAll();
-  }
-}
-
-async function handleSubmit(e) {
-  e.preventDefault();
-  const room = document.getElementById('sel-room').value;
-  const doc_type = document.getElementById('sel-doc').value;
-  const round = document.getElementById('sel-round').value;
   const file = fileInput.files[0];
-
-  if (submissions.length >= 999) {
-    showFeedback('error', 'ข้อมูลเต็มจำนวนสูงสุดแล้ว (999 รายการ)');
-    return;
-  }
-
-  const key = `${room}|${doc_type}|${round}`;
-  const lookup = buildLookup(submissions);
-  if (lookup[key]) {
-    showFeedback('warning', `รายการนี้ถูกบันทึกแล้ว (${room} - ${doc_type} - ${round})`);
-    return;
-  }
-
+  const base64Data = await toBase64(file);
   const btn = document.getElementById('submit-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="animate-pulse">กำลังอัปโหลดและบันทึก...</span>';
-
-  let filename = 'บันทึกสถานะ (ไม่แนบไฟล์)';
-  let filesize = '';
-  let filedata = null;
-
-  if (file) {
-    filename = file.name;
-    filesize = formatBytes(file.size);
-    try {
-      filedata = await toBase64(file);
-    } catch (err) {
-      console.error("File conversion error:", err);
-    }
-  }
-
-  const result = await window.dataSdk.create({
-    room, doc_type, round, filename, filesize, filedata,
-    status: 'submitted',
-    submitted_at: new Date().toISOString()
-  });
-
-  btn.disabled = false;
-  btn.innerHTML = '<i data-lucide="save" class="w-4 h-4 md:w-5 md:h-5"></i> บันทึกข้อมูลการนำส่ง';
-  lucide.createIcons();
-
-  if (result.isOk) {
-    showFeedback('success', `บันทึกสำเร็จ: ${doc_type} (${round}) ห้อง ${room}`);
-    clearFile();
-    setTimeout(() => { switchTab('dashboard'); }, 1000);
-  } else {
-    showFeedback('error', 'เกิดข้อผิดพลาด กรุณาลองอีกครั้ง');
-  }
-}
-
-function showFeedback(type, msg) {
-  const el = document.getElementById('submit-feedback');
-  const colors = { success: 'bg-emerald-50 text-emerald-800 border-emerald-300', error: 'bg-red-50 text-red-800 border-red-300', warning: 'bg-amber-50 text-amber-800 border-amber-300' };
-  el.className = `${colors[type]} border rounded-lg px-3 py-2 text-[11px] md:text-xs mt-3 fade-in font-semibold`;
-  el.textContent = msg;
-  el.classList.remove('hidden');
-  setTimeout(() => { el.className = 'hidden'; }, 4000);
-}
-
-const dataHandler = {
-  onDataChanged(data) {
-    submissions = data || [];
-    renderMetrics();
-    renderTable();
-    renderLog();
-    renderAdminTable(); 
-  }
-};
-
-const defaultConfig = {
-  system_title: 'ระบบสารสนเทศติดตามการส่งเอกสารวิชาการ',
-  department_name: 'กลุ่มบริหารวิชาการ โรงเรียนโคราชพิทยาคม',
-  academic_year: '2569',
-  background_color: '#F9FAFB',
-  header_color: '#1a237e',
-  text_color: '#1F2937',
-  accent_color: '#B8860B',
-  button_color: '#1a237e',
-  font_family: 'Sarabun',
-  font_size: 14
-};
-
-window.elementSdk.init({
-  defaultConfig,
-  onConfigChange: async (config) => {
-    const title = config.system_title || defaultConfig.system_title;
-    const dept = config.department_name || defaultConfig.department_name;
-    const year = config.academic_year || defaultConfig.academic_year;
-    const bg = config.background_color || defaultConfig.background_color;
-    const hdr = config.header_color || defaultConfig.header_color;
-    const txt = config.text_color || defaultConfig.text_color;
-    const acc = config.accent_color || defaultConfig.accent_color;
-    const font = config.font_family || defaultConfig.font_family;
-    const size = config.font_size || defaultConfig.font_size;
-
-    document.getElementById('header-title').textContent = title;
-    document.getElementById('header-subtitle').textContent = `${dept} ประจำปีการศึกษา ${year}`;
-    document.body.style.backgroundColor = bg;
-    document.getElementById('main-header').style.backgroundColor = hdr;
-    document.body.style.color = txt;
-    document.body.style.fontFamily = `${font}, Sarabun, sans-serif`;
-    document.body.style.fontSize = `${size}px`;
-
-    document.querySelectorAll('.navy-bg').forEach(el => el.style.backgroundColor = hdr);
-    document.querySelectorAll('.gold-accent').forEach(el => el.style.color = acc);
-  }
-});
-
-// --- ระบบจัดการไฟล์ต้นฉบับ (Master Files) ---
-const masterCollectionRef = db.collection("master_files");
-let masterFilesData = [];
-
-masterCollectionRef.onSnapshot((snapshot) => {
-  masterFilesData = [];
-  snapshot.forEach((doc) => {
-    masterFilesData.push({ id: doc.id, ...doc.data() });
-  });
-  renderMasterAdminTable();
-  checkAvailableMasterFile();
-}, (error) => {
-  console.error("Master Files Sync Error:", error);
-});
-
-const masterSelRoom = document.getElementById('master-sel-room');
-ROOMS.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; masterSelRoom.appendChild(o); });
-
-const masterSelDoc = document.getElementById('master-sel-doc');
-DOC_TYPES.forEach(d => { const o = document.createElement('option'); o.value = d; o.textContent = d; masterSelDoc.appendChild(o); });
-
-async function handleMasterFileUpload(e) {
-  e.preventDefault();
-  const room = document.getElementById('master-sel-room').value;
-  const doc_type = document.getElementById('master-sel-doc').value;
-  const fileInput = document.getElementById('master-input-file');
-  const file = fileInput.files[0];
-
-  if (!file) return alert('กรุณาเลือกไฟล์เพื่ออัปโหลด');
-  if (file.size > 10 * 1024 * 1024) return alert('ไฟล์ใหญ่เกินไป (ไม่เกิน 10MB)');
-
-  const btn = document.getElementById('master-submit-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="animate-pulse">กำลังอัปโหลด...</span>';
+  btn.disabled = true; btn.innerHTML = 'กำลังบันทึกและส่งไฟล์...';
 
   try {
-    const filedata = await toBase64(file);
-    await masterCollectionRef.add({
-      room,
-      doc_type,
+    await docCollection.add({
+      room: document.getElementById('sel-room').value,
+      doc_type: document.getElementById('sel-doc').value,
+      round: document.getElementById('sel-round').value,
       filename: file.name,
-      filedata,
-      uploaded_at: new Date().toISOString()
+      filedata: base64Data,
+      submitted_by: currentUser.fullname,
+      submitted_at: new Date().toISOString()
     });
-    alert('อัปโหลดไฟล์ต้นฉบับสำเร็จ');
-    fileInput.value = '';
-  } catch(err) {
-    console.error(err);
-    alert('เกิดข้อผิดพลาดในการอัปโหลดไฟล์');
-  }
-  
-  btn.disabled = false;
-  btn.innerHTML = '<i data-lucide="upload" class="w-4 h-4"></i> อัปโหลดต้นฉบับ';
-  lucide.createIcons();
+    alert('จัดส่งเอกสารสำเร็จเรียบร้อยแล้ว!');
+    clearFile(); switchTab('dashboard');
+  } catch(e) { alert("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์"); }
+  finally { btn.disabled = false; btn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> บันทึกรายการส่งเอกสารวิชาการ'; lucide.createIcons(); }
 }
 
-function renderMasterAdminTable() {
-  const tbody = document.getElementById('master-table-body');
-  if (masterFilesData.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-gray-500 italic">ยังไม่มีไฟล์ต้นฉบับในระบบ</td></tr>';
-    return;
-  }
+function renderCalendarGrid() {
+  const grid = document.getElementById('calendar-grid'); grid.innerHTML = '';
+  const year = currentCalendarDate.getFullYear(); const month = currentCalendarDate.getMonth();
+  document.getElementById('calendar-month-year').textContent = currentCalendarDate.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
+  const firstDayIndex = new Date(year, month, 1).getDay();
+  const totalDays = new Date(year, month + 1, 0).getDate();
 
-  const sorted = masterFilesData.sort((a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at));
-  
-  tbody.innerHTML = sorted.map(rec => {
-    const roomBadge = rec.room === 'all' 
-      ? '<span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-[10px] font-bold">ทุกห้อง</span>' 
-      : `<span class="font-bold text-gray-800">${rec.room}</span>`;
-
-    return `
-      <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-        <td class="px-3 py-3 whitespace-nowrap">${roomBadge}</td>
-        <td class="px-3 py-3 font-semibold text-gray-700 whitespace-nowrap">${rec.doc_type}</td>
-        <td class="px-3 py-3 max-w-[150px] md:max-w-[250px] text-gray-600 truncate" title="${rec.filename}">${rec.filename}</td>
-        <td class="px-3 py-3 text-center">
-          <button onclick="deleteMasterFile('${rec.id}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded transition-colors" title="ลบไฟล์ต้นฉบับ">
-            <i data-lucide="trash-2" class="w-4 h-4"></i>
-          </button>
-        </td>
-      </tr>
-    `;
-  }).join('');
-  lucide.createIcons();
-}
-
-async function deleteMasterFile(id) {
-  if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบไฟล์ต้นฉบับนี้? (คุณครูจะไม่สามารถดาวน์โหลดไฟล์นี้ได้อีก)')) {
-    try {
-      await masterCollectionRef.doc(id).delete();
-    } catch (error) {
-      console.error("Error deleting master file:", error);
-      alert('เกิดข้อผิดพลาดในการลบข้อมูล');
+  for (let i = 0; i < firstDayIndex; i++) { const blank = document.createElement('div'); grid.appendChild(blank); }
+  for (let day = 1; day <= totalDays; day++) {
+    const cell = document.createElement('div');
+    cell.className = "border border-gray-100 rounded-lg p-1.5 text-left min-h-[50px] bg-gray-50 relative flex flex-col gap-1 overflow-hidden";
+    cell.innerHTML = `<span class="text-[10px] font-bold text-gray-400 w-5 h-5 flex items-center justify-center rounded-full ${new Date().getDate() === day && new Date().getMonth() === month ? 'bg-indigo-600 text-white' : ''}">${day}</span>`;
+    const currentStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dayBookings = bookings.filter(b => b.date === currentStr);
+    if (dayBookings.length > 0) {
+      const indicator = document.createElement('div');
+      indicator.className = "bg-amber-500 text-white font-bold text-[8px] px-1.5 py-0.5 rounded shadow-sm truncate w-full";
+      indicator.textContent = dayBookings[0].title;
+      cell.appendChild(indicator);
+      cell.className = cell.className.replace('bg-gray-50', 'bg-amber-50 border-amber-200');
     }
+    grid.appendChild(cell);
   }
 }
+function changeMonth(dir) { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + dir); renderCalendarGrid(); }
 
-function checkAvailableMasterFile() {
-  const currentRoom = document.getElementById('sel-room').value;
-  const currentDoc = document.getElementById('sel-doc').value;
-  const container = document.getElementById('master-file-container');
-  const nameEl = document.getElementById('master-file-name');
-
-  const matchedFile = masterFilesData.find(m => 
-    (m.room === currentRoom || m.room === 'all') && m.doc_type === currentDoc
-  );
-
-  if (matchedFile) {
-    container.classList.remove('hidden');
-    nameEl.textContent = matchedFile.filename;
-    container.dataset.fileId = matchedFile.id;
-  } else {
-    container.classList.add('hidden');
-    container.dataset.fileId = '';
-  }
+function renderBookingTable() {
+  const tbody = document.getElementById('booking-table-body');
+  if(bookings.length===0) { tbody.innerHTML=`<tr><td colspan="5" class="p-5 text-center text-gray-400 font-medium">ยังไม่มีรายการจองกิจกรรม</td></tr>`; return;}
+  tbody.innerHTML = bookings.map(b => `
+    <tr class="border-b hover:bg-gray-50 transition-colors">
+      <td class="p-3 font-bold text-gray-700">${b.date}</td><td class="p-3 text-amber-600 font-bold">${b.time}</td>
+      <td class="p-3 text-indigo-900 font-bold">${b.resource}</td><td class="p-3 font-medium text-gray-800">${b.title}</td><td class="p-3 text-gray-500 text-[11px]">${b.user}</td>
+    </tr>
+  `).join('');
 }
 
-function downloadCurrentMasterFile() {
-  const id = document.getElementById('master-file-container').dataset.fileId;
-  const rec = masterFilesData.find(m => m.id === id);
-  if (rec && rec.filedata) {
-    const a = document.createElement('a');
-    a.href = rec.filedata;
-    a.download = `ต้นฉบับ_${rec.doc_type}_${rec.filename}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  } else {
-    alert('ไม่พบไฟล์ต้นฉบับ');
-  }
+async function handleBookingSubmit(event) {
+  event.preventDefault();
+  await bookingCollection.add({
+    title: document.getElementById('book-title').value,
+    resource: document.getElementById('book-resource').value,
+    date: document.getElementById('book-date').value,
+    time: document.getElementById('book-time').value,
+    user: currentUser.fullname
+  });
+  alert('ลงบันทึกคิวปฏิทินขอจองสำเร็จเรียบร้อย');
+  document.getElementById('booking-form').reset();
 }
 
-document.getElementById('sel-room').addEventListener('change', checkAvailableMasterFile);
+function renderGradesTable() {
+  const tbody = document.getElementById('grades-table-body');
+  if(grades.length===0) { tbody.innerHTML=`<tr><td colspan="7" class="p-5 text-center text-gray-400 font-medium">ไม่มีสถิตินักเรียนติดค้างผลการเรียน</td></tr>`; return; }
+  tbody.innerHTML = grades.map(g => `
+    <tr class="border-b hover:bg-gray-50 transition-colors">
+      <td class="p-3 font-bold text-gray-700">${g.room}</td><td class="p-3 font-bold text-indigo-900">${g.student}</td>
+      <td class="p-3 text-gray-600 font-medium">${g.code} ${g.subject}</td>
+      <td class="p-3 text-center"><span class="bg-red-100 text-red-700 px-3 py-1 rounded-full font-black shadow-sm">${g.type}</span></td>
+      <td class="p-3 text-gray-500">${g.teacher}</td>
+      <td class="p-3 text-center"><span class="font-bold px-2 py-1 rounded-md text-[10px] ${g.status === 'แก้ไขแล้ว' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-amber-50 text-amber-600 border border-amber-200'}">${g.status}</span></td>
+      <td class="p-3 text-center">
+        <button onclick="toggleGradeStatus('${g.id}', '${g.status}')" class="bg-white hover:bg-gray-100 px-2.5 py-1 rounded border text-[10px] font-bold text-gray-600 shadow-sm transition-all">สลับสถานะ</button>
+        ${isAdminAuthenticated ? `<button onclick="deleteGradeRecord('${g.id}')" class="text-red-500 hover:text-red-700 ml-2 font-bold text-[10px] bg-red-50 px-2 py-1 rounded">ลบ</button>` : ''}
+      </td>
+    </tr>
+  `).join('');
+}
 
-(async () => {
-  const r = await window.dataSdk.init(dataHandler);
-  if (!r.isOk) console.error('Data SDK init failed');
-})();
+async function handleGradeSubmit(event) {
+  event.preventDefault();
+  await gradeCollection.add({
+    room: document.getElementById('grade-room').value,
+    student: document.getElementById('grade-student').value,
+    code: document.getElementById('grade-code').value,
+    subject: document.getElementById('grade-subject').value,
+    type: document.getElementById('grade-type').value,
+    teacher: document.getElementById('grade-teacher').value,
+    status: "รอดำเนินการ"
+  });
+  alert('บันทึกเพิ่มประวัตินักเรียนสำเร็จ'); closeGradeModal();
+}
 
-handleDocTypeChange();
-lucide.createIcons();
+async function toggleGradeStatus(id, stat) { await gradeCollection.doc(id).update({ status: stat === "แก้ไขแล้ว" ? "รอดำเนินการ" : "แก้ไขแล้ว" }); }
+async function deleteGradeRecord(id) { if(confirm('ต้องการลบประวัตินักเรียนคนนี้ใช่หรือไม่?')) await gradeCollection.doc(id).delete(); }
+function openGradeModal() { document.getElementById('grade-modal').classList.remove('hidden'); }
+function closeGradeModal() { document.getElementById('grade-modal').classList.add('hidden'); }
+
+function switchAdminSub(sub) {
+  ['docs', 'teachers', 'masters'].forEach(s => {
+    document.getElementById(`admin-sub-${s}`).classList.toggle('hidden', s !== sub);
+    document.getElementById(`btn-admin-${s}`).className = s === sub ? "px-4 py-2 text-xs font-bold border-b-2 border-red-600 text-red-700 transition-colors" : "px-4 py-2 text-xs font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors";
+  });
+}
+
+function renderAdminDocsTable() {
+  const tbody = document.getElementById('admin-docs-table-body');
+  tbody.innerHTML = submissions.map(s => `
+    <tr class="border-b hover:bg-red-50/30 transition-colors">
+      <td class="p-3 text-gray-500">${new Date(s.submitted_at).toLocaleDateString('th-TH')}</td>
+      <td class="p-3 font-bold">${s.room}</td><td class="p-3 font-medium">${s.doc_type}</td><td class="p-3 font-bold text-blue-600">${s.round}</td>
+      <td class="p-3"><a href="${s.filedata}" download="${s.filename}" class="text-blue-600 font-bold hover:underline truncate max-w-[200px] inline-flex items-center gap-1 bg-blue-50 px-2 py-1 rounded"><i data-lucide="download" class="w-3 h-3"></i> ${s.filename}</a></td>
+      <td class="p-3 text-center"><button onclick="deleteSubmission('${s.id}')" class="text-red-500 font-bold hover:underline bg-red-50 px-2 py-1 rounded">ลบไฟล์</button></td>
+    </tr>
+  `).join('');
+  lucide.createIcons();
+}
+
+async function handleCreateTeacher(event) {
+  event.preventDefault();
+  await teacherCollection.add({
+    username: document.getElementById('teacher-username').value.trim(),
+    fullname: document.getElementById('teacher-fullname').value.trim(),
+    dept: document.getElementById('teacher-dept').value.trim(),
+    password: document.getElementById('teacher-password').value.trim()
+  });
+  alert('สร้างบัญชีผู้ใช้ให้คุณครูสำเร็จแล้วครับ!'); event.target.reset();
+}
+
+function renderAdminTeachersTable() {
+  const tbody = document.getElementById('admin-teachers-table-body');
+  tbody.innerHTML = teachers.map(t => `
+    <tr class="border-b hover:bg-blue-50/50 transition-colors">
+      <td class="p-3 font-mono text-blue-800 bg-blue-50 font-bold px-3 rounded">${t.username}</td><td class="p-3 font-bold text-gray-800">${t.fullname}</td>
+      <td class="p-3 text-gray-600 font-medium">${t.dept}</td><td class="p-3 text-gray-400 font-mono">${t.password}</td>
+      <td class="p-3 text-center"><button onclick="deleteTeacher('${t.id}')" class="text-red-500 font-bold hover:underline bg-red-50 px-2 py-1 rounded">ลบสิทธิ์</button></td>
+    </tr>
+  `).join('');
+}
+
+async function handleMasterTemplateSubmit(event) {
+  event.preventDefault();
+  const fileInput = document.getElementById('master-file-input');
+  if(!fileInput.files.length) return;
+  const file = fileInput.files[0]; const b64 = await toBase64(file);
+  await masterCollection.add({
+    room: document.getElementById('master-room').value,
+    doc_type: document.getElementById('master-doc').value,
+    filename: file.name, filedata: b64
+  });
+  alert('อัปโหลดไฟล์ตัวอย่างประจำหมวดวิชาการเข้าสู่ระบบแล้ว'); fileInput.value = '';
+}
+
+function renderAdminMastersTable() {
+  const tbody = document.getElementById('admin-masters-table-body');
+  tbody.innerHTML = masterTemplates.map(m => `
+    <tr class="border-b hover:bg-amber-50/50 transition-colors">
+      <td class="p-3 font-bold">${m.room}</td><td class="p-3 font-bold text-indigo-900">${m.doc_type}</td>
+      <td class="p-3 truncate max-w-[200px] font-medium text-gray-600">${m.filename}</td>
+      <td class="p-3 text-center"><button onclick="deleteMasterTemplate('${m.id}')" class="text-red-500 font-bold hover:underline bg-red-50 px-2 py-1 rounded">ลบออก</button></td>
+    </tr>
+  `).join('');
+}
+
+function checkMasterTemplate() {
+  const room = document.getElementById('sel-room').value; const doc = document.getElementById('sel-doc').value;
+  const box = document.getElementById('master-template-box');
+  const matched = masterTemplates.find(m => (m.room === room || m.room === 'all') && m.doc_type === doc);
+  if(matched) {
+    box.classList.remove('hidden'); document.getElementById('master-filename-display').textContent = matched.filename;
+    box.dataset.url = matched.filedata; box.dataset.filename = matched.filename;
+  } else { box.classList.add('hidden'); }
+}
+
+function downloadMasterTemplate() {
+  const box = document.getElementById('master-template-box');
+  const a = document.createElement('a'); a.href = box.dataset.url; a.download = `ตัวอย่าง_${box.dataset.filename}`; a.click();
+}
+
+async function deleteSubmission(id) { if(confirm('ต้องการลบไฟล์ส่งชิ้นนี้ใช่หรือไม่?')) await docCollection.doc(id).delete(); }
+async function deleteTeacher(id) { if(confirm('ต้องการลบชื่อและสิทธิ์ของครูท่านนี้ใช่หรือไม่?')) await teacherCollection.doc(id).delete(); }
+async function deleteMasterTemplate(id) { if(confirm('ต้องการลบไฟล์ตัวอย่างระบบชิ้นนี้ใช่หรือไม่?')) await masterCollection.doc(id).delete(); }
+async function clearAllSubmissions() { if(confirm('ต้องการล้างประวัติไฟล์ส่งเข้าทั้งหมด?')) { const s = await docCollection.get(); s.forEach(d => d.ref.delete()); } }
+
+function switchTab(tabId) {
+  if (tabId === 'admin' && !isAdminAuthenticated) {
+    const password = prompt("กรุณากรอกรหัสผ่านเพื่อเข้าสู่ระบบควบคุมแอดมิน:");
+    if (password === 'admin1234') { isAdminAuthenticated = true; switchAdminSub('docs'); } 
+    else { if (password !== null) alert("รหัสผ่านไม่ถูกต้อง!"); return; }
+  }
+
+  ['dashboard', 'submission', 'booking', 'grades', 'admin'].forEach(p => {
+    document.getElementById(`panel-${p}`).classList.toggle('hidden', p !== tabId);
+    const btn = document.getElementById(`tab-${p}`);
+    if (btn) {
+      if (p === 'admin') {
+        btn.className = p === tabId 
+          ? "px-4 py-1.5 text-[11px] md:text-xs font-bold text-white bg-gradient-to-r from-red-600 to-red-800 rounded-full shadow-lg transition-all flex items-center gap-1.5 ring-2 ring-red-300 ring-offset-1 shrink-0" 
+          : "px-4 py-1.5 text-[11px] md:text-xs font-bold text-white bg-gradient-to-r from-slate-600 to-slate-800 rounded-full shadow hover:shadow-md transition-all flex items-center gap-1.5 border border-slate-700 shrink-0 opacity-90 hover:opacity-100";
+      } else {
+        btn.className = p === tabId 
+          ? "pb-1 px-2 text-xs md:text-sm font-bold text-indigo-900 border-b-2 border-indigo-900 transition-all hover:text-indigo-700" 
+          : "pb-1 px-2 text-xs md:text-sm font-bold text-gray-400 border-b-2 border-transparent transition-all hover:text-indigo-600";
+      }
+    }
+  });
+  if(tabId === 'booking') renderCalendarGrid();
+  renderTable();
+  renderGradesTable();
+}
+
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('input-file');
+dropzone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', () => {
+  if(fileInput.files.length) {
+    document.getElementById('dropzone-prompt').classList.add('hidden');
+    document.getElementById('file-info').classList.remove('hidden'); document.getElementById('file-info').classList.add('flex');
+    document.getElementById('info-filename').textContent = fileInput.files[0].name;
+  }
+});
+function clearFile(e) { if(e) e.stopPropagation(); fileInput.value=''; document.getElementById('file-info').classList.replace('flex','hidden'); document.getElementById('dropzone-prompt').classList.remove('hidden'); }
+
+const toBase64 = file => new Promise((resolve, reject) => {
+  const r = new FileReader(); r.readAsDataURL(file); r.onload = () => resolve(r.result); r.onerror = e => reject(e);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  initDropdowns(); startRealtimeSync();
+  setInterval(() => {
+    const now = new Date(); document.getElementById('clock-display').textContent = now.toLocaleDateString('th-TH', {year:'numeric', month:'long', day:'numeric'}) + ' ' + now.toLocaleTimeString('th-TH') + ' น.';
+  }, 1000);
+  lucide.createIcons();
+});
   </script>
- </div>
  </body>
 </html>
