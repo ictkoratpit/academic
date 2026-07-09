@@ -303,9 +303,9 @@
              </div>
              <button type="submit" class="w-full bg-emerald-600 text-white font-bold p-2.5 rounded-lg text-xs hover:bg-emerald-700 shadow-sm">บันทึกส่งข้อมูลขอจอง</button>
            </form>
-         </div>
+             </div>
 
-         <div class="lg:col-span-2 bg-white rounded-xl card-shadow p-5 space-y-4">
+             <div class="lg:col-span-2 bg-white rounded-xl card-shadow p-5 space-y-4">
            <div class="flex items-center justify-between border-b border-gray-100 pb-3">
              <div class="flex items-center gap-2">
                <button onclick="changeMonth(-1)" class="p-1.5 border rounded-lg hover:bg-gray-100"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
@@ -406,99 +406,202 @@
 
      <!-- แท็บจิตอาสา -->
      <div id="panel-volunteer" class="max-w-7xl mx-auto hidden fade-in space-y-6">
-       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-         <div class="bg-white rounded-xl card-shadow p-5 border-t-4 border-indigo-600 space-y-4">
-           <h2 class="font-bold text-sm text-indigo-900 flex items-center gap-1.5 uppercase"><i data-lucide="heart" class="text-rose-500 fill-rose-500"></i> บันทึกชั่วโมงจิตอาสา</h2>
-           <form id="volunteer-form" onsubmit="handleVolunteerSubmit(event)" class="space-y-4">
-             <div>
-               <label class="block text-[11px] font-bold text-gray-600 mb-1">ระดับชั้น/ห้องเรียน</label>
-               <select id="vol-room" class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white"></select>
-             </div>
-             <div>
-               <label class="block text-[11px] font-bold text-gray-600 mb-1">ชื่อ-นามสกุลนักเรียน</label>
-               <input type="text" id="vol-student" required class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white" placeholder="ระบุชื่อนักเรียน">
-             </div>
-             <div>
-               <label class="block text-[11px] font-bold text-gray-600 mb-1">ประเภทกิจกรรมตามเกณฑ์โรงเรียน</label>
-               <select id="vol-activity" onchange="handleActivityChange()" class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white">
-                 <option value="20" data-name="ทำความสะอาดห้องเรียน">1. ทำความสะอาดห้องเรียน (20 นาที)</option>
-                 <option value="60" data-name="คัดแยกขยะและจัดการขยะรีไซเคิล">2. คัดแยกขยะและจัดการขยะรีไซเคิล (60 นาที)</option>
-                 <option value="60" data-name="ช่วยงานธุรการของโรงเรียน เช่น จัดเอกสาร แยกเอกสาร">3. ช่วยงานธุรการของโรงเรียน (60 นาที)</option>
-                 <option value="120" data-name="ช่วยจัดเตรียมสถานที่สำหรับกิจกรรมโรงเรียน">4. ช่วยจัดเตรียมสถานที่สำหรับกิจกรรมโรงเรียน (120 นาที)</option>
-                 <option value="30" data-name="เป็นพิธีกรหรือผู้ช่วยดำเนินกิจกรรมหรือพูดให้ความรู้หน้าเสาธง">5. เป็นพิธีกร/พูดให้ความรู้หน้าเสาธง (30 นาที)</option>
-                 <option value="60" data-name="ทำความสะอาดห้องผู้อำนวยการโรงเรียน/รองผู้อำนวยการ">6. ทำความสะอาดห้อง ผอ./รอง ผอ. (60 นาที)</option>
-                 <option value="60" data-name="ลอกท่อระบายน้ำ">7. ลอกท่อระบายน้ำ (60 นาที)</option>
-                 <option value="15" data-name="ล้างจาน">8. ล้างจาน (15 นาที)</option>
-                 <option value="other" data-name="กิจกรรมอื่นๆ">9. กิจกรรมอื่นๆ (ระบุเวลาเอง)</option>
-               </select>
-             </div>
-             
-             <div id="vol-other-box" class="hidden space-y-3 bg-slate-50 p-3 rounded-lg border border-gray-200">
-               <div>
-                 <label class="block text-[11px] font-bold text-gray-600 mb-1">ระบุชื่อกิจกรรมอื่น ๆ</label>
-                 <input type="text" id="vol-other-name" class="w-full border rounded-lg p-2 text-xs bg-white" placeholder="เช่น ช่วยปลูกต้นไม้โรงเรียน">
-               </div>
-               <div>
-                 <label class="block text-[11px] font-bold text-gray-600 mb-1">กำหนดจำนวนเวลา (นาที)</label>
-                 <input type="number" id="vol-other-minutes" class="w-full border rounded-lg p-2 text-xs bg-white" placeholder="เช่น 45">
-               </div>
-             </div>
-
-             <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold p-2.5 rounded-lg text-xs shadow-sm transition-colors">
-               บันทึกชั่วโมงจิตอาสา
-             </button>
-           </form>
-         </div>
-
-         <div class="lg:col-span-2 bg-white rounded-xl card-shadow p-5 space-y-4">
-           <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-3 gap-3">
-             <h3 class="font-bold text-sm text-gray-800 flex items-center gap-1.5 uppercase"><i data-lucide="award" class="text-amber-500"></i> สรุปเวลาสะสม (เป้าหมาย 12 ชม.)</h3>
-             <div class="flex items-center gap-2">
-               <label class="text-[11px] font-bold text-gray-500">กรองรายห้อง:</label>
-               <select id="filter-vol-room" onchange="renderVolunteerData()" class="text-xs border border-gray-300 rounded-md px-2 py-1.5 bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400"></select>
-             </div>
-           </div>
-
-           <div class="overflow-x-auto max-h-[380px]">
-             <table class="w-full text-xs text-left">
-               <thead class="bg-gray-50 font-bold border-b text-gray-500 sticky top-0">
-                 <tr>
-                   <th class="p-3">ห้อง</th>
-                   <th class="p-3">ชื่อ-นามสกุลนักเรียน</th>
-                   <th class="p-3">เวลาสะสมปัจจุบัน</th>
-                   <th class="p-3 text-center">สถานะ / แจ้งเตือน</th>
-                 </tr>
-               </thead>
-               <tbody id="volunteer-summary-tbody"></tbody>
-             </table>
-           </div>
-         </div>
-       </div>
-
+       
+       <!-- Volunteer Sub-tabs -->
        <div class="bg-white rounded-xl card-shadow overflow-hidden">
-         <div class="p-4 bg-slate-800 text-white font-bold text-xs flex items-center justify-between gap-2">
-           <div class="flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-amber-400"></i> ประวัติรายการลงบันทึกจิตอาสาระบบภาพรวม</div>
-           <span id="volunteer-log-count" class="bg-slate-700 text-slate-300 px-2 py-0.5 rounded text-[10px]">0 รายการ</span>
+         <div class="flex gap-2 border-b border-gray-200 pb-1 overflow-x-auto hide-scrollbar px-4 pt-3">
+           <button onclick="switchVolunteerSub('dashboard')" id="btn-vol-dashboard" class="px-4 py-2 text-xs font-bold border-b-2 border-indigo-600 text-indigo-700 transition-colors">แดชบอร์ดสรุป</button>
+           <button onclick="switchVolunteerSub('form')" id="btn-vol-form" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors">บันทึกชั่วโมงจิตอาสา</button>
+           <button onclick="switchVolunteerSub('history')" id="btn-vol-history" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors">ประวัติรายการ</button>
          </div>
-         <div class="overflow-x-auto max-h-[250px]">
-           <table class="w-full text-xs text-left">
-             <thead class="bg-gray-100 font-bold border-b text-gray-600 sticky top-0">
-               <tr>
-                 <th class="p-3">ห้อง</th>
-                 <th class="p-3">ชื่อนักเรียน</th>
-                 <th class="p-3">รายละเอียดกิจกรรม</th>
-                 <th class="p-3 text-center">เวลาที่ได้รับ</th>
-                 <th class="p-3">ผู้บันทึกข้อมูล</th>
-                 <th class="p-3 text-center">จัดการ</th>
-               </tr>
-             </thead>
-             <tbody id="volunteer-log-tbody"></tbody>
-           </table>
+         
+         <!-- Volunteer Dashboard -->
+         <div id="vol-sub-dashboard" class="p-5 space-y-5 fade-in">
+           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+             <div class="bg-gradient-to-br from-indigo-50 to-white rounded-xl p-4 border border-indigo-100">
+               <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">นักเรียนทั้งหมดในระบบ</p>
+               <p id="vol-stat-total-students" class="text-2xl font-black text-indigo-900 mt-1">0</p>
+               <p class="text-[9px] text-gray-400 mt-0.5">คน</p>
+             </div>
+             <div class="bg-gradient-to-br from-emerald-50 to-white rounded-xl p-4 border border-emerald-100">
+               <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">ลงบันทึกแล้ว</p>
+               <p id="vol-stat-logged-students" class="text-2xl font-black text-emerald-600 mt-1">0</p>
+               <p class="text-[9px] text-gray-400 mt-0.5">คน</p>
+             </div>
+             <div class="bg-gradient-to-br from-amber-50 to-white rounded-xl p-4 border border-amber-100">
+               <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">ครบ 12 ชม. แล้ว</p>
+               <p id="vol-stat-completed" class="text-2xl font-black text-amber-600 mt-1">0</p>
+               <p class="text-[9px] text-gray-400 mt-0.5">คน</p>
+             </div>
+             <div class="bg-gradient-to-br from-rose-50 to-white rounded-xl p-4 border border-rose-100">
+               <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">จำนวนรายการทั้งหมด</p>
+               <p id="vol-stat-total-records" class="text-2xl font-black text-rose-600 mt-1">0</p>
+               <p class="text-[9px] text-gray-400 mt-0.5">รายการ</p>
+             </div>
+           </div>
+
+           <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+             <div class="bg-white rounded-xl border border-gray-100 p-5">
+               <h3 class="font-bold text-sm text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="bar-chart-3" class="w-4 h-4 text-indigo-600"></i> สัดส่วนความคืบหน้าจิตอาสา</h3>
+               <div class="relative w-40 h-40 mx-auto flex items-center justify-center">
+                 <svg class="w-full h-full" viewBox="0 0 100 100">
+                   <circle cx="50" cy="50" r="40" fill="transparent" stroke="#fee2e2" stroke-width="10"></circle>
+                   <circle id="vol-progress-bar" class="chart-circle" cx="50" cy="50" r="40" fill="transparent" stroke="#10b981" stroke-width="10" stroke-dasharray="251.2" stroke-dashoffset="251.2" stroke-linecap="round"></circle>
+                 </svg>
+                 <div class="absolute text-center">
+                   <span id="vol-progress-pct" class="text-2xl font-black text-slate-800">0%</span>
+                   <p class="text-[8px] text-gray-400 font-bold uppercase">ครบตามเกณฑ์</p>
+                 </div>
+               </div>
+               <div class="grid grid-cols-2 gap-4 mt-4 text-xs">
+                 <div class="text-center">
+                   <p class="text-gray-500 text-[10px]">นักเรียนทั้งหมด</p>
+                   <p id="vol-chart-total" class="font-bold text-slate-700 text-lg">0</p>
+                 </div>
+                 <div class="text-center">
+                   <p class="text-gray-500 text-[10px]">ครบ 12 ชม.</p>
+                   <p id="vol-chart-done" class="font-bold text-emerald-600 text-lg">0</p>
+                 </div>
+               </div>
+             </div>
+
+             <div class="bg-white rounded-xl border border-gray-100 p-5">
+               <h3 class="font-bold text-sm text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="layers" class="w-4 h-4 text-amber-500"></i> สถิติรายห้องเรียน</h3>
+               <div class="overflow-x-auto max-h-[200px]">
+                 <table class="w-full text-[11px] text-left">
+                   <thead class="bg-gray-50 font-bold border-b text-gray-500 sticky top-0">
+                     <tr><th class="p-2">ห้องเรียน</th><th class="p-2 text-center">นักเรียน</th><th class="p-2 text-center">ครบแล้ว</th><th class="p-2 text-center">อัตรา%</th></tr>
+                   </thead>
+                   <tbody id="vol-room-stats-tbody"></tbody>
+                 </table>
+               </div>
+             </div>
+           </div>
+
+           <div class="bg-white rounded-xl border border-gray-100 p-5">
+             <h3 class="font-bold text-sm text-slate-800 mb-3 flex items-center gap-2"><i data-lucide="trophy" class="w-4 h-4 text-yellow-500"></i> นักเรียนที่มีชั่วโมงสะสมสูงสุด 10 อันดับแรก</h3>
+             <div class="overflow-x-auto">
+               <table class="w-full text-xs text-left">
+                 <thead class="bg-gray-50 font-bold border-b text-gray-500 sticky top-0">
+                   <tr><th class="p-2">อันดับ</th><th class="p-2">ห้อง</th><th class="p-2">ชื่อ-นามสกุล</th><th class="p-2 text-center">เวลาสะสม (นาที)</th><th class="p-2 text-center">เทียบ (ชม.)</th></tr>
+                 </thead>
+                 <tbody id="vol-top-students-tbody"></tbody>
+               </table>
+             </div>
+           </div>
          </div>
+
+         <!-- Volunteer Form -->
+         <div id="vol-sub-form" class="p-5 hidden fade-in">
+           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+             <div class="bg-white rounded-xl card-shadow p-5 border-t-4 border-indigo-600 space-y-4">
+               <h2 class="font-bold text-sm text-indigo-900 flex items-center gap-1.5 uppercase"><i data-lucide="heart" class="text-rose-500 fill-rose-500"></i> บันทึกชั่วโมงจิตอาสา</h2>
+               <form id="volunteer-form" onsubmit="handleVolunteerSubmit(event)" class="space-y-4">
+                 <div>
+                   <label class="block text-[11px] font-bold text-gray-600 mb-1">ระดับชั้น/ห้องเรียน</label>
+                   <select id="vol-room" onchange="handleVolRoomChange()" class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white"></select>
+                 </div>
+                 <div>
+                   <label class="block text-[11px] font-bold text-gray-600 mb-1">ชื่อ-นามสกุลนักเรียน</label>
+                   <select id="vol-student-select" onchange="handleVolStudentSelectChange()" class="w-full border rounded-lg p-2 text-xs bg-white shadow-sm">
+                     <option value="">-- กรุณาเลือกห้องเรียนก่อน --</option>
+                   </select>
+                   <div id="vol-student-custom-box" class="hidden mt-2">
+                     <input type="text" id="vol-student-custom" class="w-full border rounded-lg p-2 text-xs bg-white shadow-sm border-indigo-300 focus:ring-1 focus:ring-indigo-400" placeholder="ระบุชื่อ-นามสกุลนักเรียน (กรณีพิมพ์นอกระบบเอง)">
+                   </div>
+                 </div>
+                 <div>
+                   <label class="block text-[11px] font-bold text-gray-600 mb-1">ประเภทกิจกรรมตามเกณฑ์โรงเรียน</label>
+                   <select id="vol-activity" onchange="handleActivityChange()" class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white">
+                     <option value="20" data-name="ทำความสะอาดห้องเรียน">1. ทำความสะอาดห้องเรียน (20 นาที)</option>
+                     <option value="60" data-name="คัดแยกขยะและจัดการขยะรีไซเคิล">2. คัดแยกขยะและจัดการขยะรีไซเคิล (60 นาที)</option>
+                     <option value="60" data-name="ช่วยงานธุรการของโรงเรียน เช่น จัดเอกสาร แยกเอกสาร">3. ช่วยงานธุรการของโรงเรียน (60 นาที)</option>
+                     <option value="120" data-name="ช่วยจัดเตรียมสถานที่สำหรับกิจกรรมโรงเรียน">4. ช่วยจัดเตรียมสถานที่สำหรับกิจกรรมโรงเรียน (120 นาที)</option>
+                     <option value="30" data-name="เป็นพิธีกรหรือผู้ช่วยดำเนินกิจกรรมหรือพูดให้ความรู้หน้าเสาธง">5. เป็นพิธีกร/พูดให้ความรู้หน้าเสาธง (30 นาที)</option>
+                     <option value="60" data-name="ทำความสะอาดห้องผู้อำนวยการโรงเรียน/รองผู้อำนวยการ">6. ทำความสะอาดห้อง ผอ./รอง ผอ. (60 นาที)</option>
+                     <option value="60" data-name="ลอกท่อระบายน้ำ">7. ลอกท่อระบายน้ำ (60 นาที)</option>
+                     <option value="15" data-name="ล้างจาน">8. ล้างจาน (15 นาที)</option>
+                     <option value="other" data-name="กิจกรรมอื่นๆ" id="vol-option-other" class="admin-only-option" style="display:none;">9. กิจกรรมอื่นๆ (ระบุเวลาเอง)</option>
+                   </select>
+                 </div>
+                 
+                 <div id="vol-other-box" class="hidden space-y-3 bg-slate-50 p-3 rounded-lg border border-gray-200">
+                   <div>
+                     <label class="block text-[11px] font-bold text-gray-600 mb-1">ระบุชื่อกิจกรรมอื่น ๆ</label>
+                     <input type="text" id="vol-other-name" class="w-full border rounded-lg p-2 text-xs bg-white" placeholder="เช่น ช่วยปลูกต้นไม้โรงเรียน">
+                   </div>
+                   <div>
+                     <label class="block text-[11px] font-bold text-gray-600 mb-1">กำหนดจำนวนเวลา (นาที)</label>
+                     <input type="number" id="vol-other-minutes" class="w-full border rounded-lg p-2 text-xs bg-white" placeholder="เช่น 45">
+                   </div>
+                 </div>
+
+                 <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold p-2.5 rounded-lg text-xs shadow-sm transition-colors">
+                   บันทึกชั่วโมงจิตอาสา
+                 </button>
+               </form>
+             </div>
+
+             <div class="lg:col-span-2 bg-white rounded-xl card-shadow p-5 space-y-4">
+               <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-3 gap-3">
+                 <h3 class="font-bold text-sm text-gray-800 flex items-center gap-1.5 uppercase"><i data-lucide="award" class="text-amber-500"></i> สรุปเวลาสะสม (เป้าหมาย 12 ชม.)</h3>
+                 <div class="flex items-center gap-2">
+                   <label class="text-[11px] font-bold text-gray-500">กรองรายห้อง:</label>
+                   <select id="filter-vol-room" onchange="renderVolunteerData()" class="text-xs border border-gray-300 rounded-md px-2 py-1.5 bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400"></select>
+                 </div>
+               </div>
+
+               <div class="overflow-x-auto max-h-[380px]">
+                 <table class="w-full text-xs text-left">
+                   <thead class="bg-gray-50 font-bold border-b text-gray-500 sticky top-0">
+                     <tr>
+                       <th class="p-3">ห้อง</th>
+                       <th class="p-3">ชื่อ-นามสกุลนักเรียน</th>
+                       <th class="p-3">เวลาสะสมปัจจุบัน</th>
+                       <th class="p-3 text-center">สถานะ / แจ้งเตือน</th>
+                     </tr>
+                   </thead>
+                   <tbody id="volunteer-summary-tbody"></tbody>
+                 </table>
+               </div>
+             </div>
+           </div>
+         </div>
+
+         <!-- Volunteer History -->
+         <div id="vol-sub-history" class="p-5 hidden fade-in">
+           <div class="bg-white rounded-xl card-shadow overflow-hidden">
+             <div class="p-4 bg-slate-800 text-white font-bold text-xs flex items-center justify-between gap-2">
+               <div class="flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-amber-400"></i> ประวัติรายการลงบันทึกจิตอาสาระบบภาพรวม</div>
+               <div class="flex items-center gap-2">
+                 <span id="volunteer-log-count" class="bg-slate-700 text-slate-300 px-2 py-0.5 rounded text-[10px]">0 รายการ</span>
+                 <select id="filter-vol-room-history" onchange="renderVolunteerData()" class="text-xs bg-slate-700 text-white border border-slate-600 rounded px-2 py-0.5 focus:outline-none">
+                   <option value="all">ทุกห้องเรียน</option>
+                 </select>
+               </div>
+             </div>
+             <div class="overflow-x-auto max-h-[350px]">
+               <table class="w-full text-xs text-left">
+                 <thead class="bg-gray-100 font-bold border-b text-gray-600 sticky top-0">
+                   <tr>
+                     <th class="p-3">ห้อง</th>
+                     <th class="p-3">ชื่อนักเรียน</th>
+                     <th class="p-3">รายละเอียดกิจกรรม</th>
+                     <th class="p-3 text-center">เวลาที่ได้รับ</th>
+                     <th class="p-3">ผู้บันทึกข้อมูล</th>
+                     <th class="p-3 text-center">จัดการ</th>
+                   </tr>
+                 </thead>
+                 <tbody id="volunteer-log-tbody"></tbody>
+               </table>
+             </div>
+           </div>
+         </div>
+
        </div>
      </div>
 
-     <!-- ระบบผู้ดูแลระบบ Admin Panel (เพิ่มส่วนจัดการฐานข้อมูลรายชื่อนักเรียนกลาง) -->
+<!-- ระบบผู้ดูแลระบบ Admin Panel (เพิ่มส่วนจัดการฐานข้อมูลรายชื่อนักเรียนกลาง) -->
      <div id="panel-admin" class="max-w-7xl mx-auto hidden fade-in space-y-6">
        <div class="flex gap-2 border-b border-gray-200 pb-1 overflow-x-auto hide-scrollbar">
          <button id="btn-admin-docs" onclick="switchAdminSub('docs')" class="px-4 py-2 text-xs font-bold border-b-2 border-red-600 text-red-700 transition-colors">จัดการไฟล์ครูที่ส่ง</button>
@@ -893,12 +996,13 @@ function checkAndSeedStudents() {
 }
 
 function initDropdowns() {
-  const selects = ['sel-room', 'grade-room', 'master-room', 'vol-room', 'filter-vol-room', 'filter-grade-room', 'admin-student-room-input', 'admin-filter-student-room'];
+  const selects = ['sel-room', 'grade-room', 'master-room', 'vol-room', 'filter-vol-room', 'filter-vol-room-history', 'filter-grade-room', 'admin-student-room-input', 'admin-filter-student-room'];
   selects.forEach(id => {
     const el = document.getElementById(id); if (!el) return;
     
     if (id === 'master-room') el.innerHTML = '<option value="all">ทุกห้อง (Global)</option>';
     else if (id === 'filter-vol-room') el.innerHTML = '<option value="all">แสดงทุกห้องเรียน</option>';
+    else if (id === 'filter-vol-room-history') el.innerHTML = '<option value="all">ทุกห้องเรียน</option>';
     else if (id === 'filter-grade-room') el.innerHTML = '<option value="all">ทุกห้องเรียน</option>';
     else if (id === 'admin-filter-student-room') el.innerHTML = '<option value="all">ทุกห้องเรียน</option>';
     else el.innerHTML = '';
@@ -998,6 +1102,8 @@ function startRealtimeSync() {
     renderAdminStudentsTable();
     const modal = document.getElementById('grade-modal');
     if(modal && !modal.classList.contains('hidden') && !editingGradeId) { handleGradeRoomChange(); }
+    handleVolRoomChange();
+    renderVolunteerDashboard();
   });
 
   docCollection.orderBy("submitted_at", "desc").onSnapshot(snap => {
@@ -1023,6 +1129,7 @@ function startRealtimeSync() {
   volunteerCollection.orderBy("timestamp", "desc").onSnapshot(snap => {
     volunteers = []; snap.forEach(d => volunteers.push({ id: d.id, ...d.data() }));
     renderVolunteerData();
+    renderVolunteerDashboard();
   });
 }
 
@@ -1048,6 +1155,7 @@ function proceedToApp() {
   document.getElementById('main-app').classList.remove('hidden');
   document.getElementById('current-user-display').textContent = currentUser.fullname;
   switchTab('dashboard');
+  lucide.createIcons();
 }
 
 function handleLogout() {
@@ -1143,6 +1251,7 @@ async function handleSubmit(event) {
     await docCollection.add(payload); alert('จัดส่งเอกสารสำเร็จเรียบร้อยแล้ว!');
     if (docType === 'ปพ.5') { document.getElementById('sel-subject-code').value = ''; document.getElementById('sel-subject-name').value = ''; }
     clearFile(); switchTab('dashboard');
+  lucide.createIcons();
   } catch(e) { alert("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์"); }
   finally { btn.disabled = false; btn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> บันทึกรายการส่งเอกสารวิชาการ'; lucide.createIcons(); }
 }
@@ -1367,26 +1476,188 @@ function handleActivityChange() {
   }
 }
 
+// 📌 ฟังก์ชันจัดการแท็บย่อยจิตอาสา
+function switchVolunteerSub(sub) {
+  ['dashboard', 'form', 'history'].forEach(s => {
+    const p = document.getElementById(`vol-sub-${s}`); if(p) p.classList.toggle('hidden', s !== sub);
+    const b = document.getElementById(`btn-vol-${s}`);
+    if(b) b.className = s === sub ? "px-4 py-2 text-xs font-bold border-b-2 border-indigo-600 text-indigo-700 transition-colors" : "px-4 py-2 text-xs font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors";
+  });
+  if (sub === 'dashboard') renderVolunteerDashboard();
+  if (sub === 'form') handleVolRoomChange();
+  if (sub === 'history') renderVolunteerData();
+  updateAdminOnlyOptions();
+  lucide.createIcons();
+}
+
+// 📌 ฟังก์ชันจัดการการเลือกห้องเรียนในฟอร์มจิตอาสา
+function handleVolRoomChange() {
+  const room = document.getElementById('vol-room').value;
+  const select = document.getElementById('vol-student-select'); if(!select) return;
+  select.innerHTML = '<option value="">-- เลือกรายชื่อนักเรียน --</option>';
+  
+  if (!room) {
+    select.innerHTML = '<option value="">-- กรุณาเลือกห้องเรียนก่อน --</option>';
+    document.getElementById('vol-student-custom-box').classList.add('hidden');
+    return;
+  }
+  
+  const roomStudents = students.filter(s => s.room === room);
+  roomStudents.sort((a,b)=> a.student_id.localeCompare(b.student_id));
+  roomStudents.forEach(s => {
+    const o = document.createElement('option'); o.value = s.name; o.dataset.studentId = s.student_id; o.textContent = `${s.student_id} - ${s.name}`; select.appendChild(o);
+  });
+  // Add custom option for admin only
+  if (isAdminAuthenticated) {
+    const customOpt = document.createElement('option'); customOpt.value = "custom"; customOpt.textContent = "++ ระบุรายชื่อนอกคลังข้อมูลเอง ++"; select.appendChild(customOpt);
+  }
+  handleVolStudentSelectChange();
+}
+
+function handleVolStudentSelectChange() {
+  const select = document.getElementById('vol-student-select');
+  const customBox = document.getElementById('vol-student-custom-box');
+  if(!select) return;
+  
+  if (select.value === 'custom') {
+    customBox.classList.remove('hidden');
+  } else {
+    customBox.classList.add('hidden');
+  }
+}
+
+// 📌 ฟังก์ชันอัปเดต visibility ของตัวเลือกแอดมินเท่านั้น
+function updateAdminOnlyOptions() {
+  const otherOption = document.getElementById('vol-option-other');
+  const actSelect = document.getElementById('vol-activity');
+  if (otherOption && actSelect) {
+    if (isAdminAuthenticated) {
+      otherOption.style.display = ''; otherOption.disabled = false;
+    } else {
+      if (actSelect.value === 'other') { actSelect.selectedIndex = 0; handleActivityChange(); }
+      otherOption.style.display = 'none'; otherOption.disabled = true;
+    }
+  }
+}
+
+// 📌 ฟังก์ชัน Dashboard จิตอาสา
+function renderVolunteerDashboard() {
+  const totalStudents = students.length;
+  const studentSummaryMap = {};
+  volunteers.forEach(v => {
+    const key = `${v.student}_${v.room}`;
+    if (!studentSummaryMap[key]) { studentSummaryMap[key] = { student: v.student, room: v.room, total_minutes: 0 }; }
+    studentSummaryMap[key].total_minutes += (v.minutes || 0);
+  });
+  
+  const loggedStudents = Object.keys(studentSummaryMap).length;
+  const completedStudents = Object.values(studentSummaryMap).filter(s => s.total_minutes >= 720).length;
+  const totalRecords = volunteers.length;
+  
+  document.getElementById('vol-stat-total-students').textContent = totalStudents;
+  document.getElementById('vol-stat-logged-students').textContent = loggedStudents;
+  document.getElementById('vol-stat-completed').textContent = completedStudents;
+  document.getElementById('vol-stat-total-records').textContent = totalRecords;
+  
+  // Progress circle
+  const pct = totalStudents > 0 ? (completedStudents / totalStudents * 100) : 0;
+  const circumference = 251.2;
+  const offset = circumference - (pct / 100 * circumference);
+  const progressBar = document.getElementById('vol-progress-bar');
+  if (progressBar) { progressBar.style.strokeDashoffset = offset; }
+  document.getElementById('vol-progress-pct').textContent = Math.round(pct) + '%';
+  document.getElementById('vol-chart-total').textContent = totalStudents;
+  document.getElementById('vol-chart-done').textContent = completedStudents;
+  
+  // Room stats
+  const roomStatsTbody = document.getElementById('vol-room-stats-tbody');
+  if (roomStatsTbody) {
+    const roomStats = {};
+    ROOMS.forEach(r => { roomStats[r] = { total: 0, completed: 0 }; });
+    students.forEach(s => { if(roomStats[s.room]) roomStats[s.room].total++; });
+    Object.values(studentSummaryMap).forEach(s => {
+      if (roomStats[s.room]) {
+        roomStats[s.room].completed += (s.total_minutes >= 720 ? 1 : 0);
+      }
+    });
+    
+    const sortedRooms = ROOMS.filter(r => roomStats[r].total > 0);
+    if (sortedRooms.length === 0) {
+      roomStatsTbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">ยังไม่มีข้อมูล</td></tr>`;
+    } else {
+      roomStatsTbody.innerHTML = sortedRooms.map(r => {
+        const stats = roomStats[r];
+        const rate = stats.total > 0 ? Math.round(stats.completed / stats.total * 100) : 0;
+        const colorClass = rate >= 50 ? 'text-emerald-600' : rate >= 20 ? 'text-amber-600' : 'text-rose-500';
+        return `<tr class="border-b hover:bg-gray-50">
+          <td class="p-2 font-bold text-gray-600">${r}</td>
+          <td class="p-2 text-center font-medium">${stats.total}</td>
+          <td class="p-2 text-center font-bold text-emerald-600">${stats.completed}</td>
+          <td class="p-2 text-center font-bold ${colorClass}">${rate}%</td>
+        </tr>`;
+      }).join('');
+    }
+  }
+  
+  // Top students
+  const topTbody = document.getElementById('vol-top-students-tbody');
+  if (topTbody) {
+    const allSummary = Object.values(studentSummaryMap).sort((a,b) => b.total_minutes - a.total_minutes).slice(0, 10);
+    if (allSummary.length === 0) {
+      topTbody.innerHTML = `<tr><td colspan="5" class="p-3 text-center text-gray-400">ยังไม่มีข้อมูลกิจกรรมจิตอาสา</td></tr>`;
+    } else {
+      topTbody.innerHTML = allSummary.map((s, idx) => {
+        const medalIcon = idx === 0 ? '\uD83E\uDD47' : idx === 1 ? '\uD83E\uDD48' : idx === 2 ? '\uD83E\uDD49' : `#${idx + 1}`;
+        const hours = (s.total_minutes / 60).toFixed(1);
+        const isDone = s.total_minutes >= 720;
+        return `<tr class="border-b hover:bg-gray-50 ${isDone ? 'bg-emerald-50/30' : ''}">
+          <td class="p-2 text-center text-base">${medalIcon}</td>
+          <td class="p-2 font-bold text-gray-600">${s.room}</td>
+          <td class="p-2 font-bold text-indigo-900">${s.student}</td>
+          <td class="p-2 text-center font-bold text-slate-700">${s.total_minutes} นาที</td>
+          <td class="p-2 text-center font-bold ${isDone ? 'text-emerald-600' : 'text-amber-600'}">${hours} ชม.</td>
+        </tr>`;
+      }).join('');
+    }
+  }
+  lucide.createIcons();
+}
+
 async function handleVolunteerSubmit(event) {
   event.preventDefault();
   const selectEl = document.getElementById('vol-activity'); const selectedOption = selectEl.options[selectEl.selectedIndex];
   let activityName = selectedOption.getAttribute('data-name'); let minutes = parseInt(selectedOption.value);
   
+  // Get student name from select or custom input
+  const studentSelect = document.getElementById('vol-student-select');
+  let studentName = studentSelect.value;
+  if (studentSelect.value === 'custom') {
+    studentName = document.getElementById('vol-student-custom').value.trim();
+  }
+  
+  if (!studentName) { alert('กรุณาเลือกชื่อนักเรียน'); return; }
+  
   if (selectedOption.value === 'other') {
     activityName = document.getElementById('vol-other-name').value.trim(); minutes = parseInt(document.getElementById('vol-other-minutes').value);
+    if (!activityName) { alert('กรุณาระบุชื่อกิจกรรม'); return; }
+    if (!minutes || minutes <= 0) { alert('กรุณาระบุจำนวนเวลาที่ถูกต้อง'); return; }
   }
+  
   try {
     await volunteerCollection.add({
-      room: document.getElementById('vol-room').value, student: document.getElementById('vol-student').value.trim(),
+      room: document.getElementById('vol-room').value, student: studentName,
       activity_name: activityName, minutes: minutes, recorded_by: currentUser.fullname, timestamp: new Date().toISOString()
     });
-    alert('บันทึกข้อมูลจิตอาสาของนักเรียนสำเร็จแล้ว!'); document.getElementById('volunteer-form').reset(); handleActivityChange();
+    alert('บันทึกข้อมูลจิตอาสาของนักเรียนสำเร็จแล้ว!'); document.getElementById('volunteer-form').reset(); handleActivityChange(); handleVolRoomChange();
   } catch(e) { alert('เกิดข้อผิดพลาดในการบันทึกข้อมูลจิตอาสา'); }
 }
 
 function renderVolunteerData() {
   const summaryTbody = document.getElementById('volunteer-summary-tbody'); const logTbody = document.getElementById('volunteer-log-tbody');
   const filterRoomSelect = document.getElementById('filter-vol-room'); const filterRoom = filterRoomSelect ? filterRoomSelect.value : 'all';
+  // Use history filter independently for the log section
+  const historyFilter = document.getElementById('filter-vol-room-history');
+  const historyRoom = historyFilter ? historyFilter.value : 'all';
   
   const studentSummaryMap = {};
   volunteers.forEach(v => {
@@ -1417,7 +1688,7 @@ function renderVolunteerData() {
     }).join('');
   }
   
-  const filteredLogs = volunteers.filter(v => filterRoom === 'all' || v.room === filterRoom);
+  const filteredLogs = volunteers.filter(v => historyRoom === 'all' || v.room === historyRoom);
   if (document.getElementById('volunteer-log-count')) document.getElementById('volunteer-log-count').textContent = `${filteredLogs.length} รายการ`;
 
   if (filteredLogs.length === 0) {
@@ -1625,7 +1896,9 @@ function switchTab(tabId) {
     }
   });
   if(tabId === 'booking') { renderCalendarGrid(); renderBookingTable(); }
+  if(tabId === 'volunteer') { switchVolunteerSub('dashboard'); return; }
   renderTable(); renderGradesTable(); renderVolunteerData();
+  updateAdminOnlyOptions();
 }
 
 const dropzone = document.getElementById('dropzone'); const fileInput = document.getElementById('input-file');
