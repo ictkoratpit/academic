@@ -2,8 +2,8 @@
 <html lang="th" class="h-full">
  <head>
   <meta charset="UTF-8">
-  <meta name="viewport" class="w-full h-full object-contain" content="width=device-width, initial-scale=1.0">
-  <title>ระบบบริหารงานวิชาการและปฏิทินกิจกรรม - โรงเรียนโคราชพิทยาคม</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>ระบบบริหารงานวิชาการและการจองปฏิทินกิจกรรม - โรงเรียนโคราชพิทยาคม</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   
@@ -14,26 +14,95 @@
   <style>
     * { font-family: 'Sarabun', 'Noto Sans Thai', sans-serif; }
     .navy-bg { background: linear-gradient(135deg, #0F1B4C 0%, #1a237e 100%); }
-    .card-shadow { box-shadow: 0 4px 20px -2px rgba(26,35,126,0.08), 0 2px 6px -1px rgba(26,35,126,0.04); }
+    .card-shadow { box-shadow: 0 8px 32px -4px rgba(26,35,126,0.12), 0 2px 8px -1px rgba(26,35,126,0.06); }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
     .fade-in { animation: fadeIn 0.4s ease-out; }
+    .slide-in-down { animation: slideInDown 0.5s ease-out; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .chart-circle { transition: stroke-dashoffset 0.6s ease-in-out; transform: rotate(-90deg); transform-origin: 50% 50%; }
+    
+    /* Enhanced Button Styles */
+    button { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    button:hover { transform: translateY(-2px); }
+    
+    /* Enhanced Card Styles */
+    .bg-white { border-radius: 12px; }
+    
+    /* Improved Input Styles */
+    input[type="text"], input[type="password"], input[type="file"], select, textarea {
+      transition: all 0.3s ease;
+      border-color: #e5e7eb;
+    }
+    input[type="text"]:focus, input[type="password"]:focus, input[type="file"]:focus, select:focus, textarea:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+    
+    /* Gradient Backgrounds */
+    .gradient-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .gradient-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .gradient-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+    .gradient-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+    
+    /* Enhanced Table Styles */
+    table tbody tr { transition: background-color 0.2s ease; }
+    table tbody tr:hover { background-color: #f9fafb; }
+    
+    /* Badge Styles */
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge-success { background-color: #d1fae5; color: #065f46; }
+    .badge-warning { background-color: #fef3c7; color: #92400e; }
+    .badge-danger { background-color: #fee2e2; color: #991b1b; }
+    .badge-info { background-color: #dbeafe; color: #0c2340; }
+    
+    /* Mobile Responsive Improvements */
+    @media (max-width: 768px) {
+      body { font-size: 14px; }
+      h1, h2, h3 { font-size: 18px; }
+      .max-w-7xl { padding: 0 12px; }
+      table { font-size: 12px; }
+      th, td { padding: 8px 4px !important; }
+      .grid { gap: 12px !important; }
+      button { padding: 10px 12px !important; font-size: 12px !important; }
+      input, select, textarea { font-size: 16px !important; padding: 10px !important; }
+      .rounded-xl { border-radius: 8px; }
+      .p-5 { padding: 12px !important; }
+      .p-4 { padding: 10px !important; }
+    }
+    
+    @media (max-width: 480px) {
+      body { font-size: 13px; }
+      h1, h2, h3 { font-size: 16px; }
+      .max-w-7xl { padding: 0 8px; }
+      table { font-size: 11px; }
+      th, td { padding: 6px 2px !important; }
+      button { padding: 8px 10px !important; font-size: 11px !important; }
+      input, select, textarea { font-size: 16px !important; padding: 8px !important; }
+      .gap-4 { gap: 8px !important; }
+      .gap-6 { gap: 12px !important; }
+      .text-3xl { font-size: 24px !important; }
+      .text-2xl { font-size: 18px !important; }
+      .text-base { font-size: 14px !important; }
+      .text-sm { font-size: 12px !important; }
+      .text-xs { font-size: 11px !important; }
+    }
   </style>
  </head>
  <body class="h-full bg-slate-50 text-gray-800 flex flex-col">
 
   <!-- หน้าจอล็อกอิน -->
-  <div id="login-screen" class="fixed inset-0 navy-bg z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full space-y-6 fade-in border-t-4 border-amber-400 relative overflow-hidden">
+  <div id="login-screen" class="fixed inset-0 navy-bg z-50 flex items-center justify-center p-4 slide-in-down">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full space-y-6 fade-in border-t-4 border-amber-400 relative overflow-hidden hover:shadow-3xl transition-all">
       <div class="absolute -top-10 -right-10 opacity-5 w-32 h-32 bg-indigo-900 rounded-full"></div>
       
       <div class="text-center space-y-2 relative z-10">
         <div class="w-16 h-16 bg-white rounded-full mx-auto flex items-center justify-center overflow-hidden border-2 border-amber-400 shadow-sm p-1">
           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3jZlVdxgEm6Vdo61ZcVRBBOPF4ga-xhdbiE71PP3dDqBHPc5YJ8BG7D8&s=10" alt="School Logo" class="w-full h-full object-contain">
         </div>
-        <h2 class="text-lg font-bold text-gray-900">เข้าสู่ระบบบริการงานวิชาการ</h2>
+        <h2 class="text-lg font-bold text-gray-900">เข้าสู่ระบบบริหารงานวิชาการ</h2>
         <p class="text-xs text-gray-500">โรงเรียนโคราชพิทยาคม</p>
       </div>
 
@@ -46,7 +115,7 @@
           <label class="block text-xs font-bold text-gray-700 mb-1">รหัสผ่าน (Password)</label>
           <input type="password" id="login-pass" required class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-300 focus:outline-none bg-gray-50" placeholder="••••••••">
         </div>
-        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-lg text-sm transition-all shadow-md hover:shadow-lg">
+        <button type="submit" class="w-full gradient-warning text-white font-bold py-2.5 rounded-lg text-sm transition-all shadow-md hover:shadow-lg hover:scale-105">
           เข้าสู่ระบบ (สำหรับคุณครู)
         </button>
       </form>
@@ -57,7 +126,7 @@
           <div class="flex-grow border-t border-gray-200"></div>
       </div>
 
-      <button type="button" onclick="handleAdminDirectLogin()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-lg text-xs transition-all shadow flex justify-center items-center gap-2 relative z-10 group border border-slate-700">
+      <button type="button" onclick="handleAdminDirectLogin()" class="w-full bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-800 hover:to-slate-950 text-white font-bold py-2.5 rounded-lg text-xs transition-all shadow flex justify-center items-center gap-2 relative z-10 group border border-slate-600 hover:scale-105">
         <i data-lucide="shield-check" class="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform"></i> เข้าสู่ระบบสำหรับผู้ดูแลระบบ (Admin)
       </button>
     </div>
@@ -65,20 +134,20 @@
 
   <!-- แอปพลิเคชันหลัก -->
   <div id="main-app" class="hidden flex-1 flex flex-col overflow-hidden">
-   <header class="navy-bg text-white py-3 px-4 md:px-8 border-b border-amber-400 shrink-0">
-    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+   <header class="navy-bg text-white py-3 px-3 sm:px-4 md:px-8 border-b-2 border-amber-400 shrink-0 shadow-md">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-2 sm:px-0">
       <div class="flex items-center gap-3">
-        <div class="bg-white p-1 rounded-full w-12 h-12 flex items-center justify-center overflow-hidden border border-amber-400 shadow-md">
+        <div class="bg-white p-1 rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center overflow-hidden border border-amber-400 shadow-md">
           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3jZlVdxgEm6Vdo61ZcVRBBOPF4ga-xhdbiE71PP3dDqBHPc5YJ8BG7D8&s=10" alt="Logo" class="w-full h-full object-contain">
         </div>
         <div>
-          <h1 class="text-base font-bold">ระบบงานวิชาการและปฏิทินแบบบูรณาการ</h1>
-          <p class="text-blue-200 text-[10px] font-medium">โรงเรียนโคราชพิทยาคม | ผู้ใช้ปัจจุบัน: <span id="current-user-display" class="text-amber-300 font-bold">-</span></p>
+          <h1 class="text-sm sm:text-base font-bold">ระบบบริหารงานวิชาการและการจองปฏิทินกิจกรรม</h1>
+          <p class="text-blue-200 text-[9px] sm:text-[10px] font-medium">โรงเรียน | ผู้ใช้: <span id="current-user-display" class="text-amber-300 font-bold">-</span></p>
         </div>
       </div>
-      <div class="flex items-center justify-between sm:justify-end gap-4 text-[11px] text-blue-100">
+      <div class="flex items-center justify-between sm:justify-end gap-2 sm:gap-4 text-[10px] sm:text-[11px] text-blue-100">
        <div id="clock-display" class="font-medium text-amber-300"></div>
-       <button onclick="handleLogout()" class="bg-red-700/80 hover:bg-red-600 px-3 py-1.5 rounded border border-red-500 text-white font-bold transition-all flex items-center gap-1.5 shadow-sm">
+       <button onclick="handleLogout()" class="bg-red-700/80 hover:bg-red-600 px-2 sm:px-3 py-1 sm:py-1.5 rounded text-xs sm:text-sm border border-red-500 text-white font-bold transition-all flex items-center gap-1 shadow-sm">
          <i data-lucide="log-out" class="w-3.5 h-3.5"></i> ออกจากระบบ
        </button>
       </div>
@@ -86,18 +155,18 @@
    </header>
 
    <!-- แถบเมนูหลัก -->
-   <div class="bg-white border-b border-gray-200 shrink-0 shadow-sm z-10 relative">
+   <div class="bg-white border-b-2 border-gray-100 shrink-0 shadow-sm z-10 relative">
     <div class="max-w-7xl mx-auto px-4 md:px-6">
-     <div class="flex gap-2 sm:gap-4 overflow-x-auto whitespace-nowrap hide-scrollbar pt-3 pb-2 items-center">
-       <button onclick="switchTab('dashboard')" id="tab-dashboard" class="pb-1 px-2 text-xs md:text-sm font-bold text-indigo-900 border-b-2 border-indigo-900 transition-all hover:text-indigo-700">สรุปผลส่งงาน</button> 
-       <button onclick="switchTab('submission')" id="tab-submission" class="pb-1 px-2 text-xs md:text-sm font-bold text-gray-400 border-b-2 border-transparent transition-all hover:text-indigo-600">ส่งแผนงาน/ปพ.5</button>
-       <button onclick="switchTab('booking')" id="tab-booking" class="pb-1 px-2 text-xs md:text-sm font-bold text-gray-400 border-b-2 border-transparent transition-all hover:text-indigo-600">ปฏิทินจองกิจกรรม</button>
-       <button onclick="switchTab('grades')" id="tab-grades" class="pb-1 px-2 text-xs md:text-sm font-bold text-gray-400 border-b-2 border-transparent transition-all hover:text-indigo-600">บันทึกผล 0,ร,มส,มผ</button>
-       <button onclick="switchTab('volunteer')" id="tab-volunteer" class="pb-1 px-2 text-xs md:text-sm font-bold text-gray-400 border-b-2 border-transparent transition-all hover:text-indigo-600">บันทึกชั่วโมงจิตอาสา</button>
+     <div class="flex gap-1 sm:gap-2 overflow-x-auto whitespace-nowrap hide-scrollbar pt-2 pb-2 items-center px-2 sm:px-0">
+       <button onclick="switchTab('dashboard')" id="tab-dashboard" class="pb-2 px-2 sm:px-3 text-[11px] sm:text-xs md:text-sm font-bold text-indigo-900 border-b-3 border-indigo-900 transition-all hover:text-indigo-700 hover:border-indigo-700">สรุป</button> 
+       <button onclick="switchTab('submission')" id="tab-submission" class="pb-2 px-2 sm:px-3 text-[11px] sm:text-xs md:text-sm font-bold text-gray-500 border-b-3 border-transparent transition-all hover:text-indigo-600 hover:border-indigo-300">ส่งเอกสาร/ปพ.</button>
+       <button onclick="switchTab('booking')" id="tab-booking" class="pb-2 px-2 sm:px-3 text-[11px] sm:text-xs md:text-sm font-bold text-gray-500 border-b-3 border-transparent transition-all hover:text-indigo-600 hover:border-indigo-300">จองกิจกรรม</button>
+       <button onclick="switchTab('grades')" id="tab-grades" class="pb-2 px-2 sm:px-3 text-[11px] sm:text-xs md:text-sm font-bold text-gray-500 border-b-3 border-transparent transition-all hover:text-indigo-600 hover:border-indigo-300">ผลการเรียน</button>
+       <button onclick="switchTab('volunteer')" id="tab-volunteer" class="pb-2 px-2 sm:px-3 text-[11px] sm:text-xs md:text-sm font-bold text-gray-500 border-b-3 border-transparent transition-all hover:text-indigo-600 hover:border-indigo-300">จิตอาสา</button>
        
        <div class="flex-1 min-w-[20px]"></div>
 
-       <button onclick="switchTab('admin')" id="tab-admin" class="px-4 py-1.5 text-[11px] md:text-xs font-bold text-white bg-gradient-to-r from-slate-600 to-slate-800 rounded-full shadow hover:shadow-md transition-all flex items-center gap-1.5 border border-slate-700 shrink-0 opacity-90 hover:opacity-100">
+       <button onclick="switchTab('admin')" id="tab-admin" class="px-4 py-2 text-[11px] md:text-xs font-bold text-white bg-gradient-to-r from-slate-700 to-slate-900 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 border border-slate-600 shrink-0 hover:scale-105">
          <i data-lucide="shield" class="w-3.5 h-3.5 text-amber-400"></i> ระบบผู้ดูแล
        </button>
      </div>
@@ -109,19 +178,20 @@
      <!-- แท็บ Dashboard สรุปผลส่งงาน -->
      <div id="panel-dashboard" class="max-w-7xl mx-auto space-y-6 fade-in">
        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-         <div class="bg-white rounded-xl p-5 card-shadow border-l-4 border-indigo-900">
-           <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">เอกสารวิชาการที่ส่งเข้าระบบ</p>
-           <p id="metric-total" class="text-3xl font-black text-indigo-900 mt-1">0</p>
+       <div class="bg-gradient-to-br from-indigo-50 to-white rounded-xl p-5 card-shadow border-l-4 border-indigo-600 hover:shadow-lg transition-all">
+           <p class="text-[11px] text-gray-600 font-bold uppercase tracking-wider">เอกสารวิชาการที่ส่งเข้าระบบ</p>
+           <p id="metric-total" class="text-3xl font-black text-indigo-900 mt-2">0</p>
+           <p class="text-[10px] text-gray-500 mt-1">รายการ</p>
          </div>
-         <div class="bg-white rounded-xl p-5 card-shadow border-l-4 border-emerald-500">
-           <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">ห้องที่ส่งครบแล้ว</p>
-           <p id="metric-rooms-completed" class="text-3xl font-black text-emerald-600 mt-1">0</p>
-           <p id="list-rooms-completed" class="text-[10px] text-gray-400 mt-1 truncate">-</p>
+         <div class="bg-gradient-to-br from-emerald-50 to-white rounded-xl p-5 card-shadow border-l-4 border-emerald-600 hover:shadow-lg transition-all">
+           <p class="text-[11px] text-gray-600 font-bold uppercase tracking-wider">ห้องที่ส่งครบแล้ว</p>
+           <p id="metric-rooms-completed" class="text-3xl font-black text-emerald-600 mt-2">0</p>
+           <p id="list-rooms-completed" class="text-[10px] text-gray-500 mt-1 truncate">-</p>
          </div>
-         <div class="bg-white rounded-xl p-5 card-shadow border-l-4 border-amber-500">
-           <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">ห้องที่ยังค้างส่ง</p>
-           <p id="metric-rooms-pending" class="text-3xl font-black text-amber-600 mt-1">0</p>
-           <p id="list-rooms-pending" class="text-[10px] text-gray-400 mt-1 truncate">-</p>
+         <div class="bg-gradient-to-br from-amber-50 to-white rounded-xl p-5 card-shadow border-l-4 border-amber-600 hover:shadow-lg transition-all">
+           <p class="text-[11px] text-gray-600 font-bold uppercase tracking-wider">ห้องที่ยังค้างส่ง</p>
+           <p id="metric-rooms-pending" class="text-3xl font-black text-amber-600 mt-2">0</p>
+           <p id="list-rooms-pending" class="text-[10px] text-gray-500 mt-1 truncate">-</p>
          </div>
        </div>
 
@@ -161,14 +231,14 @@
            </div>
          </div>
 
-         <div class="bg-white rounded-xl card-shadow overflow-hidden flex flex-col lg:col-span-2">
-           <div class="p-4 bg-indigo-900 text-white flex items-center justify-between">
-             <h2 class="font-bold text-sm">สถานะการส่งเล่มรายงานวิชาการ</h2>
+         <div class="bg-white rounded-xl card-shadow overflow-hidden flex flex-col lg:col-span-2 hover:shadow-lg transition-all">
+           <div class="p-4 bg-gradient-to-r from-indigo-900 to-indigo-800 text-white flex items-center justify-between">
+             <h2 class="font-bold text-sm flex items-center gap-2"><i data-lucide="file-check" class="w-4 h-4"></i>สถานะการส่งเล่มรายงานวิชาการ</h2>
              <select id="filter-doc" onchange="renderTable()" class="text-xs bg-indigo-800 text-white border border-indigo-700 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400">
                <option value="all">แสดงเอกสารทั้งหมด</option>
-               <option value="ปพ.5">ปพ.5 (ส่ง 3 ครั้ง)</option>
+               <option value="ปพ.5">ปพ.5 (ส่ง 3 ครั้ง - แต่ละรอบการ)</option>
                <option value="แผนการสอน">แผนการสอน (ส่งเล่มสมบูรณ์)</option>
-               <option value="แผนการปฏิบัติงาน">แผนการปฏิบัติงาน (ส่งเล่มสมบูรณ์)</option>
+               <option value="แผนการปฏิบัติงาน">แผนการปฏิบัติงาน (ส่ง 3 ครั้ง)</option>
              </select>
            </div>
            <div class="overflow-x-auto flex-1 max-h-[380px]">
@@ -186,8 +256,8 @@
          </div>
        </div>
 
-       <div class="bg-white rounded-xl card-shadow overflow-hidden">
-          <div class="p-4 bg-slate-800 text-white font-bold text-sm flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-amber-400"></i> ประวัติการอัปโหลดไฟล์เข้าระบบล่าสุด</div>
+       <div class="bg-white rounded-xl card-shadow overflow-hidden hover:shadow-lg transition-all">
+          <div class="p-4 bg-gradient-to-r from-slate-800 to-slate-700 text-white font-bold text-sm flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-amber-400"></i> ประวัติการอัปโหลดไฟล์เข้าระบบล่าสุด</div>
           <div id="log-container" class="p-2 divide-y text-xs max-h-[220px] overflow-y-auto"></div>
        </div>
      </div>
@@ -207,9 +277,9 @@
            <div>
              <label class="block text-xs font-bold text-gray-700 mb-1.5">ประเภทเอกสาร</label>
              <select id="sel-doc" onchange="handleDocTypeChange()" class="w-full border border-gray-300 rounded-lg p-2.5 text-xs bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-300 focus:outline-none">
-               <option value="ปพ.5">ปพ.5</option>
-               <option value="แผนการสอน">แผนการสอน</option>
-               <option value="แผนการปฏิบัติงาน">แผนการปฏิบัติงาน</option>
+               <option value="ปพ.5">ปพ.5 (ส่ง 3 ครั้ง)</option>
+               <option value="แผนการสอน">แผนการสอน (ส่งเล่มสมบูรณ์)</option>
+               <option value="แผนการปฏิบัติงาน">แผนการปฏิบัติงาน (ส่ง 3 ครั้ง)</option>
              </select>
            </div>
          </div>
@@ -232,9 +302,12 @@
                <option value="2">ภาคเรียนที่ 2</option>
              </select>
            </div>
+           <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+             <p class="text-xs font-bold text-blue-900 mb-2"><i data-lucide="info" class="w-3.5 h-3.5 inline mr-1"></i>หมายเหตุ: ปพ.5 ต้องส่ง 3 ครั้งตามรอบการนำส่ง</p>
+           </div>
          </div>
 
-         <div>
+         <div id="round-field">
            <label class="block text-xs font-bold text-gray-700 mb-1.5">รอบการนำส่ง</label>
            <select id="sel-round" class="w-full border border-gray-300 rounded-lg p-2.5 text-xs bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-300 focus:outline-none">
              <option>ครั้งที่ 1</option><option>ครั้งที่ 2</option><option>ครั้งที่ 3</option>
@@ -266,7 +339,7 @@
              <button type="button" onclick="clearFile(event)" class="text-red-500 text-xs font-bold hover:underline bg-red-50 px-2 py-1 rounded">ลบไฟล์</button>
            </div>
          </div>
-         <button type="submit" id="submit-btn" class="w-full navy-bg text-white py-3 rounded-lg font-bold text-sm hover:opacity-90 flex items-center justify-center gap-2 shadow-md">
+       <button type="submit" id="submit-btn" class="w-full gradient-primary text-white py-3 rounded-lg font-bold text-sm hover:shadow-lg flex items-center justify-center gap-2 shadow-md transition-all hover:scale-105">
            <i data-lucide="check-circle" class="w-4 h-4"></i> บันทึกรายการส่งเอกสารวิชาการ
          </button>
        </form>
@@ -301,7 +374,7 @@
                  <input type="text" id="book-time" required class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white" placeholder="เช่น 09.00 - 12.00 น.">
                </div>
              </div>
-             <button type="submit" class="w-full bg-emerald-600 text-white font-bold p-2.5 rounded-lg text-xs hover:bg-emerald-700 shadow-sm">บันทึกส่งข้อมูลขอจอง</button>
+             <button type="submit" class="w-full gradient-success text-white font-bold p-2.5 rounded-lg text-xs hover:shadow-lg shadow-sm transition-all hover:scale-105">บันทึกส่งข้อมูลขอจอง</button>
            </form>
              </div>
 
@@ -341,70 +414,257 @@
        </div>
      </div>
 
-     <!-- แท็บตรวจสอบผล 0, ร, มส, มผ (ปรับปรุงระบบคัดกรอง และแนวโน้มผลเรียนเดิม-ใหม่) -->
+     <!-- แท็บบันทึกผล 0, ร, มส, มผ (ปรับปรุงใหม่ มี Sub-tabs: รายการ | เปรียบเทียบ | สรุป) -->
      <div id="panel-grades" class="max-w-7xl mx-auto hidden fade-in space-y-4">
-       <div class="bg-white rounded-xl card-shadow p-4 flex flex-col md:flex-row gap-3 items-start md:items-center justify-between border-t-4 border-amber-500">
-         <div class="flex flex-wrap gap-2 items-center text-xs w-full md:w-auto">
-           <div>
-             <label class="block text-[10px] font-bold text-gray-500 mb-0.5 uppercase">กรองรายห้อง</label>
-             <select id="filter-grade-room" onchange="renderGradesTable()" class="border border-gray-300 rounded px-2 py-1.5 bg-gray-50 focus:bg-white focus:outline-none text-xs"></select>
-           </div>
-           <div>
-             <label class="block text-[10px] font-bold text-gray-500 mb-0.5 uppercase">ประเภทผล</label>
-             <select id="filter-grade-type" onchange="renderGradesTable()" class="border border-gray-300 rounded px-2 py-1.5 bg-gray-50 focus:bg-white focus:outline-none text-xs">
-               <option value="all">ทั้งหมด</option>
-               <option value="0">0</option>
-               <option value="ร">ร</option>
-               <option value="มส">มส</option>
-               <option value="มผ">มผ</option>
-             </select>
-           </div>
-           <div>
-             <label class="block text-[10px] font-bold text-gray-500 mb-0.5 uppercase">สถานะดำเนินงาน</label>
-             <select id="filter-grade-status" onchange="renderGradesTable()" class="border border-gray-300 rounded px-2 py-1.5 bg-gray-50 focus:bg-white focus:outline-none text-xs">
-               <option value="all">ทั้งหมด</option>
-               <option value="รอดำเนินการ">รอดำเนินการ</option>
-               <option value="แก้ไขแล้ว">แก้ไขแล้ว</option>
-             </select>
-           </div>
-           <div class="flex-1 min-w-[200px]">
-             <label class="block text-[10px] font-bold text-gray-500 mb-0.5 uppercase">ค้นหา (ชื่อเด็ก / รหัสประจำตัว / รายวิชา)</label>
-             <input type="text" id="search-grade-student" oninput="renderGradesTable()" class="border border-gray-300 rounded px-2 py-1.5 focus:outline-none text-xs w-full bg-gray-50 focus:bg-white" placeholder="พิมพ์ชื่อ รหัส หรือวิชาเพื่อค้นหา...">
-           </div>
-         </div>
-         <button onclick="openGradeModal('add')" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-4 py-2 rounded-lg text-xs shadow transition-all flex items-center gap-1.5 shrink-0 self-end md:self-auto">
-           <i data-lucide="plus-circle" class="w-4 h-4"></i> เพิ่มบันทึกรายชื่อค้างผล
-         </button>
-       </div>
 
+       <!-- Grade Sub-tabs -->
        <div class="bg-white rounded-xl card-shadow overflow-hidden">
-         <div class="p-4 bg-slate-800 text-white flex justify-between items-center">
-           <div class="font-bold text-sm flex items-center gap-2"><i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400"></i> ตารางติดตามสถานะและตรวจสอบแนวโน้มผลการเรียนติดค้าง (0, ร, มส, มผ)</div>
-           <div id="grade-summary-count" class="bg-slate-700 text-amber-300 px-2 py-0.5 rounded text-[11px] font-bold">0 รายการ</div>
+         <div class="flex gap-1 border-b border-gray-200 overflow-x-auto hide-scrollbar px-4 pt-3">
+           <button onclick="switchGradeSub('list')" id="btn-grade-list"
+             class="px-4 py-2 text-xs font-bold border-b-2 border-amber-500 text-amber-700 transition-colors whitespace-nowrap">
+             รายการทั้งหมด
+           </button>
+           <button onclick="switchGradeSub('compare')" id="btn-grade-compare"
+             class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors whitespace-nowrap">
+             เปรียบเทียบผลเดิม vs ผลที่แก้แล้ว
+           </button>
+           <button onclick="switchGradeSub('summary')" id="btn-grade-summary"
+             class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors whitespace-nowrap">
+             สรุปสถิติภาพรวม
+           </button>
          </div>
-         <div class="overflow-x-auto p-2">
-           <table class="w-full text-xs text-left border-collapse">
-             <thead class="bg-gray-50 font-bold border-b text-gray-600 rounded-lg">
-               <tr>
-                 <th class="p-3">ห้อง</th>
-                 <th class="p-3">รหัสประจำตัว</th>
-                 <th class="p-3">ชื่อ-นามสกุลนักเรียน</th>
-                 <th class="p-3">รายวิชา</th>
-                 <th class="p-3 text-center">ประเภทผล</th>
-                 <th class="p-3 text-center">ผล/คะแนนเดิม</th>
-                 <th class="p-3 text-center">ผลการแก้</th>
-                 <th class="p-3">ครูประจำวิชา</th>
-                 <th class="p-3 text-center">สถานะ</th>
-                 <th class="p-3 text-center">คำสั่งจัดการ</th>
-               </tr>
-             </thead>
-             <tbody id="grades-table-body"></tbody>
-           </table>
+
+         <!-- ===== Sub: รายการทั้งหมด ===== -->
+         <div id="grade-sub-list" class="p-4 space-y-4 fade-in">
+           <div class="flex flex-col md:flex-row gap-3 items-start md:items-end justify-between">
+             <div class="flex flex-wrap gap-2 items-end text-xs w-full md:w-auto">
+               <div>
+                 <label class="block text-[10px] font-bold text-gray-500 mb-0.5 uppercase">กรองรายห้อง</label>
+                 <select id="filter-grade-room" onchange="renderGradesTable()" class="border border-gray-300 rounded px-2 py-1.5 bg-gray-50 focus:bg-white focus:outline-none text-xs"></select>
+               </div>
+               <div>
+                 <label class="block text-[10px] font-bold text-gray-500 mb-0.5 uppercase">ประเภทผล</label>
+                 <select id="filter-grade-type" onchange="renderGradesTable()" class="border border-gray-300 rounded px-2 py-1.5 bg-gray-50 focus:bg-white focus:outline-none text-xs">
+                   <option value="all">ทั้งหมด</option>
+                   <option value="0">0</option>
+                   <option value="ร">ร</option>
+                   <option value="มส">มส</option>
+                   <option value="มผ">มผ</option>
+                 </select>
+               </div>
+               <div>
+                 <label class="block text-[10px] font-bold text-gray-500 mb-0.5 uppercase">กรองตามผลการเรียน</label>
+                 <select id="filter-grade-status" onchange="renderGradesTable()" class="border border-gray-300 rounded px-2 py-1.5 bg-gray-50 focus:bg-white focus:outline-none text-xs">
+                   <option value="all">ทั้งหมด</option>
+                   <option value="รอดำเนินการ">รอการแก้ไข (ยังไม่เสร็จ)</option>
+                   <option value="แก้ไขแล้ว">แก้ไขเสร็จสิ้น (มีผลใหม่แล้ว)</option>
+                 </select>
+               </div>
+               <div class="min-w-[200px]">
+                 <label class="block text-[10px] font-bold text-gray-500 mb-0.5 uppercase">ค้นหา (ชื่อ / รหัส / รายวิชา)</label>
+                 <input type="text" id="search-grade-student" oninput="renderGradesTable()"
+                   class="border border-gray-300 rounded px-2 py-1.5 focus:outline-none text-xs w-full bg-gray-50 focus:bg-white"
+                   placeholder="พิมพ์ชื่อ รหัส หรือวิชาเพื่อค้นหา...">
+               </div>
+             </div>
+             <button onclick="openGradeModal('add')"
+               class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-4 py-2 rounded-lg text-xs shadow transition-all flex items-center gap-1.5 shrink-0">
+               <i data-lucide="plus-circle" class="w-4 h-4"></i> บันทึก/แก้ไข ผลการเรียนเดิมและผลการแก้ไข
+             </button>
+           </div>
+
+           <div class="overflow-hidden rounded-xl border border-gray-200">
+             <div class="p-3 bg-slate-800 text-white flex justify-between items-center">
+               <div class="font-bold text-sm flex items-center gap-2">
+                 <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400"></i>
+                 ตารางติดตามผลการเรียนติดค้าง (0, ร, มส, มผ)
+               </div>
+               <div id="grade-summary-count" class="bg-slate-700 text-amber-300 px-2 py-0.5 rounded text-[11px] font-bold">0 รายการ</div>
+             </div>
+             <div class="overflow-x-auto">
+               <table class="w-full text-xs text-left border-collapse">
+                 <thead class="bg-gray-50 font-bold border-b text-gray-600">
+                   <tr>
+                     <th class="p-3">ห้อง</th>
+                     <th class="p-3">รหัสประจำตัว</th>
+                     <th class="p-3">ชื่อ-นามสกุลนักเรียน</th>
+                     <th class="p-3">รายวิชา</th>
+                     <th class="p-3 text-center">ประเภทผล</th>
+                     <th class="p-3 text-center bg-red-50 text-red-700">ผลเรียนเดิม</th>
+                     <th class="p-3 text-center bg-emerald-50 text-emerald-700">ผลที่แก้แล้ว</th>
+                     <th class="p-3">ครูประจำวิชา</th>
+                     <th class="p-3 text-center">สถานะ</th>
+                     <th class="p-3 text-center">คำสั่งจัดการ</th>
+                   </tr>
+                 </thead>
+                 <tbody id="grades-table-body"></tbody>
+               </table>
+             </div>
+           </div>
          </div>
+
+         <!-- ===== Sub: เปรียบเทียบผลเดิม vs ผลที่แก้แล้ว ===== -->
+         <div id="grade-sub-compare" class="p-4 space-y-4 hidden fade-in">
+           <div class="flex flex-wrap gap-2 items-end text-xs">
+             <div>
+               <label class="block text-[10px] font-bold text-gray-500 mb-0.5 uppercase">กรองรายห้อง</label>
+               <select id="compare-grade-room" onchange="renderGradeCompare()"
+                 class="border border-gray-300 rounded px-2 py-1.5 bg-gray-50 focus:bg-white focus:outline-none text-xs"></select>
+             </div>
+             <div>
+               <label class="block text-[10px] font-bold text-gray-500 mb-0.5 uppercase">ประเภทผล</label>
+               <select id="compare-grade-type" onchange="renderGradeCompare()"
+                 class="border border-gray-300 rounded px-2 py-1.5 bg-gray-50 focus:bg-white focus:outline-none text-xs">
+                 <option value="all">ทั้งหมด</option>
+                 <option value="0">0</option>
+                 <option value="ร">ร</option>
+                 <option value="มส">มส</option>
+                 <option value="มผ">มผ</option>
+               </select>
+             </div>
+             <div>
+               <label class="block text-[10px] font-bold text-gray-500 mb-0.5 uppercase">กรองตามผลการเรียน</label>
+               <select id="compare-grade-status" onchange="renderGradeCompare()"
+                 class="border border-gray-300 rounded px-2 py-1.5 bg-gray-50 focus:bg-white focus:outline-none text-xs">
+                 <option value="all">ทั้งหมด</option>
+                 <option value="รอดำเนินการ">รอการแก้ไข (ยังไม่เสร็จ)</option>
+                 <option value="แก้ไขแล้ว">แก้ไขเสร็จสิ้น (มีผลใหม่แล้ว)</option>
+               </select>
+             </div>
+             <div class="min-w-[180px]">
+               <label class="block text-[10px] font-bold text-gray-500 mb-0.5 uppercase">ค้นหาชื่อ / รหัส / วิชา</label>
+               <input type="text" id="compare-grade-search" oninput="renderGradeCompare()"
+                 class="border border-gray-300 rounded px-2 py-1.5 focus:outline-none text-xs w-full bg-gray-50 focus:bg-white"
+                 placeholder="ค้นหา...">
+             </div>
+           </div>
+
+           <!-- Summary badges -->
+           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+             <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+               <p class="text-[10px] font-bold text-slate-500 uppercase">รายการทั้งหมด</p>
+               <p id="cmp-stat-total" class="text-2xl font-black text-slate-700 mt-0.5">0</p>
+             </div>
+             <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
+               <p class="text-[10px] font-bold text-amber-600 uppercase">รอการแก้ไข</p>
+               <p id="cmp-stat-pending" class="text-2xl font-black text-amber-700 mt-0.5">0</p>
+             </div>
+             <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center">
+               <p class="text-[10px] font-bold text-emerald-600 uppercase">แก้ไขเสร็จสิ้น</p>
+               <p id="cmp-stat-done" class="text-2xl font-black text-emerald-700 mt-0.5">0</p>
+             </div>
+             <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-3 text-center">
+               <p class="text-[10px] font-bold text-indigo-600 uppercase">มีผลที่แก้แล้ว</p>
+               <p id="cmp-stat-has-new" class="text-2xl font-black text-indigo-700 mt-0.5">0</p>
+             </div>
+           </div>
+
+           <div class="overflow-hidden rounded-xl border border-gray-200">
+             <div class="p-3 bg-indigo-900 text-white font-bold text-sm flex items-center gap-2">
+               <i data-lucide="git-compare" class="w-4 h-4 text-amber-300"></i>
+               ตารางเปรียบเทียบผลการเรียนเดิม กับ ผลการเรียนที่แก้แล้ว
+             </div>
+             <div class="overflow-x-auto">
+               <table class="w-full text-xs text-left border-collapse">
+                 <thead class="bg-gray-50 font-bold border-b text-gray-600">
+                   <tr>
+                     <th class="p-3">ห้อง</th>
+                     <th class="p-3">รหัสประจำตัว</th>
+                     <th class="p-3">ชื่อ-นามสกุลนักเรียน</th>
+                     <th class="p-3">รายวิชา</th>
+                     <th class="p-3 text-center">ประเภทผล</th>
+                     <th class="p-3 text-center" style="background:#fff1f2;color:#b91c1c;">ผลการเรียนเดิม</th>
+                     <th class="p-3 text-center text-gray-400">→</th>
+                     <th class="p-3 text-center" style="background:#f0fdf4;color:#15803d;">ผลที่แก้แล้ว</th>
+                     <th class="p-3">ครูประจำวิชา</th>
+                     <th class="p-3 text-center">สถานะ</th>
+                     <th class="p-3 text-center">แก้ไข</th>
+                   </tr>
+                 </thead>
+                 <tbody id="grade-compare-tbody"></tbody>
+               </table>
+             </div>
+           </div>
+         </div>
+
+         <!-- ===== Sub: สรุปสถิติภาพรวม ===== -->
+         <div id="grade-sub-summary" class="p-4 space-y-5 hidden fade-in">
+           <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+             <div class="bg-white rounded-xl border border-gray-200 p-4 text-center card-shadow">
+               <p class="text-[10px] font-bold text-gray-400 uppercase">รายการทั้งหมด</p>
+               <p id="gs-total" class="text-3xl font-black text-slate-800 mt-1">0</p>
+             </div>
+             <div class="bg-amber-50 rounded-xl border border-amber-200 p-4 text-center">
+               <p class="text-[10px] font-bold text-amber-500 uppercase">รอการแก้ไข</p>
+               <p id="gs-pending" class="text-3xl font-black text-amber-600 mt-1">0</p>
+             </div>
+             <div class="bg-emerald-50 rounded-xl border border-emerald-200 p-4 text-center">
+               <p class="text-[10px] font-bold text-emerald-500 uppercase">แก้ไขเสร็จสิ้น</p>
+               <p id="gs-done" class="text-3xl font-black text-emerald-600 mt-1">0</p>
+             </div>
+             <div class="bg-indigo-50 rounded-xl border border-indigo-200 p-4 text-center">
+               <p class="text-[10px] font-bold text-indigo-500 uppercase">อัตราแก้ไขสำเร็จ</p>
+               <p id="gs-rate" class="text-3xl font-black text-indigo-600 mt-1">0%</p>
+             </div>
+           </div>
+
+           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+             <!-- สถิติแยกตามประเภทผล -->
+             <div class="bg-white rounded-xl border border-gray-200 p-4">
+               <h3 class="font-bold text-sm text-slate-800 mb-3 flex items-center gap-2">
+                 <i data-lucide="bar-chart-2" class="w-4 h-4 text-amber-500"></i> สถิติแยกตามประเภทผลการเรียน
+               </h3>
+               <div class="space-y-3" id="gs-type-bars"></div>
+             </div>
+             <!-- สถิติแยกตามห้องเรียน -->
+             <div class="bg-white rounded-xl border border-gray-200 p-4">
+               <h3 class="font-bold text-sm text-slate-800 mb-3 flex items-center gap-2">
+                 <i data-lucide="layers" class="w-4 h-4 text-indigo-500"></i> สถิติแยกตามห้องเรียน
+               </h3>
+               <div class="overflow-x-auto max-h-[260px]">
+                 <table class="w-full text-xs text-left">
+                   <thead class="bg-gray-50 font-bold border-b text-gray-500 sticky top-0">
+                     <tr>
+                       <th class="p-2">ห้องเรียน</th>
+                       <th class="p-2 text-center">รายการ</th>
+                       <th class="p-2 text-center">แก้แล้ว</th>
+                       <th class="p-2 text-center">คงค้าง</th>
+                       <th class="p-2 text-center">อัตรา%</th>
+                     </tr>
+                   </thead>
+                   <tbody id="gs-room-tbody"></tbody>
+                 </table>
+               </div>
+             </div>
+           </div>
+
+           <!-- ตารางรายชื่อที่แก้ไขแล้วล่าสุด -->
+           <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+             <div class="p-3 bg-emerald-700 text-white font-bold text-sm flex items-center gap-2">
+               <i data-lucide="check-circle" class="w-4 h-4"></i> รายชื่อที่แก้ไขผลการเรียนสำเร็จแล้ว
+             </div>
+             <div class="overflow-x-auto max-h-[280px]">
+               <table class="w-full text-xs text-left">
+                 <thead class="bg-gray-50 font-bold border-b text-gray-500 sticky top-0">
+                   <tr>
+                     <th class="p-3">ห้อง</th>
+                     <th class="p-3">รหัส</th>
+                     <th class="p-3">ชื่อ-นามสกุล</th>
+                     <th class="p-3">รายวิชา</th>
+                     <th class="p-3 text-center">ผลเดิม</th>
+                     <th class="p-3 text-center">ผลที่แก้</th>
+                     <th class="p-3">ครูประจำวิชา</th>
+                   </tr>
+                 </thead>
+                 <tbody id="gs-done-tbody"></tbody>
+               </table>
+             </div>
+           </div>
+         </div>
+
        </div>
      </div>
-
-     <!-- แท็บจิตอาสา -->
+          <!-- แท็บจิตอาสา -->
      <div id="panel-volunteer" class="max-w-7xl mx-auto hidden fade-in space-y-6">
        
        <!-- Volunteer Sub-tabs -->
@@ -536,7 +796,7 @@
                    </div>
                  </div>
 
-                 <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold p-2.5 rounded-lg text-xs shadow-sm transition-colors">
+             <button type="submit" class="w-full gradient-primary text-white font-bold p-2.5 rounded-lg text-xs shadow-sm transition-all hover:shadow-lg hover:scale-105">
                    บันทึกชั่วโมงจิตอาสา
                  </button>
                </form>
@@ -603,11 +863,11 @@
 
 <!-- ระบบผู้ดูแลระบบ Admin Panel (เพิ่มส่วนจัดการฐานข้อมูลรายชื่อนักเรียนกลาง) -->
      <div id="panel-admin" class="max-w-7xl mx-auto hidden fade-in space-y-6">
-       <div class="flex gap-2 border-b border-gray-200 pb-1 overflow-x-auto hide-scrollbar">
-         <button id="btn-admin-docs" onclick="switchAdminSub('docs')" class="px-4 py-2 text-xs font-bold border-b-2 border-red-600 text-red-700 transition-colors">จัดการไฟล์ครูที่ส่ง</button>
-         <button id="btn-admin-teachers" onclick="switchAdminSub('teachers')" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors">จัดการรหัสครูและสร้างบัญชี</button>
-         <button id="btn-admin-masters" onclick="switchAdminSub('masters')" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors">อัปโหลดไฟล์ตัวอย่าง ปพ.5</button>
-         <button id="btn-admin-students" onclick="switchAdminSub('students')" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors">จัดการรายชื่อนักเรียน (เพิ่ม/ลบ/แก้ไข)</button>
+       <div class="flex gap-2 border-b-2 border-gray-200 pb-1 overflow-x-auto hide-scrollbar">
+         <button id="btn-admin-docs" onclick="switchAdminSub('docs')" class="px-4 py-2 text-xs font-bold border-b-3 border-red-600 text-red-700 transition-colors hover:text-red-800">จัดการไฟล์ครูที่ส่ง</button>
+         <button id="btn-admin-teachers" onclick="switchAdminSub('teachers')" class="px-4 py-2 text-xs font-bold border-b-3 border-transparent text-gray-600 hover:text-blue-600 hover:border-blue-300 transition-colors">จัดการรหัสครูและสร้างบัญชี</button>
+         <button id="btn-admin-masters" onclick="switchAdminSub('masters')" class="px-4 py-2 text-xs font-bold border-b-3 border-transparent text-gray-600 hover:text-amber-600 hover:border-amber-300 transition-colors">อัปโหลดไฟล์ตัวอย่าง ปพ.5</button>
+         <button id="btn-admin-students" onclick="switchAdminSub('students')" class="px-4 py-2 text-xs font-bold border-b-3 border-transparent text-gray-600 hover:text-emerald-600 hover:border-emerald-300 transition-colors">จัดการรายชื่อนักเรียน (เพิ่ม/ลบ/แก้ไข)</button>
        </div>
 
        <!-- คลังรวมไฟล์ -->
@@ -647,11 +907,11 @@
                <label class="block text-[11px] font-bold text-gray-600 mb-1">กำหนดรหัสผ่าน (Password)</label>
                <input type="text" id="teacher-password" required class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white" placeholder="กำหนดรหัสผ่าน">
              </div>
-             <button type="submit" class="w-full bg-blue-600 text-white font-bold p-2.5 rounded-lg text-xs hover:bg-blue-700 shadow-sm">เพิ่มบัญชีผู้ใช้ใหม่</button>
+             <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold p-2.5 rounded-lg text-xs hover:shadow-lg shadow-sm transition-all hover:scale-105">เพิ่มบัญชีผู้ใช้ใหม่</button>
            </form>
          </div>
          <div class="lg:col-span-2 bg-white rounded-xl card-shadow overflow-hidden">
-           <div class="p-4 bg-blue-900 text-white font-bold text-sm flex items-center gap-2"><i data-lucide="users" class="w-4 h-4"></i> รายชื่อคุณครูในระบบ</div>
+           <div class="p-4 bg-gradient-to-r from-blue-900 to-blue-800 text-white font-bold text-sm flex items-center gap-2"><i data-lucide="users" class="w-4 h-4"></i> รายชื่อคุณครูในระบบ</div>
            <div class="p-2 overflow-x-auto">
              <table class="w-full text-xs text-left">
                <thead class="bg-gray-50 border-b font-bold text-gray-600">
@@ -682,7 +942,7 @@
                <label class="block text-[11px] font-bold text-gray-600 mb-1">เลือกไฟล์ตัวอย่าง</label>
                <input type="file" id="master-file-input" required class="w-full text-xs border rounded-lg p-1.5 bg-gray-50">
              </div>
-             <button type="submit" class="w-full bg-amber-500 text-white font-bold p-2.5 rounded-lg text-xs hover:bg-amber-600 shadow-sm">อัปโหลดไฟล์ต้นแบบ</button>
+             <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold p-2.5 rounded-lg text-xs hover:shadow-lg shadow-sm transition-all hover:scale-105">อัปโหลดไฟล์ต้นแบบ</button>
            </form>
          </div>
          <div class="lg:col-span-2 bg-white rounded-xl card-shadow overflow-hidden">
@@ -716,7 +976,7 @@
                <select id="admin-student-room-input" class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white"></select>
              </div>
              <div class="flex gap-2">
-               <button type="submit" class="w-full bg-emerald-600 text-white font-bold p-2.5 rounded-lg text-xs hover:bg-emerald-700 shadow-sm">บันทึกข้อมูลนักเรียน</button>
+               <button type="submit" class="w-full gradient-success text-white font-bold p-2.5 rounded-lg text-xs hover:shadow-lg shadow-sm transition-all hover:scale-105">บันทึกข้อมูลนักเรียน</button>
                <button type="button" id="admin-student-cancel-btn" onclick="cancelAdminStudentEdit()" class="hidden bg-gray-400 text-white font-bold p-2.5 rounded-lg text-xs hover:bg-gray-500 shadow-sm">ยกเลิก</button>
              </div>
            </form>
@@ -747,7 +1007,7 @@
    <div id="grade-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden fade-in border border-gray-100">
        <div class="p-4 bg-amber-500 text-white font-bold text-sm flex justify-between items-center">
-         <span id="grade-modal-title" class="flex items-center gap-2"><i data-lucide="user-plus" class="w-4 h-4"></i> เพิ่มรายชื่อนักเรียนค้างผล</span>
+         <span id="grade-modal-title" class="flex items-center gap-2"><i data-lucide="user-plus" class="w-4 h-4"></i> บันทึกข้อมูลผลการเรียนเดิมและผลการแก้ไข</span>
          <button onclick="closeGradeModal()" type="button" class="text-amber-50 hover:text-white bg-amber-600 hover:bg-amber-700 p-1 rounded-lg transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button>
        </div>
        <form id="grade-form-el" onsubmit="handleGradeSubmit(event)" class="p-5 space-y-4 bg-gray-50/50">
@@ -786,11 +1046,11 @@
              </select>
            </div>
            <div>
-             <label class="block text-[11px] font-bold text-gray-700 mb-1">ผลเรียน/คะแนนเดิม</label>
+             <label class="block text-[11px] font-bold text-gray-700 mb-1">ผลการเรียนเดิม (0,ร,มส,มผ)</label>
              <input type="text" id="grade-old-score" class="w-full border rounded-lg p-2.5 text-xs shadow-sm" placeholder="เช่น 0 หรือ ร">
            </div>
            <div>
-             <label class="block text-[11px] font-bold text-gray-700 mb-1">ผลเรียน/ผลการแก้</label>
+             <label class="block text-[11px] font-bold text-gray-700 mb-1">ผลการเรียนที่แก้ไขแล้ว</label>
              <input type="text" id="grade-remedial-score" class="w-full border rounded-lg p-2.5 text-xs shadow-sm" placeholder="เช่น 1 หรือ 2">
            </div>
          </div>
@@ -800,10 +1060,10 @@
              <input type="text" id="grade-teacher" required class="w-full border rounded-lg p-2.5 text-xs shadow-sm" placeholder="ชื่อคุณครู">
            </div>
            <div>
-             <label class="block text-[11px] font-bold text-gray-700 mb-1">สถานะปัจจุบัน</label>
+             <label class="block text-[11px] font-bold text-gray-700 mb-1">สถานะการดำเนินงาน</label>
              <select id="grade-status" class="w-full border rounded-lg p-2.5 text-xs bg-white shadow-sm font-bold text-gray-700">
-               <option value="รอดำเนินการ">รอดำเนินการ</option>
-               <option value="แก้ไขแล้ว">แก้ไขแล้ว</option>
+               <option value="รอดำเนินการ">รอการแก้ไข (ยังไม่เสร็จ)</option>
+               <option value="แก้ไขแล้ว">แก้ไขเสร็จสิ้น (มีผลใหม่แล้ว)</option>
              </select>
            </div>
          </div>
@@ -996,7 +1256,7 @@ function checkAndSeedStudents() {
 }
 
 function initDropdowns() {
-  const selects = ['sel-room', 'grade-room', 'master-room', 'vol-room', 'filter-vol-room', 'filter-vol-room-history', 'filter-grade-room', 'admin-student-room-input', 'admin-filter-student-room'];
+  const selects = ['sel-room', 'grade-room', 'master-room', 'vol-room', 'filter-vol-room', 'filter-vol-room-history', 'filter-grade-room', 'compare-grade-room', 'admin-student-room-input', 'admin-filter-student-room'];
   selects.forEach(id => {
     const el = document.getElementById(id); if (!el) return;
     
@@ -1004,6 +1264,7 @@ function initDropdowns() {
     else if (id === 'filter-vol-room') el.innerHTML = '<option value="all">แสดงทุกห้องเรียน</option>';
     else if (id === 'filter-vol-room-history') el.innerHTML = '<option value="all">ทุกห้องเรียน</option>';
     else if (id === 'filter-grade-room') el.innerHTML = '<option value="all">ทุกห้องเรียน</option>';
+    else if (id === 'compare-grade-room') el.innerHTML = '<option value="all">ทุกห้องเรียน</option>';
     else if (id === 'admin-filter-student-room') el.innerHTML = '<option value="all">ทุกห้องเรียน</option>';
     else el.innerHTML = '';
     
@@ -1117,6 +1378,11 @@ function startRealtimeSync() {
   gradeCollection.onSnapshot(snap => {
     grades = []; snap.forEach(d => grades.push({ id: d.id, ...d.data() }));
     renderGradesTable();
+    // อัปเดต sub-tabs อื่นๆ ถ้ากำลังแสดงอยู่
+    const compareEl = document.getElementById('grade-sub-compare');
+    if (compareEl && !compareEl.classList.contains('hidden')) renderGradeCompare();
+    const summaryEl = document.getElementById('grade-sub-summary');
+    if (summaryEl && !summaryEl.classList.contains('hidden')) renderGradeSummary();
   });
   teacherCollection.onSnapshot(snap => {
     teachers = []; snap.forEach(d => teachers.push({ id: d.id, ...d.data() }));
@@ -1366,7 +1632,7 @@ function openGradeModal(mode, id = null) {
   const form = document.getElementById('grade-form-el'); form.reset();
   
   if (mode === 'edit' && id) {
-    editingGradeId = id; title.innerHTML = `<i data-lucide="edit" class="w-4 h-4"></i> แก้ไขข้อมูลผลการเรียนนักเรียน`;
+    editingGradeId = id; title.innerHTML = `<i data-lucide="edit" class="w-4 h-4"></i> แก้ไขข้อมูลผลการเรียนเดิม/ผลการแก้ไข`;
     const g = grades.find(x => x.id === id);
     if (g) {
       document.getElementById('grade-room').value = g.room; handleGradeRoomChange();
@@ -1385,7 +1651,7 @@ function openGradeModal(mode, id = null) {
       document.getElementById('grade-status').value = g.status || 'รอดำเนินการ';
     }
   } else {
-    editingGradeId = null; title.innerHTML = `<i data-lucide="user-plus" class="w-4 h-4"></i> เพิ่มรายชื่อนักเรียนค้างผล`;
+    editingGradeId = null; title.innerHTML = `<i data-lucide="user-plus" class="w-4 h-4"></i> บันทึก/แก้ไข ผลการเรียนเดิมและผลการแก้ไข`;
     document.getElementById('grade-room').selectedIndex = 0; handleGradeRoomChange();
   }
   lucide.createIcons();
@@ -1465,6 +1731,205 @@ async function handleGradeSubmit(event) {
 
 async function toggleGradeStatus(id, stat) { await gradeCollection.doc(id).update({ status: stat === "แก้ไขแล้ว" ? "รอดำเนินการ" : "แก้ไขแล้ว" }); }
 async function deleteGradeRecord(id) { if(confirm('ต้องการลบประวัตินักเรียนคนนี้ใช่หรือไม่?')) await gradeCollection.doc(id).delete(); }
+
+// --- ฟังก์ชัน Sub-tabs ของระบบบันทึกผล 0, ร, มส, มผ ---
+
+// 📌 สลับ Sub-tab ในหน้า grades
+function switchGradeSub(sub) {
+  ['list', 'compare', 'summary'].forEach(s => {
+    const p = document.getElementById(`grade-sub-${s}`);
+    if (p) p.classList.toggle('hidden', s !== sub);
+    const b = document.getElementById(`btn-grade-${s}`);
+    if (b) {
+      b.className = s === sub
+        ? "px-4 py-2 text-xs font-bold border-b-2 border-amber-500 text-amber-700 transition-colors whitespace-nowrap"
+        : "px-4 py-2 text-xs font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors whitespace-nowrap";
+    }
+  });
+  if (sub === 'compare') { populateCompareDropdowns(); renderGradeCompare(); }
+  if (sub === 'summary') renderGradeSummary();
+  lucide.createIcons();
+}
+
+// 📌 เติม dropdown ห้องเรียนในหน้า compare
+function populateCompareDropdowns() {
+  const sel = document.getElementById('compare-grade-room');
+  if (!sel) return;
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="all">ทุกห้องเรียน</option>';
+  ROOMS.forEach(r => {
+    const o = document.createElement('option');
+    o.value = r; o.textContent = r; sel.appendChild(o);
+  });
+  if (currentVal) sel.value = currentVal;
+}
+
+// 📌 แสดงตารางเปรียบเทียบผลเดิม vs ผลที่แก้แล้ว
+function renderGradeCompare() {
+  const tbody = document.getElementById('grade-compare-tbody');
+  if (!tbody) return;
+
+  const roomFilter = document.getElementById('compare-grade-room')?.value || 'all';
+  const typeFilter = document.getElementById('compare-grade-type')?.value || 'all';
+  const statusFilter = document.getElementById('compare-grade-status')?.value || 'all';
+  const searchFilter = (document.getElementById('compare-grade-search')?.value || '').trim().toLowerCase();
+
+  let filtered = grades;
+  if (roomFilter !== 'all') filtered = filtered.filter(g => g.room === roomFilter);
+  if (typeFilter !== 'all') filtered = filtered.filter(g => g.type === typeFilter);
+  if (statusFilter !== 'all') filtered = filtered.filter(g => g.status === statusFilter);
+  if (searchFilter) {
+    filtered = filtered.filter(g =>
+      (g.student && g.student.toLowerCase().includes(searchFilter)) ||
+      (g.student_id && g.student_id.toLowerCase().includes(searchFilter)) ||
+      (g.subject && g.subject.toLowerCase().includes(searchFilter)) ||
+      (g.code && g.code.toLowerCase().includes(searchFilter))
+    );
+  }
+
+  const total = filtered.length;
+  const pending = filtered.filter(g => g.status === 'รอดำเนินการ').length;
+  const done = filtered.filter(g => g.status === 'แก้ไขแล้ว').length;
+  const hasNew = filtered.filter(g => g.remedial_score && g.remedial_score.trim() !== '').length;
+
+  const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  setEl('cmp-stat-total', total);
+  setEl('cmp-stat-pending', pending);
+  setEl('cmp-stat-done', done);
+  setEl('cmp-stat-has-new', hasNew);
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="11" class="p-5 text-center text-gray-400 font-medium">ไม่พบข้อมูลที่ตรงตามเงื่อนไขที่เลือก</td></tr>`;
+    return;
+  }
+
+  const typeColors = { '0': 'bg-red-100 text-red-700', 'ร': 'bg-orange-100 text-orange-700', 'มส': 'bg-purple-100 text-purple-700', 'มผ': 'bg-gray-100 text-gray-700' };
+
+  tbody.innerHTML = filtered.map(g => {
+    const hasRemedial = g.remedial_score && g.remedial_score.trim() !== '';
+    const isDone = g.status === 'แก้ไขแล้ว';
+    const typeColor = typeColors[g.type] || 'bg-red-100 text-red-700';
+    const rowBg = isDone ? 'bg-emerald-50/40' : '';
+
+    const oldScoreCell = g.old_score
+      ? `<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold">${g.old_score}</span>`
+      : `<span class="text-gray-300 italic">ไม่ระบุ</span>`;
+
+    const newScoreCell = hasRemedial
+      ? `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-bold">${g.remedial_score}</span>`
+      : `<span class="text-gray-300 italic">ยังไม่มีผล</span>`;
+
+    return `
+    <tr class="border-b hover:bg-gray-50 transition-colors ${rowBg}">
+      <td class="p-3 font-bold text-gray-700">${g.room}</td>
+      <td class="p-3 font-mono text-gray-400 font-semibold">${g.student_id || '-'}</td>
+      <td class="p-3 font-bold text-indigo-900">${g.student}</td>
+      <td class="p-3 text-gray-600">${g.code || ''} ${g.subject}</td>
+      <td class="p-3 text-center"><span class="${typeColor} px-2.5 py-0.5 rounded-full font-black text-[11px]">${g.type}</span></td>
+      <td class="p-3 text-center">${oldScoreCell}</td>
+      <td class="p-3 text-center text-gray-300 font-bold">→</td>
+      <td class="p-3 text-center">${newScoreCell}</td>
+      <td class="p-3 text-gray-500 text-[11px]">${g.teacher}</td>
+      <td class="p-3 text-center">
+        <span class="font-bold px-2 py-1 rounded-md text-[10px] ${isDone ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-amber-50 text-amber-600 border border-amber-200'}">${g.status}</span>
+      </td>
+      <td class="p-3 text-center">
+        <button onclick="openGradeModal('edit', '${g.id}')" class="bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 px-2 py-1 rounded text-[10px] font-bold">แก้ไข</button>
+      </td>
+    </tr>`;
+  }).join('');
+  lucide.createIcons();
+}
+
+// 📌 แสดงสรุปสถิติภาพรวมผลการเรียน
+function renderGradeSummary() {
+  const total = grades.length;
+  const pending = grades.filter(g => g.status === 'รอดำเนินการ').length;
+  const done = grades.filter(g => g.status === 'แก้ไขแล้ว').length;
+  const rate = total > 0 ? Math.round(done / total * 100) : 0;
+
+  const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  setEl('gs-total', total);
+  setEl('gs-pending', pending);
+  setEl('gs-done', done);
+  setEl('gs-rate', rate + '%');
+
+  // สถิติแยกตามประเภทผล
+  const typesBarsEl = document.getElementById('gs-type-bars');
+  if (typesBarsEl) {
+    const typeList = ['0', 'ร', 'มส', 'มผ'];
+    const typeColors = { '0': 'bg-red-500', 'ร': 'bg-orange-500', 'มส': 'bg-purple-500', 'มผ': 'bg-gray-500' };
+    const typeBgColors = { '0': 'bg-red-50', 'ร': 'bg-orange-50', 'มส': 'bg-purple-50', 'มผ': 'bg-gray-50' };
+    typesBarsEl.innerHTML = typeList.map(t => {
+      const count = grades.filter(g => g.type === t).length;
+      const doneCount = grades.filter(g => g.type === t && g.status === 'แก้ไขแล้ว').length;
+      const pct = count > 0 ? Math.round(doneCount / count * 100) : 0;
+      const barWidth = total > 0 ? Math.round(count / total * 100) : 0;
+      return `
+        <div class="${typeBgColors[t]} rounded-lg p-2.5 border border-gray-100">
+          <div class="flex justify-between items-center mb-1.5">
+            <span class="font-black text-sm ${typeColors[t].replace('bg-', 'text-')}">${t}</span>
+            <span class="text-[11px] text-gray-500 font-bold">${count} ราย (แก้แล้ว ${doneCount} ราย = ${pct}%)</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="${typeColors[t]} h-2 rounded-full transition-all" style="width:${barWidth}%"></div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // สถิติแยกตามห้องเรียน
+  const roomTbody = document.getElementById('gs-room-tbody');
+  if (roomTbody) {
+    const roomStats = {};
+    ROOMS.forEach(r => { roomStats[r] = { total: 0, done: 0 }; });
+    grades.forEach(g => {
+      if (roomStats[g.room]) {
+        roomStats[g.room].total++;
+        if (g.status === 'แก้ไขแล้ว') roomStats[g.room].done++;
+      }
+    });
+    const activeRooms = ROOMS.filter(r => roomStats[r].total > 0);
+    if (activeRooms.length === 0) {
+      roomTbody.innerHTML = `<tr><td colspan="5" class="p-3 text-center text-gray-400">ยังไม่มีข้อมูล</td></tr>`;
+    } else {
+      roomTbody.innerHTML = activeRooms.map(r => {
+        const s = roomStats[r];
+        const pending = s.total - s.done;
+        const rateR = s.total > 0 ? Math.round(s.done / s.total * 100) : 0;
+        const colorClass = rateR >= 80 ? 'text-emerald-600' : rateR >= 50 ? 'text-amber-600' : 'text-red-500';
+        return `<tr class="border-b hover:bg-gray-50">
+          <td class="p-2 font-bold text-gray-700">${r}</td>
+          <td class="p-2 text-center font-medium">${s.total}</td>
+          <td class="p-2 text-center font-bold text-emerald-600">${s.done}</td>
+          <td class="p-2 text-center font-bold text-amber-600">${pending}</td>
+          <td class="p-2 text-center font-bold ${colorClass}">${rateR}%</td>
+        </tr>`;
+      }).join('');
+    }
+  }
+
+  // ตารางรายชื่อที่แก้ไขแล้ว
+  const doneTbody = document.getElementById('gs-done-tbody');
+  if (doneTbody) {
+    const doneList = grades.filter(g => g.status === 'แก้ไขแล้ว');
+    if (doneList.length === 0) {
+      doneTbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-400">ยังไม่มีรายการที่แก้ไขสำเร็จ</td></tr>`;
+    } else {
+      doneTbody.innerHTML = doneList.map(g => `
+        <tr class="border-b hover:bg-emerald-50/30 transition-colors">
+          <td class="p-3 font-bold text-gray-700">${g.room}</td>
+          <td class="p-3 font-mono text-gray-400">${g.student_id || '-'}</td>
+          <td class="p-3 font-bold text-indigo-900">${g.student}</td>
+          <td class="p-3 text-gray-600">${g.code || ''} ${g.subject}</td>
+          <td class="p-3 text-center"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold text-[11px]">${g.old_score || g.type}</span></td>
+          <td class="p-3 text-center"><span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-bold text-[11px]">${g.remedial_score || '-'}</span></td>
+          <td class="p-3 text-gray-500 text-[11px]">${g.teacher}</td>
+        </tr>`).join('');
+    }
+  }
+  lucide.createIcons();
+}
 
 // --- ฟังก์ชันของระบบงานจิตอาสา ---
 function handleActivityChange() {
@@ -1897,6 +2362,7 @@ function switchTab(tabId) {
   });
   if(tabId === 'booking') { renderCalendarGrid(); renderBookingTable(); }
   if(tabId === 'volunteer') { switchVolunteerSub('dashboard'); return; }
+  if(tabId === 'grades') { switchGradeSub('list'); }
   renderTable(); renderGradesTable(); renderVolunteerData();
   updateAdminOnlyOptions();
 }
