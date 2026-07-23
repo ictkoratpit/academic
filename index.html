@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="th" class="h-full">
  <head>
@@ -160,6 +161,7 @@
      <div class="flex gap-1 sm:gap-2 overflow-x-auto whitespace-nowrap hide-scrollbar pt-2 pb-2 items-center px-2 sm:px-0">
        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="pb-2 px-2 sm:px-3 text-[11px] sm:text-xs md:text-sm font-bold text-indigo-900 border-b-3 border-indigo-900 transition-all hover:text-indigo-700 hover:border-indigo-700">สรุป</button> 
        <button onclick="switchTab('submission')" id="tab-submission" class="pb-2 px-2 sm:px-3 text-[11px] sm:text-xs md:text-sm font-bold text-gray-500 border-b-3 border-transparent transition-all hover:text-indigo-600 hover:border-indigo-300">ส่งเอกสาร/ปพ.5</button>
+       <button onclick="switchTab('curriculum')" id="tab-curriculum" class="pb-2 px-2 sm:px-3 text-[11px] sm:text-xs md:text-sm font-bold text-gray-500 border-b-3 border-transparent transition-all hover:text-indigo-600 hover:border-indigo-300">กำหนดการสอน</button>
        <button onclick="switchTab('booking')" id="tab-booking" class="pb-2 px-2 sm:px-3 text-[11px] sm:text-xs md:text-sm font-bold text-gray-500 border-b-3 border-transparent transition-all hover:text-indigo-600 hover:border-indigo-300">จองกิจกรรม</button>
        <button onclick="switchTab('grades')" id="tab-grades" class="pb-2 px-2 sm:px-3 text-[11px] sm:text-xs md:text-sm font-bold text-gray-500 border-b-3 border-transparent transition-all hover:text-indigo-600 hover:border-indigo-300">ผลการเรียน</button>
        <button onclick="switchTab('volunteer')" id="tab-volunteer" class="pb-2 px-2 sm:px-3 text-[11px] sm:text-xs md:text-sm font-bold text-gray-500 border-b-3 border-transparent transition-all hover:text-indigo-600 hover:border-indigo-300">จิตอาสา</button>
@@ -279,7 +281,7 @@
              <select id="sel-doc" onchange="handleDocTypeChange()" class="w-full border border-gray-300 rounded-lg p-2.5 text-xs bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-300 focus:outline-none">
                <option value="ปพ.5">ปพ.5 (ส่ง 3 ครั้ง)</option>
                <option value="แผนการสอน">แผนการสอน (ส่งเล่มสมบูรณ์)</option>
-               <option value="แผนการปฏิบัติงาน">แผนการปฏิบัติงาน (ส่ง 3 ครั้ง)</option>
+               <option value="แผนการปฏิบัติงาน">แผนการปฏิบัติงาน</option>
              </select>
            </div>
          </div>
@@ -783,8 +785,11 @@
                      <option value="15" data-name="ล้างจาน">8. ล้างจาน (15 นาที)</option>
                      <option value="other" data-name="กิจกรรมอื่นๆ" id="vol-option-other" class="admin-only-option" style="display:none;">9. กิจกรรมอื่นๆ (ระบุเวลาเอง)</option>
                    </select>
+                 </div>                 <div>
+                   <label class="block text-[11px] font-bold text-gray-600 mb-1">วันที่ทำกิจกรรม <span class="text-red-500">*</span></label>
+                   <input type="date" id="vol-work-date" required class="w-full border rounded-lg p-2 text-xs bg-white shadow-sm" value="">
                  </div>
-                 
+
                  <div id="vol-other-box" class="hidden space-y-3 bg-slate-50 p-3 rounded-lg border border-gray-200">
                    <div>
                      <label class="block text-[11px] font-bold text-gray-600 mb-1">ระบุชื่อกิจกรรมอื่น ๆ</label>
@@ -846,6 +851,7 @@
                    <tr>
                      <th class="p-3">ห้อง</th>
                      <th class="p-3">ชื่อนักเรียน</th>
+                     <th class="p-3">วันที่ทำกิจกรรม</th>
                      <th class="p-3">รายละเอียดกิจกรรม</th>
                      <th class="p-3 text-center">เวลาที่ได้รับ</th>
                      <th class="p-3">ผู้บันทึกข้อมูล</th>
@@ -858,6 +864,150 @@
            </div>
          </div>
 
+       </div>
+     </div>
+
+<!-- แท็บกำหนดการสอน (โครงสร้างรายวิชา) -->
+     <div id="panel-curriculum" class="max-w-7xl mx-auto hidden fade-in space-y-6">
+       <div class="bg-white rounded-xl card-shadow overflow-hidden">
+         <div class="flex gap-2 border-b border-gray-200 pb-1 overflow-x-auto hide-scrollbar px-4 pt-3">
+           <button onclick="switchCurriculumSub('list')" id="btn-cur-list" class="px-4 py-2 text-xs font-bold border-b-2 border-teal-600 text-teal-700 transition-colors">รายการโครงสร้างรายวิชา</button>
+           <button onclick="switchCurriculumSub('form')" id="btn-cur-form" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors">เพิ่ม/แก้ไขโครงสร้างรายวิชา</button>
+         </div>
+
+         <!-- รายการโครงสร้างรายวิชา -->
+         <div id="cur-sub-list" class="p-5 space-y-4 fade-in">
+           <div class="flex flex-wrap gap-3 items-end">
+             <div>
+               <label class="block text-[10px] font-bold text-gray-500 mb-0.5 uppercase">กรองตามห้องเรียน</label>
+               <select id="cur-filter-room" onchange="renderCurriculumTable()" class="border border-gray-300 rounded px-2 py-1.5 bg-gray-50 focus:bg-white focus:outline-none text-xs"><option value="all">ทุกห้องเรียน</option></select>
+             </div>
+             <div>
+               <label class="block text-[10px] font-bold text-gray-500 mb-0.5 uppercase">กรองตามกลุ่มสาระ</label>
+               <select id="cur-filter-dept" onchange="renderCurriculumTable()" class="border border-gray-300 rounded px-2 py-1.5 bg-gray-50 focus:bg-white focus:outline-none text-xs">
+                 <option value="all">ทุกกลุ่มสาระ</option>
+                 <option value="ภาษาไทย">ภาษาไทย</option>
+                 <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+                 <option value="วิทยาศาสตร์และเทคโนโลยี">วิทยาศาสตร์และเทคโนโลยี</option>
+                 <option value="สังคมศึกษา">สังคมศึกษา</option>
+                 <option value="สุขศึกษาและพลศึกษา">สุขศึกษาและพลศึกษา</option>
+                 <option value="ศิลปะ">ศิลปะ</option>
+                 <option value="การงานอาชีพ">การงานอาชีพ</option>
+                 <option value="ภาษาต่างประเทศ">ภาษาต่างประเทศ</option>
+               </select>
+             </div>
+             <div class="min-w-[180px]">
+               <label class="block text-[10px] font-bold text-gray-500 mb-0.5 uppercase">ค้นหารหัส/ชื่อวิชา/ครู</label>
+               <input type="text" id="cur-search" oninput="renderCurriculumTable()" class="border border-gray-300 rounded px-2 py-1.5 focus:outline-none text-xs w-full bg-gray-50 focus:bg-white" placeholder="ค้นหา...">
+             </div>
+             <button onclick="openCurriculumModal()" class="ml-auto gradient-success text-white font-bold px-4 py-2 rounded-lg text-xs shadow hover:shadow-md flex items-center gap-1.5"><i data-lucide="plus" class="w-3.5 h-3.5"></i> เพิ่มรายวิชาใหม่</button>
+           </div>
+           <div class="overflow-hidden rounded-xl border border-gray-200">
+             <div class="p-3 bg-teal-800 text-white font-bold text-sm flex items-center justify-between gap-2">
+               <div class="flex items-center gap-2"><i data-lucide="book-open" class="w-4 h-4 text-amber-300"></i> กำหนดการสอน / โครงสร้างรายวิชา</div>
+               <span id="cur-count" class="bg-teal-700 text-teal-200 px-2 py-0.5 rounded text-[10px]">0 รายวิชา</span>
+             </div>
+             <div class="overflow-x-auto">
+               <table class="w-full text-xs text-left border-collapse">
+                 <thead class="bg-gray-50 font-bold border-b text-gray-600">
+                   <tr>
+                     <th class="p-3">ห้องเรียน</th>
+                     <th class="p-3">รหัสวิชา</th>
+                     <th class="p-3">ชื่อวิชา</th>
+                     <th class="p-3">กลุ่มสาระ</th>
+                     <th class="p-3 text-center">หน่วยกิต</th>
+                     <th class="p-3 text-center">ชม./สัปดาห์</th>
+                     <th class="p-3">ครูผู้สอน</th>
+                     <th class="p-3">ภาคเรียน</th>
+                     <th class="p-3">หมายเหตุ</th>
+                     <th class="p-3 text-center">จัดการ</th>
+                   </tr>
+                 </thead>
+                 <tbody id="curriculum-table-body"></tbody>
+               </table>
+             </div>
+           </div>
+         </div>
+
+         <!-- ฟอร์มเพิ่ม/แก้ไขโครงสร้างรายวิชา -->
+         <div id="cur-sub-form" class="p-5 hidden fade-in">
+           <div class="max-w-2xl mx-auto bg-white rounded-xl border border-teal-200 overflow-hidden card-shadow">
+             <div class="p-4 bg-teal-700 text-white font-bold text-sm flex items-center gap-2">
+               <i data-lucide="book-open" class="w-4 h-4"></i>
+               <span id="cur-form-title">เพิ่มโครงสร้างรายวิชาใหม่</span>
+             </div>
+             <form id="curriculum-form" onsubmit="handleCurriculumSubmit(event)" class="p-5 space-y-4">
+               <div class="grid grid-cols-2 gap-3">
+                 <div>
+                   <label class="block text-[11px] font-bold text-gray-700 mb-1">ระดับชั้น/ห้องเรียน <span class="text-red-500">*</span></label>
+                   <select id="cur-room" class="w-full border rounded-lg p-2.5 text-xs bg-white shadow-sm"></select>
+                 </div>
+                 <div>
+                   <label class="block text-[11px] font-bold text-gray-700 mb-1">ภาคเรียน <span class="text-red-500">*</span></label>
+                   <select id="cur-semester" class="w-full border rounded-lg p-2.5 text-xs bg-white shadow-sm">
+                     <option value="1">ภาคเรียนที่ 1</option>
+                     <option value="2">ภาคเรียนที่ 2</option>
+                   </select>
+                 </div>
+               </div>
+               <div class="grid grid-cols-2 gap-3">
+                 <div>
+                   <label class="block text-[11px] font-bold text-gray-700 mb-1">รหัสวิชา <span class="text-red-500">*</span></label>
+                   <input type="text" id="cur-code" required class="w-full border rounded-lg p-2.5 text-xs shadow-sm" placeholder="เช่น ท21101">
+                 </div>
+                 <div>
+                   <label class="block text-[11px] font-bold text-gray-700 mb-1">ชื่อวิชา <span class="text-red-500">*</span></label>
+                   <input type="text" id="cur-name" required class="w-full border rounded-lg p-2.5 text-xs shadow-sm" placeholder="เช่น ภาษาไทย 1">
+                 </div>
+               </div>
+               <div class="grid grid-cols-2 gap-3">
+                 <div>
+                   <label class="block text-[11px] font-bold text-gray-700 mb-1">กลุ่มสาระการเรียนรู้ <span class="text-red-500">*</span></label>
+                   <select id="cur-dept" class="w-full border rounded-lg p-2.5 text-xs bg-white shadow-sm">
+                     <option value="ภาษาไทย">ภาษาไทย</option>
+                     <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+                     <option value="วิทยาศาสตร์และเทคโนโลยี">วิทยาศาสตร์และเทคโนโลยี</option>
+                     <option value="สังคมศึกษา">สังคมศึกษา</option>
+                     <option value="สุขศึกษาและพลศึกษา">สุขศึกษาและพลศึกษา</option>
+                     <option value="ศิลปะ">ศิลปะ</option>
+                     <option value="การงานอาชีพ">การงานอาชีพ</option>
+                     <option value="ภาษาต่างประเทศ">ภาษาต่างประเทศ</option>
+                   </select>
+                 </div>
+                 <div>
+                   <label class="block text-[11px] font-bold text-gray-700 mb-1">ครูผู้สอน <span class="text-red-500">*</span></label>
+                   <input type="text" id="cur-teacher" required class="w-full border rounded-lg p-2.5 text-xs shadow-sm" placeholder="ชื่อ-นามสกุลครูผู้สอน">
+                 </div>
+               </div>
+               <div class="grid grid-cols-3 gap-3">
+                 <div>
+                   <label class="block text-[11px] font-bold text-gray-700 mb-1">จำนวนหน่วยกิต</label>
+                   <input type="number" id="cur-credits" min="0" step="0.5" class="w-full border rounded-lg p-2.5 text-xs shadow-sm" placeholder="เช่น 1.0">
+                 </div>
+                 <div>
+                   <label class="block text-[11px] font-bold text-gray-700 mb-1">ชั่วโมง/สัปดาห์</label>
+                   <input type="number" id="cur-hours" min="0" class="w-full border rounded-lg p-2.5 text-xs shadow-sm" placeholder="เช่น 2">
+                 </div>
+                 <div>
+                   <label class="block text-[11px] font-bold text-gray-700 mb-1">ปีการศึกษา</label>
+                   <input type="text" id="cur-year" class="w-full border rounded-lg p-2.5 text-xs shadow-sm" placeholder="เช่น 2567">
+                 </div>
+               </div>
+               <div>
+                 <label class="block text-[11px] font-bold text-gray-700 mb-1">คำอธิบายรายวิชา</label>
+                 <textarea id="cur-description" rows="3" class="w-full border rounded-lg p-2.5 text-xs shadow-sm" placeholder="ระบุคำอธิบายรายวิชาโดยย่อ..."></textarea>
+               </div>
+               <div>
+                 <label class="block text-[11px] font-bold text-gray-700 mb-1">หมายเหตุ</label>
+                 <input type="text" id="cur-note" class="w-full border rounded-lg p-2.5 text-xs shadow-sm" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)">
+               </div>
+               <div class="flex gap-3">
+                 <button type="submit" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold p-3 rounded-lg text-xs shadow-md transition-all">บันทึกโครงสร้างรายวิชา</button>
+                 <button type="button" onclick="cancelCurriculumEdit()" id="cur-cancel-btn" class="hidden px-4 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold p-3 rounded-lg text-xs transition-all">ยกเลิกการแก้ไข</button>
+               </div>
+             </form>
+           </div>
+         </div>
        </div>
      </div>
 
@@ -907,15 +1057,21 @@
                <label class="block text-[11px] font-bold text-gray-600 mb-1">กำหนดรหัสผ่าน (Password)</label>
                <input type="text" id="teacher-password" required class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white" placeholder="กำหนดรหัสผ่าน">
              </div>
+             <div>
+               <label class="block text-[11px] font-bold text-gray-600 mb-1">ระดับสิทธิ์</label>
+               <select id="teacher-role" class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white">
+                 <option value="teacher">ครู (ส่งเอกสาร/ดูข้อมูล)</option>
+                 <option value="reviewer">ผู้ตรวจข้อมูล (แก้ไขรายละเอียดได้)</option>
+               </select>
+             </div>
              <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold p-2.5 rounded-lg text-xs hover:shadow-lg shadow-sm transition-all hover:scale-105">เพิ่มบัญชีผู้ใช้ใหม่</button>
            </form>
          </div>
          <div class="lg:col-span-2 bg-white rounded-xl card-shadow overflow-hidden">
            <div class="p-4 bg-gradient-to-r from-blue-900 to-blue-800 text-white font-bold text-sm flex items-center gap-2"><i data-lucide="users" class="w-4 h-4"></i> รายชื่อคุณครูในระบบ</div>
            <div class="p-2 overflow-x-auto">
-             <table class="w-full text-xs text-left">
-               <thead class="bg-gray-50 border-b font-bold text-gray-600">
-                 <tr><th class="p-3">Username</th><th class="p-3">ชื่อคุณครู</th><th class="p-3">กลุ่มสาระ</th><th class="p-3">รหัสผ่าน</th><th class="p-3 text-center">จัดการ</th></tr>
+             <table class="w-full text-xs text-left">               <thead class="bg-gray-50 border-b font-bold text-gray-600">
+               <tr><th class="p-3">Username</th><th class="p-3">ชื่อคุณครู</th><th class="p-3">กลุ่มสาระ</th><th class="p-3">รหัสผ่าน</th><th class="p-3">สิทธิ์</th><th class="p-3 text-center">จัดการ</th></tr>
                </thead>
                <tbody id="admin-teachers-table-body"></tbody>
              </table>
@@ -1095,6 +1251,7 @@ const teacherCollection = db.collection("academic_teachers");
 const masterCollection = db.collection("academic_master_templates");
 const volunteerCollection = db.collection("academic_volunteers");
 const studentCollection = db.collection("academic_students"); // คอลเลกชันรายชื่อนักเรียนที่สร้างขึ้นใหม่
+const curriculumCollection = db.collection("academic_curriculum"); // โครงสร้างรายวิชา
 
 const ROOMS = ["ม.1/1", "ม.2/1", "ม.3/1", "ม.3/2", "ม.4/1", "ม.4/2", "ม.5/1", "ม.5/2", "ม.6/1", "ม.6/2"];
 const DOC_TYPES = ["ปพ.5", "แผนการสอน", "แผนการปฏิบัติงาน"];
@@ -1237,9 +1394,15 @@ const DEFAULT_STUDENTS = [
 let submissions = []; let bookings = []; let grades = []; let teachers = []; let masterTemplates = []; let volunteers = []; let students = [];
 let currentUser = null;
 let isAdminAuthenticated = false;
+let isReviewerAuthenticated = false; // ผู้ตรวจข้อมูล
+// บัญชีผู้ตรวจข้อมูลที่อนุญาตให้แก้ไขรายละเอียดได้
+const REVIEWER_ACCOUNTS = ['T213', 'T359', 'T908'];
 let currentCalendarDate = new Date();
 let editingGradeId = null; // ID ตัวแปรสลับการทำงานใน Modal ผลการเรียน
 let editingStudentId = null; // ID ตัวแปรสลับการทำงานของฟอร์มผู้ดูแลระบบนักเรียน
+let editingTeacherId = null; // ID สำหรับแก้ไขบัญชีครู
+let editingCurriculumId = null; // ID สำหรับแก้ไขโครงสร้างรายวิชา
+let curriculums = []; // เก็บข้อมูลโครงสร้างรายวิชา
 
 // 📌 ฟังก์ชันตรวจสอบและ Seed รายชื่อลง Firebase อัตโนมัติ (ครั้งแรก)
 function checkAndSeedStudents() {
@@ -1256,7 +1419,7 @@ function checkAndSeedStudents() {
 }
 
 function initDropdowns() {
-  const selects = ['sel-room', 'grade-room', 'master-room', 'vol-room', 'filter-vol-room', 'filter-vol-room-history', 'filter-grade-room', 'compare-grade-room', 'admin-student-room-input', 'admin-filter-student-room'];
+  const selects = ['sel-room', 'grade-room', 'master-room', 'vol-room', 'filter-vol-room', 'filter-vol-room-history', 'filter-grade-room', 'compare-grade-room', 'admin-student-room-input', 'admin-filter-student-room', 'cur-room', 'cur-filter-room'];
   selects.forEach(id => {
     const el = document.getElementById(id); if (!el) return;
     
@@ -1266,6 +1429,7 @@ function initDropdowns() {
     else if (id === 'filter-grade-room') el.innerHTML = '<option value="all">ทุกห้องเรียน</option>';
     else if (id === 'compare-grade-room') el.innerHTML = '<option value="all">ทุกห้องเรียน</option>';
     else if (id === 'admin-filter-student-room') el.innerHTML = '<option value="all">ทุกห้องเรียน</option>';
+    else if (id === 'cur-filter-room') el.innerHTML = '<option value="all">ทุกห้องเรียน</option>';
     else el.innerHTML = '';
     
     ROOMS.forEach(r => { 
@@ -1397,6 +1561,11 @@ function startRealtimeSync() {
     renderVolunteerData();
     renderVolunteerDashboard();
   });
+  curriculumCollection.onSnapshot(snap => {
+    curriculums = []; snap.forEach(d => curriculums.push({ id: d.id, ...d.data() }));
+    const curPanel = document.getElementById('panel-curriculum');
+    if(curPanel && !curPanel.classList.contains('hidden')) renderCurriculumTable();
+  });
 }
 
 async function handleTeacherLogin(event) {
@@ -1404,8 +1573,14 @@ async function handleTeacherLogin(event) {
   const user = document.getElementById('login-user').value.trim();
   const pass = document.getElementById('login-pass').value.trim();
   const matched = teachers.find(t => t.username === user && t.password === pass);
-  if (matched) { currentUser = matched; proceedToApp(); } 
-  else { alert("รหัสผู้ใช้หรือรหัสผ่านคุณครูไม่ถูกต้อง กรุณาติดต่อฝ่ายวิชาการ"); }
+  if (matched) {
+    currentUser = matched;
+    // ตรวจสอบว่าเป็นผู้ตรวจข้อมูลหรือไม่ (username หรือ role)
+    if (REVIEWER_ACCOUNTS.includes(user) || matched.role === 'reviewer') {
+      isReviewerAuthenticated = true;
+    }
+    proceedToApp();
+  } else { alert("รหัสผู้ใช้หรือรหัสผ่านคุณครูไม่ถูกต้อง กรุณาติดต่อฝ่ายวิชาการ"); }
 }
 
 function handleAdminDirectLogin() {
@@ -1419,13 +1594,16 @@ function handleAdminDirectLogin() {
 function proceedToApp() {
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('main-app').classList.remove('hidden');
-  document.getElementById('current-user-display').textContent = currentUser.fullname;
+  document.getElementById('current-user-display').textContent = currentUser ? currentUser.fullname : 'Admin';
   switchTab('dashboard');
+  // ตั้งค่าวันที่เริ่มต้นในฟอร์มจิตอาสา
+  const today = new Date(); const todayStr = today.toISOString().split('T')[0];
+  const wdEl = document.getElementById('vol-work-date'); if(wdEl) wdEl.value = todayStr;
   lucide.createIcons();
 }
 
 function handleLogout() {
-  currentUser = null; isAdminAuthenticated = false;
+  currentUser = null; isAdminAuthenticated = false; isReviewerAuthenticated = false;
   document.getElementById('main-app').classList.add('hidden');
   document.getElementById('login-screen').classList.remove('hidden');
   document.getElementById('login-form')?.reset();
@@ -2108,12 +2286,17 @@ async function handleVolunteerSubmit(event) {
     if (!minutes || minutes <= 0) { alert('กรุณาระบุจำนวนเวลาที่ถูกต้อง'); return; }
   }
   
+  const workDate = document.getElementById('vol-work-date').value;
+  if (!workDate) { alert('กรุณาระบุวันที่ทำกิจกรรม'); return; }
   try {
     await volunteerCollection.add({
       room: document.getElementById('vol-room').value, student: studentName,
-      activity_name: activityName, minutes: minutes, recorded_by: currentUser.fullname, timestamp: new Date().toISOString()
+      activity_name: activityName, minutes: minutes, work_date: workDate,
+      recorded_by: currentUser.fullname, timestamp: new Date().toISOString()
     });
     alert('บันทึกข้อมูลจิตอาสาของนักเรียนสำเร็จแล้ว!'); document.getElementById('volunteer-form').reset(); handleActivityChange(); handleVolRoomChange();
+    // ตั้งค่าวันที่เป็นวันนี้อีกครั้ง
+    const today = new Date(); document.getElementById('vol-work-date').value = today.toISOString().split('T')[0];
   } catch(e) { alert('เกิดข้อผิดพลาดในการบันทึกข้อมูลจิตอาสา'); }
 }
 
@@ -2157,16 +2340,23 @@ function renderVolunteerData() {
   if (document.getElementById('volunteer-log-count')) document.getElementById('volunteer-log-count').textContent = `${filteredLogs.length} รายการ`;
 
   if (filteredLogs.length === 0) {
-    logTbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400 font-medium">ไม่มีประวัติรายการบันทึกกิจกรรมสำหรับห้องที่เลือก</td></tr>`;
+    logTbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-400 font-medium">ไม่มีประวัติรายการบันทึกกิจกรรมสำหรับห้องที่เลือก</td></tr>`;
   } else {
-    logTbody.innerHTML = filteredLogs.map(v => `
+    logTbody.innerHTML = filteredLogs.map(v => {
+      let displayDate = '-';
+      if (v.work_date) {
+        const [yy, mm, dd] = v.work_date.split('-');
+        displayDate = new Date(yy, mm-1, dd).toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'numeric'});
+      }
+      return `
       <tr class="border-b hover:bg-gray-50 transition-colors">
         <td class="p-3 font-bold text-gray-600">${v.room}</td><td class="p-3 font-medium text-indigo-950">${v.student}</td>
+        <td class="p-3 text-gray-600 text-[11px] font-medium">${displayDate}</td>
         <td class="p-3 text-gray-600 text-[11px]">${v.activity_name}</td><td class="p-3 text-center font-bold text-emerald-600">+${v.minutes} นาที</td>
         <td class="p-3 text-gray-500 text-[10px]">${v.recorded_by || '-'}</td>
         <td class="p-3 text-center"><button onclick="deleteVolunteerRecord('${v.id}')" class="text-red-500 hover:text-red-700 font-bold text-[10px] bg-red-50 px-2 py-0.5 rounded border border-red-100">ลบ</button></td>
       </tr>
-    `).join('');
+    `}).join('');
   }
   lucide.createIcons();
 }
@@ -2283,22 +2473,62 @@ function renderAdminDocsTable() {
 
 async function handleCreateTeacher(event) {
   event.preventDefault();
-  await teacherCollection.add({
-    username: document.getElementById('teacher-username').value.trim(), fullname: document.getElementById('teacher-fullname').value.trim(),
-    dept: document.getElementById('teacher-dept').value.trim(), password: document.getElementById('teacher-password').value.trim()
-  });
-  alert('สร้างบัญชีผู้ใช้ให้คุณครูสำเร็จแล้วครับ!'); event.target.reset();
+  const payload = {
+    username: document.getElementById('teacher-username').value.trim(),
+    fullname: document.getElementById('teacher-fullname').value.trim(),
+    dept: document.getElementById('teacher-dept').value.trim(),
+    password: document.getElementById('teacher-password').value.trim(),
+    role: document.getElementById('teacher-role').value
+  };
+  if (editingTeacherId) {
+    await teacherCollection.doc(editingTeacherId).update(payload);
+    alert('อัปเดตข้อมูลบัญชีครูเรียบร้อยแล้ว!'); cancelTeacherEdit();
+  } else {
+    await teacherCollection.add(payload);
+    alert('สร้างบัญชีผู้ใช้ให้คุณครูสำเร็จแล้วครับ!'); event.target.reset();
+  }
+}
+
+function editTeacherRecord(id) {
+  const t = teachers.find(x => x.id === id); if (!t) return;
+  editingTeacherId = id;
+  document.getElementById('teacher-username').value = t.username || '';
+  document.getElementById('teacher-fullname').value = t.fullname || '';
+  document.getElementById('teacher-dept').value = t.dept || '';
+  document.getElementById('teacher-password').value = t.password || '';
+  document.getElementById('teacher-role').value = t.role || 'teacher';
+  // เปลี่ยนปุ่มเป็น อัปเดต
+  const btn = document.querySelector('[onclick="handleCreateTeacher(event)"]')?.closest('form')?.querySelector('button[type="submit"]');
+  if (btn) btn.textContent = 'บันทึกการแก้ไขบัญชี';
+  switchAdminSub('teachers');
+}
+
+function cancelTeacherEdit() {
+  editingTeacherId = null;
+  document.getElementById('teacher-username').value = '';
+  document.getElementById('teacher-fullname').value = '';
+  document.getElementById('teacher-dept').value = '';
+  document.getElementById('teacher-password').value = '';
+  document.getElementById('teacher-role').value = 'teacher';
+  const btn = document.querySelector('[onclick="handleCreateTeacher(event)"]')?.closest('form')?.querySelector('button[type="submit"]');
+  if (btn) btn.textContent = 'เพิ่มบัญชีผู้ใช้ใหม่';
 }
 
 function renderAdminTeachersTable() {
   const tbody = document.getElementById('admin-teachers-table-body');
-  tbody.innerHTML = teachers.map(t => `
+  tbody.innerHTML = teachers.map(t => {
+    const roleLabel = t.role === 'reviewer' ? `<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-[10px] font-bold">ผู้ตรวจ</span>` : `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px] font-bold">ครู</span>`;
+    return `
     <tr class="border-b hover:bg-blue-50/50 transition-colors">
       <td class="p-3 font-mono text-blue-800 bg-blue-50 font-bold px-3 rounded">${t.username}</td><td class="p-3 font-bold text-gray-800">${t.fullname}</td>
       <td class="p-3 text-gray-600 font-medium">${t.dept}</td><td class="p-3 text-gray-400 font-mono">${t.password}</td>
-      <td class="p-3 text-center"><button onclick="deleteTeacher('${t.id}')" class="text-red-500 font-bold hover:underline bg-red-50 px-2 py-1 rounded">ลบสิทธิ์</button></td>
+      <td class="p-3">${roleLabel}</td>
+      <td class="p-3 text-center space-x-1">
+        <button onclick="editTeacherRecord('${t.id}')" class="text-amber-600 font-bold text-[11px] bg-amber-50 px-2 py-1 rounded border border-amber-200 hover:bg-amber-100">แก้ไข</button>
+        <button onclick="deleteTeacher('${t.id}')" class="text-red-500 font-bold text-[11px] bg-red-50 px-2 py-1 rounded border border-red-200 hover:bg-red-100">ลบ</button>
+      </td>
     </tr>
-  `).join('');
+  `}).join('');
 }
 
 async function handleMasterTemplateSubmit(event) {
@@ -2333,6 +2563,141 @@ function downloadMasterTemplate() {
   const box = document.getElementById('master-template-box'); const a = document.createElement('a'); a.href = box.dataset.url; a.download = `ตัวอย่าง_${box.dataset.filename}`; a.click();
 }
 
+// ============================================================
+// ฟังก์ชันกำหนดการสอน / โครงสร้างรายวิชา
+// ============================================================
+function switchCurriculumSub(sub) {
+  ['list','form'].forEach(s => {
+    const p = document.getElementById(`cur-sub-${s}`); if(p) p.classList.toggle('hidden', s !== sub);
+    const b = document.getElementById(`btn-cur-${s}`);
+    if(b) b.className = s === sub
+      ? "px-4 py-2 text-xs font-bold border-b-2 border-teal-600 text-teal-700 transition-colors"
+      : "px-4 py-2 text-xs font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors";
+  });
+  if(sub === 'list') renderCurriculumTable();
+  lucide.createIcons();
+}
+
+function openCurriculumModal() {
+  editingCurriculumId = null;
+  document.getElementById('cur-form-title').textContent = 'เพิ่มโครงสร้างรายวิชาใหม่';
+  document.getElementById('curriculum-form').reset();
+  document.getElementById('cur-cancel-btn').classList.add('hidden');
+  switchCurriculumSub('form');
+}
+
+function editCurriculumRecord(id) {
+  const c = curriculums.find(x => x.id === id); if(!c) return;
+  editingCurriculumId = id;
+  document.getElementById('cur-form-title').textContent = 'แก้ไขโครงสร้างรายวิชา';
+  document.getElementById('cur-room').value = c.room || '';
+  document.getElementById('cur-semester').value = c.semester || '1';
+  document.getElementById('cur-code').value = c.code || '';
+  document.getElementById('cur-name').value = c.name || '';
+  document.getElementById('cur-dept').value = c.dept || '';
+  document.getElementById('cur-teacher').value = c.teacher || '';
+  document.getElementById('cur-credits').value = c.credits || '';
+  document.getElementById('cur-hours').value = c.hours || '';
+  document.getElementById('cur-year').value = c.year || '';
+  document.getElementById('cur-description').value = c.description || '';
+  document.getElementById('cur-note').value = c.note || '';
+  document.getElementById('cur-cancel-btn').classList.remove('hidden');
+  switchCurriculumSub('form');
+}
+
+function cancelCurriculumEdit() {
+  editingCurriculumId = null;
+  document.getElementById('curriculum-form').reset();
+  document.getElementById('cur-form-title').textContent = 'เพิ่มโครงสร้างรายวิชาใหม่';
+  document.getElementById('cur-cancel-btn').classList.add('hidden');
+  switchCurriculumSub('list');
+}
+
+async function handleCurriculumSubmit(event) {
+  event.preventDefault();
+  const payload = {
+    room: document.getElementById('cur-room').value,
+    semester: document.getElementById('cur-semester').value,
+    code: document.getElementById('cur-code').value.trim(),
+    name: document.getElementById('cur-name').value.trim(),
+    dept: document.getElementById('cur-dept').value,
+    teacher: document.getElementById('cur-teacher').value.trim(),
+    credits: parseFloat(document.getElementById('cur-credits').value) || 0,
+    hours: parseInt(document.getElementById('cur-hours').value) || 0,
+    year: document.getElementById('cur-year').value.trim(),
+    description: document.getElementById('cur-description').value.trim(),
+    note: document.getElementById('cur-note').value.trim(),
+    updated_by: currentUser.fullname,
+    updated_at: new Date().toISOString()
+  };
+  try {
+    if (editingCurriculumId) {
+      await curriculumCollection.doc(editingCurriculumId).update(payload);
+      alert('อัปเดตโครงสร้างรายวิชาเรียบร้อยแล้ว!');
+      cancelCurriculumEdit();
+    } else {
+      await curriculumCollection.add(payload);
+      alert('เพิ่มโครงสร้างรายวิชาเรียบร้อยแล้ว!');
+      document.getElementById('curriculum-form').reset();
+    }
+  } catch(e) { alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล'); }
+}
+
+async function deleteCurriculumRecord(id) {
+  if(confirm('ต้องการลบรายวิชานี้ออกจากระบบใช่หรือไม่?')) {
+    try { await curriculumCollection.doc(id).delete(); alert('ลบรายวิชาเรียบร้อย'); } catch(e) { alert('เกิดข้อผิดพลาด'); }
+  }
+}
+
+function renderCurriculumTable() {
+  const tbody = document.getElementById('curriculum-table-body'); if(!tbody) return;
+  const roomFilter = document.getElementById('cur-filter-room')?.value || 'all';
+  const deptFilter = document.getElementById('cur-filter-dept')?.value || 'all';
+  const search = document.getElementById('cur-search')?.value.trim().toLowerCase() || '';
+  
+  let filtered = curriculums;
+  if(roomFilter !== 'all') filtered = filtered.filter(c => c.room === roomFilter);
+  if(deptFilter !== 'all') filtered = filtered.filter(c => c.dept === deptFilter);
+  if(search) filtered = filtered.filter(c =>
+    (c.code && c.code.toLowerCase().includes(search)) ||
+    (c.name && c.name.toLowerCase().includes(search)) ||
+    (c.teacher && c.teacher.toLowerCase().includes(search))
+  );
+  
+  const countEl = document.getElementById('cur-count');
+  if(countEl) countEl.textContent = `${filtered.length} รายวิชา`;
+  
+  const canEdit = isAdminAuthenticated || isReviewerAuthenticated;
+  
+  if(filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10" class="p-5 text-center text-gray-400">ยังไม่มีข้อมูลโครงสร้างรายวิชาที่ตรงตามเงื่อนไข</td></tr>`; return;
+  }
+  tbody.innerHTML = filtered.map(c => `
+    <tr class="border-b hover:bg-teal-50/30 transition-colors">
+      <td class="p-3 font-bold text-gray-700">${c.room}</td>
+      <td class="p-3 font-mono text-teal-700 font-bold">${c.code}</td>
+      <td class="p-3 font-bold text-indigo-900">${c.name}</td>
+      <td class="p-3 text-gray-600">${c.dept || '-'}</td>
+      <td class="p-3 text-center font-bold text-gray-700">${c.credits || '-'}</td>
+      <td class="p-3 text-center font-bold text-gray-700">${c.hours || '-'}</td>
+      <td class="p-3 text-gray-600">${c.teacher}</td>
+      <td class="p-3 text-gray-500">ภาค ${c.semester || '-'}</td>
+      <td class="p-3 text-gray-400 text-[11px]">${c.note || '-'}</td>
+      <td class="p-3 text-center">
+        ${canEdit ? `
+          <div class="inline-flex gap-1">
+            <button onclick="editCurriculumRecord('${c.id}')" class="bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 px-2 py-1 rounded text-[10px] font-bold">แก้ไข</button>
+            <button onclick="deleteCurriculumRecord('${c.id}')" class="bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 px-2 py-1 rounded text-[10px] font-bold">ลบ</button>
+          </div>
+        ` : '<span class="text-gray-400 text-[11px]">-</span>'}
+      </td>
+    </tr>
+  `).join('');
+  lucide.createIcons();
+}
+
+// ============================================================
+
 async function deleteSubmission(id) { if(confirm('ต้องการลบไฟล์ส่งชิ้นนี้ใช่หรือไม่?')) await docCollection.doc(id).delete(); }
 async function deleteTeacher(id) { if(confirm('ต้องการลบชื่อและสิทธิ์ของครูท่านนี้ใช่หรือไม่?')) await teacherCollection.doc(id).delete(); }
 async function deleteMasterTemplate(id) { if(confirm('ต้องการลบไฟล์ตัวอย่างระบบชิ้นนี้ใช่หรือไม่?')) await masterCollection.doc(id).delete(); }
@@ -2345,7 +2710,7 @@ function switchTab(tabId) {
     else { if (password !== null) alert("รหัสผ่านไม่ถูกต้อง!"); return; }
   }
 
-  ['dashboard', 'submission', 'booking', 'grades', 'volunteer', 'admin'].forEach(p => {
+  ['dashboard', 'submission', 'booking', 'grades', 'volunteer', 'curriculum', 'admin'].forEach(p => {
     const panelEl = document.getElementById(`panel-${p}`); if (panelEl) panelEl.classList.toggle('hidden', p !== tabId);
     const btn = document.getElementById(`tab-${p}`);
     if (btn) {
@@ -2363,6 +2728,7 @@ function switchTab(tabId) {
   if(tabId === 'booking') { renderCalendarGrid(); renderBookingTable(); }
   if(tabId === 'volunteer') { switchVolunteerSub('dashboard'); return; }
   if(tabId === 'grades') { switchGradeSub('list'); }
+  if(tabId === 'curriculum') { switchCurriculumSub('list'); return; }
   renderTable(); renderGradesTable(); renderVolunteerData();
   updateAdminOnlyOptions();
 }
