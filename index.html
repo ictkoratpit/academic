@@ -3015,11 +3015,16 @@ async function downloadVolunteerPDF() {
     // --- สร้าง element HTML จริงใน DOM (เพื่อให้ html2canvas เรนเดอร์ได้ถูกต้อง) ---
     const wrapper = document.createElement('div');
     wrapper.id = 'pdf-wrapper-temp';
-    // เปลี่ยนวิธีซ่อน: ย้ายออกนอกจอแทนการใช้ opacity เพื่อป้องกันหน้าว่าง (Blank PDF)
-    wrapper.style.position = 'absolute';
-    wrapper.style.left = '-9999px';
+    
+    // ปรับปรุงการซ่อน: ใช้ visibility hidden ร่วมกับ z-index และ opacity เล็กน้อย
+    // html2canvas มักจะมีปัญหากับ left: -9999px ในบางเบราว์เซอร์
+    wrapper.style.position = 'fixed';
     wrapper.style.top = '0';
+    wrapper.style.left = '0';
     wrapper.style.width = '750px';
+    wrapper.style.zIndex = '-9999';
+    wrapper.style.opacity = '0.02'; // ต้องมีค่าบ้างเพื่อให้ browser เรนเดอร์เนื้อหา
+    wrapper.style.pointerEvents = 'none';
     wrapper.style.backgroundColor = '#ffffff';
     wrapper.style.boxSizing = 'border-box';
     wrapper.style.fontFamily = "'Sarabun', 'Noto Sans Thai', Arial, sans-serif";
@@ -3184,13 +3189,14 @@ async function downloadVolunteerPDF() {
     const opt = {
       margin: 10,
       filename: filename,
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'jpeg', quality: 0.95 },
       html2canvas: { 
-        scale: 2, // เพิ่มความชัด
+        scale: 1.5, 
         useCORS: true, 
         letterRendering: true,
         windowWidth: 750,
-        logging: false
+        scrollY: 0,
+        scrollX: 0
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
       pagebreak: { mode: ['css', 'legacy'] }
