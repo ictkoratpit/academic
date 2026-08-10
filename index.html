@@ -838,6 +838,37 @@
 
          <!-- Volunteer History -->
          <div id="vol-sub-history" class="p-5 hidden fade-in">
+           <!-- ส่วนกรองข้อมูลตามช่วงวันที่และส่งออก -->
+           <div class="bg-white rounded-xl card-shadow p-4 mb-4 border border-gray-200">
+             <h3 class="font-bold text-sm text-gray-800 mb-3 flex items-center gap-2"><i data-lucide="filter" class="w-4 h-4 text-indigo-600"></i> ตัวกรองและส่งออกข้อมูล</h3>
+             <div class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+               <div>
+                 <label class="block text-[10px] font-bold text-gray-600 mb-1 uppercase">ห้องเรียน</label>
+                 <select id="filter-vol-room-export" onchange="updateExportData()" class="w-full text-xs border border-gray-300 rounded px-2 py-2 bg-gray-50 focus:bg-white focus:outline-none">
+                   <option value="all">ทุกห้องเรียน</option>
+                 </select>
+               </div>
+               <div>
+                 <label class="block text-[10px] font-bold text-gray-600 mb-1 uppercase">วันที่เริ่มต้น</label>
+                 <input type="date" id="filter-date-start" onchange="updateExportData()" class="w-full text-xs border border-gray-300 rounded px-2 py-2 bg-gray-50 focus:bg-white focus:outline-none">
+               </div>
+               <div>
+                 <label class="block text-[10px] font-bold text-gray-600 mb-1 uppercase">วันที่สิ้นสุด</label>
+                 <input type="date" id="filter-date-end" onchange="updateExportData()" class="w-full text-xs border border-gray-300 rounded px-2 py-2 bg-gray-50 focus:bg-white focus:outline-none">
+               </div>
+               <div>
+                 <button onclick="downloadVolunteerPDF()" class="w-full bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded text-[10px] font-bold flex items-center justify-center gap-1.5 transition-all hover:shadow-lg">
+                   <i data-lucide="file-pdf" class="w-3.5 h-3.5"></i> PDF
+                 </button>
+               </div>
+               <div>
+                 <button onclick="exportVolunteerToCSV()" class="w-full bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-[10px] font-bold flex items-center justify-center gap-1.5 transition-all hover:shadow-lg">
+                   <i data-lucide="download" class="w-3.5 h-3.5"></i> CSV
+                 </button>
+               </div>
+             </div>
+           </div>
+           
            <div class="bg-white rounded-xl card-shadow overflow-hidden">
              <div class="p-4 bg-slate-800 text-white font-bold text-xs flex items-center justify-between gap-2">
                <div class="flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-amber-400"></i> ประวัติรายการลงบันทึกจิตอาสาระบบภาพรวม</div>
@@ -846,9 +877,6 @@
                  <select id="filter-vol-room-history" onchange="renderVolunteerData()" class="text-xs bg-slate-700 text-white border border-slate-600 rounded px-2 py-0.5 focus:outline-none">
                    <option value="all">ทุกห้องเรียน</option>
                  </select>
-                 <button onclick="downloadVolunteerPDF()" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded text-[10px] font-bold flex items-center gap-1.5 transition-all hover:shadow-lg whitespace-nowrap">
-                   <i data-lucide="download" class="w-3.5 h-3.5"></i> ดาวน์โหลด PDF
-                 </button>
                </div>
              </div>
              <div class="overflow-x-auto max-h-[350px]">
@@ -2855,12 +2883,54 @@ function updateReviewerTab() {
 
 // ✅ ฟังก์ชันดาวน์โหลด PDF สรุปจิตอาสา
 function downloadVolunteerPDF() {
-  const room = document.getElementById('filter-vol-room-history').value;
+  const room = document.getElementById('filter-vol-room-export').value;
+  const dateStart = document.getElementById('filter-date-start').value;
+  const dateEnd = document.getElementById('filter-date-end').value;
   let filteredVolunteers = volunteers;
   
   if (room !== 'all') {
-    filteredVolunteers = volunteers.filter(v => v.room === room);
+    filteredVolunteers = filteredVolunteers.filter(v => v.room === room);
   }
+  
+  if (dateStart) {
+    filteredVolunteers = filteredVolunteers.filter(v => (v.work_date || '') >= dateStart);
+  }
+  
+  if (dateEnd) {
+    filteredVolunteers = filteredVolunteers.filter(v => (v.work_date || '') <= dateEnd);
+  }
+
+  // --- 1. คำนวณสรุปเวลาของนักเรียนแต่ละคน ---
+  const studentSummaryMap = {};
+  filteredVolunteers.forEach(vol => {
+    const key = `${vol.student_name}_${vol.room}`;
+    if (!studentSummaryMap[key]) {
+      studentSummaryMap[key] = { name: vol.student_name, room: vol.room, totalMinutes: 0 };
+    }
+    studentSummaryMap[key].totalMinutes += (vol.minutes || 0);
+  });
+
+  // --- 2. คำนวณสรุปรายห้องและเปอร์เซ็นต์ ---
+  const roomSummary = {};
+  const activeRooms = room === 'all' ? ROOMS : [room];
+  activeRooms.forEach(r => {
+    const studentsInRoom = students.filter(s => s.room === r);
+    roomSummary[r] = { totalMinutes: 0, recordCount: 0, studentCount: studentsInRoom.length, completedStudents: 0 };
+  });
+
+  filteredVolunteers.forEach(vol => {
+    const r = vol.room;
+    if (roomSummary[r]) {
+      roomSummary[r].totalMinutes += (vol.minutes || 0);
+      roomSummary[r].recordCount += 1;
+    }
+  });
+
+  Object.values(studentSummaryMap).forEach(s => {
+    if (s.totalMinutes >= 720) { // 12 ชม. = 720 นาที
+      if (roomSummary[s.room]) roomSummary[s.room].completedStudents++;
+    }
+  });
 
   // สร้าง HTML สำหรับ PDF
   let htmlContent = `
@@ -2870,105 +2940,95 @@ function downloadVolunteerPDF() {
       <style>
         body { font-family: 'Sarabun', Arial, sans-serif; margin: 20px; }
         h1 { text-align: center; color: #0F1B4C; margin-bottom: 10px; }
+        h2 { color: #0F1B4C; margin-top: 30px; border-bottom: 2px solid #E9C46A; padding-bottom: 5px; font-size: 16px; }
         p { text-align: center; color: #666; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { background-color: #0F1B4C; color: white; padding: 12px; text-align: left; border: 1px solid #ddd; }
-        td { padding: 10px; border: 1px solid #ddd; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px; }
+        th { background-color: #0F1B4C; color: white; padding: 8px; text-align: left; border: 1px solid #ddd; }
+        td { padding: 6px; border: 1px solid #ddd; }
         tr:nth-child(even) { background-color: #f9f9f9; }
-        .summary { margin-top: 30px; padding: 15px; background-color: #f0f0f0; border-radius: 5px; }
-        .summary h3 { color: #0F1B4C; }
-        .room-summary-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .room-summary-table th { background-color: #059669; color: white; padding: 12px; text-align: left; border: 1px solid #ddd; }
-        .room-summary-table td { padding: 10px; border: 1px solid #ddd; }
-        .room-summary-table tr:nth-child(even) { background-color: #f0fdf4; }
+        .summary-box { margin-top: 30px; padding: 15px; background-color: #f0f0f0; border-radius: 8px; border-left: 5px solid #0F1B4C; }
+        .room-table th { background-color: #059669; }
+        .student-table th { background-color: #4f46e5; }
+        .status-done { color: #059669; font-weight: bold; }
+        .status-pending { color: #d97706; }
       </style>
     </head>
     <body>
-      <h1>รายงานสรุปการทำจิตอาสา</h1>
+      <h1>รายงานสรุปกิจกรรมจิตอาสา</h1>
       <p>โรงเรียนโคราชพิทยาคม</p>
       <p>วันที่พิมพ์: ${new Date().toLocaleDateString('th-TH')}</p>
+      ${dateStart || dateEnd ? '<p style="color: #059669; font-weight: bold; text-align:center;">ช่วงวันที่: ' + (dateStart ? new Date(dateStart + 'T00:00:00').toLocaleDateString('th-TH') : 'เริ่มต้น') + ' ถึง ' + (dateEnd ? new Date(dateEnd + 'T00:00:00').toLocaleDateString('th-TH') : 'ปัจจุบัน') + '</p>' : ''}
       
-      <table>
+      <h2>1. สรุปภาพรวมรายห้องเรียน (คิดเป็นเปอร์เซ็นต์)</h2>
+      <table class="room-table">
         <thead>
           <tr>
-            <th>ห้อง</th>
-            <th>ชื่อนักเรียน</th>
-            <th>วันที่ทำกิจกรรม</th>
-            <th>รายละเอียดกิจกรรม</th>
-            <th>เวลาที่ได้รับ (นาที)</th>
+            <th>ห้องเรียน</th>
+            <th style="text-align:center">นร. ทั้งหมด</th>
+            <th style="text-align:center">นร. ที่ผ่านเกณฑ์ (12 ชม.)</th>
+            <th style="text-align:center">ความสำเร็จ (%)</th>
+            <th style="text-align:center">เวลารวม (ชม.)</th>
           </tr>
         </thead>
         <tbody>
   `;
 
-  filteredVolunteers.forEach(vol => {
+  Object.keys(roomSummary).sort().forEach(r => {
+    const data = roomSummary[r];
+    const percent = data.studentCount > 0 ? ((data.completedStudents / data.studentCount) * 100).toFixed(1) : '0.0';
+    const hours = (data.totalMinutes / 60).toFixed(2);
     htmlContent += `
       <tr>
-        <td>${vol.room || '-'}</td>
-        <td>${vol.student_name || '-'}</td>
-        <td>${vol.work_date || '-'}</td>
-        <td>${vol.activity_name || '-'}</td>
-        <td>${vol.minutes || 0}</td>
+        <td>${r}</td>
+        <td style="text-align:center">${data.studentCount}</td>
+        <td style="text-align:center">${data.completedStudents}</td>
+        <td style="text-align:center; font-weight:bold;">${percent}%</td>
+        <td style="text-align:center">${hours}</td>
       </tr>
     `;
   });
-
-  // คำนวณสรุปเวลาแยกตามห้องเรียน
-  const roomSummary = {};
-  filteredVolunteers.forEach(vol => {
-    const roomKey = vol.room || 'ไม่ระบุห้อง';
-    if (!roomSummary[roomKey]) {
-      roomSummary[roomKey] = { totalMinutes: 0, count: 0 };
-    }
-    roomSummary[roomKey].totalMinutes += (vol.minutes || 0);
-    roomSummary[roomKey].count += 1;
-  });
-
-  // สร้างตารางสรุปแยกตามห้องเรียน
-  let roomSummaryTable = `
-    <h2 style="color: #0F1B4C; margin-top: 40px; margin-bottom: 15px;">สรุปเวลาสะสมแยกตามห้องเรียน</h2>
-    <table class="room-summary-table">
-      <thead>
-        <tr>
-          <th>ห้องเรียน</th>
-          <th style="text-align: center;">จำนวนรายการ</th>
-          <th style="text-align: center;">เวลาสะสม (นาที)</th>
-          <th style="text-align: center;">เวลาสะสม (ชั่วโมง)</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-
-  // เรียงลำดับห้องเรียน
-  const sortedRooms = Object.keys(roomSummary).sort();
-  sortedRooms.forEach(roomKey => {
-    const data = roomSummary[roomKey];
-    const hours = (data.totalMinutes / 60).toFixed(2);
-    roomSummaryTable += `
-      <tr>
-        <td>${roomKey}</td>
-        <td style="text-align: center;">${data.count}</td>
-        <td style="text-align: center;">${data.totalMinutes}</td>
-        <td style="text-align: center; font-weight: bold;">${hours}</td>
-      </tr>
-    `;
-  });
-
-  roomSummaryTable += `
-      </tbody>
-    </table>
-  `;
 
   htmlContent += `
         </tbody>
       </table>
-      
-      ${roomSummaryTable}
-      
-      <div class="summary">
-        <h3>สรุปสถิติภาพรวม</h3>
-        <p>จำนวนรายการทั้งหมด: ${filteredVolunteers.length} รายการ</p>
-        <p>เวลาสะสมรวม: ${Math.round(filteredVolunteers.reduce((sum, v) => sum + (v.minutes || 0), 0) / 60 * 10) / 10} ชั่วโมง</p>
+
+      <h2>2. สรุปเวลาสะสมรายบุคคล (เป็นชั่วโมง)</h2>
+      <table class="student-table">
+        <thead>
+          <tr>
+            <th>ห้อง</th>
+            <th>ชื่อ-นามสกุล</th>
+            <th style="text-align:center">เวลาสะสม (นาที)</th>
+            <th style="text-align:center">เวลาสะสม (ชั่วโมง)</th>
+            <th style="text-align:center">สถานะ</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  const sortedStudents = Object.values(studentSummaryMap).sort((a, b) => a.room.localeCompare(b.room) || a.name.localeCompare(b.name));
+  sortedStudents.forEach(s => {
+    const hours = (s.totalMinutes / 60).toFixed(2);
+    const isDone = s.totalMinutes >= 720;
+    htmlContent += `
+      <tr>
+        <td>${s.room}</td>
+        <td>${s.name}</td>
+        <td style="text-align:center">${s.totalMinutes}</td>
+        <td style="text-align:center; font-weight:bold">${hours}</td>
+        <td style="text-align:center" class="${isDone ? 'status-done' : 'status-pending'}">${isDone ? 'ครบเกณฑ์' : 'กำลังสะสม'}</td>
+      </tr>
+    `;
+  });
+
+  htmlContent += `
+        </tbody>
+      </table>
+
+      <div class="summary-box">
+        <h3>สรุปสถิติรวมทั้งสิ้น</h3>
+        <p style="text-align:left">จำนวนรายการกิจกรรม: ${filteredVolunteers.length} รายการ</p>
+        <p style="text-align:left">เวลารวมทั้งหมด: ${(filteredVolunteers.reduce((sum, v) => sum + (v.minutes || 0), 0) / 60).toFixed(2)} ชั่วโมง</p>
       </div>
     </body>
     </html>
@@ -2984,6 +3044,184 @@ function downloadVolunteerPDF() {
   };
   
   html2pdf().set(opt).from(htmlContent).save();
+}
+
+// ✅ ฟังก์ชันอัปเดตข้อมูลสำหรับส่งออก
+function updateExportData() {
+  // ฟังก์ชันนี้เรียกเมื่อมีการเปลี่ยนแปลงตัวกรอง
+  // ใช้สำหรับการอัปเดตข้อมูลในอนาคต
+}
+
+// ✅ ฟังก์ชันส่งออกข้อมูลเป็น CSV
+function exportVolunteerToCSV() {
+  const room = document.getElementById('filter-vol-room-export').value;
+  const dateStart = document.getElementById('filter-date-start').value;
+  const dateEnd = document.getElementById('filter-date-end').value;
+  let filteredVolunteers = volunteers;
+  
+  if (room !== 'all') {
+    filteredVolunteers = filteredVolunteers.filter(v => v.room === room);
+  }
+  
+  if (dateStart) {
+    filteredVolunteers = filteredVolunteers.filter(v => (v.work_date || '') >= dateStart);
+  }
+  
+  if (dateEnd) {
+    filteredVolunteers = filteredVolunteers.filter(v => (v.work_date || '') <= dateEnd);
+  }
+
+  // 1. สรุปรายบุคคล
+  const studentSummaryMap = {};
+  filteredVolunteers.forEach(vol => {
+    const key = `${vol.student_name}_${vol.room}`;
+    if (!studentSummaryMap[key]) {
+      studentSummaryMap[key] = { name: vol.student_name, room: vol.room, totalMinutes: 0 };
+    }
+    studentSummaryMap[key].totalMinutes += (vol.minutes || 0);
+  });
+
+  // 2. สรุปรายห้อง
+  const roomSummary = {};
+  const activeRooms = room === 'all' ? ROOMS : [room];
+  activeRooms.forEach(r => {
+    const studentsInRoom = students.filter(s => s.room === r);
+    roomSummary[r] = { totalMinutes: 0, recordCount: 0, studentCount: studentsInRoom.length, completedStudents: 0 };
+  });
+
+  filteredVolunteers.forEach(vol => {
+    const r = vol.room;
+    if (roomSummary[r]) {
+      roomSummary[r].totalMinutes += (vol.minutes || 0);
+      roomSummary[r].recordCount += 1;
+    }
+  });
+
+  Object.values(studentSummaryMap).forEach(s => {
+    if (s.totalMinutes >= 720) {
+      if (roomSummary[s.room]) roomSummary[s.room].completedStudents++;
+    }
+  });
+
+  // สร้าง CSV Header
+  let csvContent = '\ufeff'; // BOM for UTF-8 Excel support
+  csvContent += 'รายงานสรุปการทำจิตอาสา - โรงเรียนโคราชพิทยาคม\n';
+  csvContent += 'วันที่พิมพ์,' + new Date().toLocaleDateString('th-TH') + '\n';
+  if (dateStart || dateEnd) {
+    csvContent += 'ช่วงวันที่,' + (dateStart ? new Date(dateStart + 'T00:00:00').toLocaleDateString('th-TH') : 'ตั้งแต่เริ่มต้น') + ' ถึง ' + (dateEnd ? new Date(dateEnd + 'T00:00:00').toLocaleDateString('th-TH') : 'ถึงปัจจุบัน') + '\n';
+  }
+  csvContent += '\n';
+
+  // ตารางสรุปรายห้อง
+  csvContent += '1. สรุปภาพรวมรายห้องเรียน\n';
+  csvContent += 'ห้องเรียน,นักเรียนทั้งหมด,ผ่านเกณฑ์ (12 ชม.),ความสำเร็จ (%),เวลารวม (ชั่วโมง)\n';
+  Object.keys(roomSummary).sort().forEach(r => {
+    const data = roomSummary[r];
+    const percent = data.studentCount > 0 ? ((data.completedStudents / data.studentCount) * 100).toFixed(1) : '0.0';
+    const hours = (data.totalMinutes / 60).toFixed(2);
+    csvContent += '"' + r + '",' + data.studentCount + ',' + data.completedStudents + ',' + percent + '%,' + hours + '\n';
+  });
+
+  // ตารางสรุปรายบุคคล
+  csvContent += '\n2. สรุปเวลาสะสมรายบุคคล\n';
+  csvContent += 'ห้อง,ชื่อ-นามสกุล,เวลาสะสม (นาที),เวลาสะสม (ชั่วโมง),สถานะ\n';
+  Object.values(studentSummaryMap).sort((a,b)=>a.room.localeCompare(b.room) || a.name.localeCompare(b.name)).forEach(s => {
+    const hours = (s.totalMinutes / 60).toFixed(2);
+    const status = s.totalMinutes >= 720 ? 'ครบเกณฑ์' : 'กำลังสะสม';
+    csvContent += '"' + s.room + '","' + s.name + '",' + s.totalMinutes + ',' + hours + ',"' + status + '"\n';
+  });
+
+  // ตารางรายละเอียดทั้งหมด
+  csvContent += '\n3. รายละเอียดกิจกรรมทั้งหมด\n';
+  csvContent += 'ห้อง,ชื่อนักเรียน,วันที่ทำกิจกรรม,รายละเอียดกิจกรรม,เวลาที่ได้รับ (นาที)\n';
+  filteredVolunteers.forEach(vol => {
+    csvContent += '"' + (vol.room || '-') + '","' + (vol.student_name || '-') + '","' + (vol.work_date || '-') + '","' + (vol.activity_name || '-') + '",' + (vol.minutes || 0) + '\n';
+  });
+
+  // ดาวน์โหลด CSV
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'volunteer_full_report_' + new Date().toISOString().split('T')[0] + '.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// ✅ ฟังก์ชันส่งออกข้อมูลเป็น Excel (ใช้ SheetJS library)
+function exportVolunteerToExcel() {
+  const room = document.getElementById('filter-vol-room-export').value;
+  const dateStart = document.getElementById('filter-date-start').value;
+  const dateEnd = document.getElementById('filter-date-end').value;
+  let filteredVolunteers = volunteers;
+  
+  if (room !== 'all') {
+    filteredVolunteers = filteredVolunteers.filter(v => v.room === room);
+  }
+  
+  if (dateStart) {
+    filteredVolunteers = filteredVolunteers.filter(v => (v.work_date || '') >= dateStart);
+  }
+  
+  if (dateEnd) {
+    filteredVolunteers = filteredVolunteers.filter(v => (v.work_date || '') <= dateEnd);
+  }
+
+  // สร้างสรุปตามห้องเรียน
+  const roomSummary = {};
+  filteredVolunteers.forEach(vol => {
+    const roomKey = vol.room || 'ไม่ระบุห้อง';
+    if (!roomSummary[roomKey]) {
+      roomSummary[roomKey] = { totalMinutes: 0, count: 0 };
+    }
+    roomSummary[roomKey].totalMinutes += (vol.minutes || 0);
+    roomSummary[roomKey].count += 1;
+  });
+
+  // เตรียมข้อมูลสำหรับตาราง
+  const detailData = filteredVolunteers.map(vol => ({
+    'ห้อง': vol.room || '-',
+    'ชื่อนักเรียน': vol.student_name || '-',
+    'วันที่ทำกิจกรรม': vol.work_date || '-',
+    'รายละเอียดกิจกรรม': vol.activity_name || '-',
+    'เวลาที่ได้รับ (นาที)': vol.minutes || 0
+  }));
+
+  const summaryData = Object.keys(roomSummary).sort().map(roomKey => {
+    const data = roomSummary[roomKey];
+    return {
+      'ห้องเรียน': roomKey,
+      'จำนวนรายการ': data.count,
+      'เวลาสะสม (นาที)': data.totalMinutes,
+      'เวลาสะสม (ชั่วโมง)': (data.totalMinutes / 60).toFixed(2)
+    };
+  });
+
+  // สร้าง HTML table สำหรับ export
+  let htmlContent = '<table border="1"><tr><td colspan="4"><strong>รายงานสรุปการทำจิตอาสา - โรงเรียนโคราชพิทยาคม</strong></td></tr>';
+  htmlContent += '<tr><td>วันที่พิมพ์</td><td>' + new Date().toLocaleDateString('th-TH') + '</td></tr>';
+  if (dateStart || dateEnd) {
+    htmlContent += '<tr><td>ช่วงวันที่</td><td>' + (dateStart ? new Date(dateStart + 'T00:00:00').toLocaleDateString('th-TH') : 'ตั้งแต่เริ่มต้น') + ' ถึง ' + (dateEnd ? new Date(dateEnd + 'T00:00:00').toLocaleDateString('th-TH') : 'ถึงปัจจุบัน') + '</td></tr>';
+  }
+  htmlContent += '</table><br>';
+
+  // ตารางรายละเอียด
+  htmlContent += '<table border="1"><tr style="background-color: #0F1B4C; color: white;"><th>ห้อง</th><th>ชื่อนักเรียน</th><th>วันที่ทำกิจกรรม</th><th>รายละเอียดกิจกรรม</th><th>เวลาที่ได้รับ (นาที)</th></tr>';
+  detailData.forEach(row => {
+    htmlContent += '<tr><td>' + row['ห้อง'] + '</td><td>' + row['ชื่อนักเรียน'] + '</td><td>' + row['วันที่ทำกิจกรรม'] + '</td><td>' + row['รายละเอียดกิจกรรม'] + '</td><td>' + row['เวลาที่ได้รับ (นาที)'] + '</td></tr>';
+  });
+  htmlContent += '</table><br>';
+
+  // สรุปตามห้องเรียน
+  htmlContent += '<table border="1"><tr style="background-color: #059669; color: white;"><th>ห้องเรียน</th><th>จำนวนรายการ</th><th>เวลาสะสม (นาที)</th><th>เวลาสะสม (ชั่วโมง)</th></tr>';
+  summaryData.forEach(row => {
+    htmlContent += '<tr><td>' + row['ห้องเรียน'] + '</td><td>' + row['จำนวนรายการ'] + '</td><td>' + row['เวลาสะสม (นาที)'] + '</td><td>' + row['เวลาสะสม (ชั่วโมง)'] + '</td></tr>';
+  });
+  htmlContent += '</table>';
+
+  // ใช้ html2pdf เพื่อสร้าง Excel (เป็น fallback ถ้าไม่มี SheetJS)
+  alert('ฟังก์ชัน Export Excel ต้องการ SheetJS library\nในขณะนี้ให้ใช้ CSV หรือ PDF แทน');
 }
 
 // ✅ ฟังก์ชันแสดงรายการไฟล์สำหรับผู้ตรวจสอบ
