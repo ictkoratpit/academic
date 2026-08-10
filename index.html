@@ -11,6 +11,8 @@
   
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -2950,8 +2952,8 @@ function getFilteredVolunteers() {
 // ✅ ฟังก์ชันดาวน์โหลด PDF สรุปจิตอาสา (ใช้ข้อมูลจริงจาก Dashboard และสร้างไฟล์แบบ async ที่เสถียร)
 async function downloadVolunteerPDF() {
   const btn = document.getElementById('btn-vol-pdf');
-  if (typeof html2pdf === 'undefined') {
-    alert('ไม่สามารถโหลดไลบรารีสร้าง PDF ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตหรือโหลดหน้าใหม่อีกครั้ง');
+  if (typeof html2canvas === 'undefined' || (typeof window.jspdf === 'undefined' && typeof jsPDF === 'undefined')) {
+    alert('ไม่สามารถโหลดไลบรารีสร้าง PDF (html2canvas/jsPDF) ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตหรือโหลดหน้าใหม่อีกครั้ง');
     return;
   }
   if (btn) {
@@ -3171,8 +3173,10 @@ async function downloadVolunteerPDF() {
       y: 0
     });
 
-    if (typeof window.jspdf === 'undefined') { alert('ไม่สามารถโหลดไลบรารีสร้าง PDF ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต'); return; }
-    const pdf = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const { jsPDF } = window.jspdf || {};
+    const PDFLib = jsPDF || window.jsPDF;
+    if (!PDFLib) { alert('ไม่สามารถเรียกใช้ไลบรารี jsPDF ได้'); return; }
+    const pdf = new PDFLib({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pageW = pdf.internal.pageSize.getWidth();   // 210
     const pageH = pdf.internal.pageSize.getHeight();  // 297
     const availW = pageW - marginMM.left - marginMM.right;   // 190 mm
