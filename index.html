@@ -2308,8 +2308,8 @@ function renderVolunteerDashboard() {
   const totalStudents = students.length;
   const studentSummaryMap = {};
   volunteers.forEach(v => {
-    const key = `${v.student}_${v.room}`;
-    if (!studentSummaryMap[key]) { studentSummaryMap[key] = { student: v.student, room: v.room, total_minutes: 0 }; }
+    const key = `${volName(v)}_${volRoom(v)}`;
+    if (!studentSummaryMap[key]) { studentSummaryMap[key] = { student: volName(v), room: volRoom(v), total_minutes: 0 }; }
     studentSummaryMap[key].total_minutes += (v.minutes || 0);
   });
   
@@ -2429,9 +2429,9 @@ function renderVolunteerData() {
   
   const studentSummaryMap = {};
   volunteers.forEach(v => {
-    if (filterRoom !== 'all' && v.room !== filterRoom) return;
-    const key = `${v.student}_${v.room}`;
-    if (!studentSummaryMap[key]) { studentSummaryMap[key] = { student: v.student, room: v.room, total_minutes: 0 }; }
+    if (filterRoom !== 'all' && volRoom(v) !== filterRoom) return;
+    const key = `${volName(v)}_${volRoom(v)}`;
+    if (!studentSummaryMap[key]) { studentSummaryMap[key] = { student: volName(v), room: volRoom(v), total_minutes: 0 }; }
     studentSummaryMap[key].total_minutes += (v.minutes || 0);
   });
   
@@ -2470,7 +2470,7 @@ function renderVolunteerData() {
       }
       return `
       <tr class="border-b hover:bg-gray-50 transition-colors">
-        <td class="p-3 font-bold text-gray-600">${v.room}</td><td class="p-3 font-medium text-indigo-950">${v.student}</td>
+        <td class="p-3 font-bold text-gray-600">${volRoom(v)}</td><td class="p-3 font-medium text-indigo-950">${volName(v)}</td>
         <td class="p-3 text-gray-600 text-[11px] font-medium">${displayDate}</td>
         <td class="p-3 text-gray-600 text-[11px]">${v.activity_name}</td><td class="p-3 text-center font-bold text-emerald-600">+${v.minutes} นาที</td>
         <td class="p-3 text-gray-500 text-[10px]">${v.recorded_by || '-'}</td>
@@ -2897,8 +2897,9 @@ function computeVolunteerSummary(room) {
   // --- 1. สรุปเวลาสะสมรายบุคคล (ตรรกะเดียวกับ Dashboard) ---
   const studentSummaryMap = {};
   volunteers.forEach(v => {
-    const key = `${v.student}_${v.room}`;
-    if (!studentSummaryMap[key]) { studentSummaryMap[key] = { student: v.student, room: v.room, total_minutes: 0 }; }
+    const name = volName(v), room = volRoom(v);
+    const key = `${name}_${room}`;
+    if (!studentSummaryMap[key]) { studentSummaryMap[key] = { student: name, room: room, total_minutes: 0 }; }
     studentSummaryMap[key].total_minutes += (v.minutes || 0);
   });
   summary.studentSummaryMap = studentSummaryMap;
@@ -2922,13 +2923,24 @@ function computeVolunteerSummary(room) {
   return summary;
 }
 
+// ✅ ฟังก์ชันช่วยอ่านชื่อ/ห้องของ volunteer อย่างปลอดภัย (รองรับ document เก่าใน Firestore ที่เก็บเป็น student_name)
+function volName(v) {
+  if (!v) return 'ไม่ระบุชื่อ';
+  let name = v.student || v.student_name || v.name || '';
+  if (typeof name === 'object' && name !== null) {
+    name = name.name || name.student_name || JSON.stringify(name);
+  }
+  return name.toString().trim() || 'ไม่ระบุชื่อ';
+}
+function volRoom(v) { return (v && (v.room || '')).toString().trim() || '-'; }
+
 // ✅ ฟังก์ชันดึงรายการที่ถูกกรองตามตัวกรอง (ห้อง + ช่วงวันที่) ตรงกับตารางประวัติ
 function getFilteredVolunteers() {
   const room = document.getElementById('filter-vol-room-export').value;
   const dateStart = document.getElementById('filter-date-start').value;
   const dateEnd = document.getElementById('filter-date-end').value;
   return volunteers.filter(v => {
-    if (room !== 'all' && v.room !== room) return false;
+    if (room !== 'all' && volRoom(v) !== room) return false;
     if (dateStart && (v.work_date || '') < dateStart) return false;
     if (dateEnd && (v.work_date || '') > dateEnd) return false;
     return true;
@@ -2968,12 +2980,13 @@ async function downloadVolunteerPDF() {
       studentListMap[`${s.name}_${s.room}`] = { student: s.name, room: s.room, total_minutes: 0 };
     });
     filteredVolunteers.forEach(v => {
-      const key = `${v.student}_${v.room}`;
+      const name = volName(v), roomV = volRoom(v);
+      const key = `${name}_${roomV}`;
       if (studentListMap[key]) {
         studentListMap[key].total_minutes += (v.minutes || 0);
       } else {
         // รายชื่อที่พิมพ์นอกคลังข้อมูล ก็ยังรวมในรายงาน
-        studentListMap[key] = { student: v.student, room: v.room, total_minutes: (v.minutes || 0) };
+        studentListMap[key] = { student: name, room: roomV, total_minutes: (v.minutes || 0) };
       }
     });
     const studentList = Object.values(studentListMap).sort((a, b) => a.room.localeCompare(b.room) || a.student.localeCompare(b.student));
@@ -2988,13 +3001,15 @@ async function downloadVolunteerPDF() {
     wrapper.style.left = '0';
     wrapper.style.top = '0';
     wrapper.style.zIndex = '-10000';
-    wrapper.style.width = '790px';
+    wrapper.style.width = '750px';
+    wrapper.style.boxSizing = 'border-box';
     wrapper.style.fontFamily = "'Sarabun', 'Noto Sans Thai', Arial, sans-serif";
     wrapper.style.color = '#1f2937';
     wrapper.style.fontSize = '11px';
+    wrapper.style.lineHeight = '1.4';
 
-    const thStyle = 'background-color:#0F1B4C; color:#ffffff; padding:7px; text-align:left; border:1px solid #d1d5db; font-size:11px;';
-    const tdStyle = 'padding:5px 7px; border:1px solid #d1d5db; font-size:11px;';
+    const thStyle = 'background-color:#0F1B4C; color:#ffffff; padding:6px; text-align:left; border:1px solid #d1d5db; font-size:10px;';
+    const tdStyle = 'padding:4px 6px; border:1px solid #d1d5db; font-size:10px; word-break:break-word;';
 
     let periodHtml = '';
     if (dateStart || dateEnd) {
@@ -3010,8 +3025,12 @@ async function downloadVolunteerPDF() {
         <p style="text-align:center; color:#666; margin:0;">วันที่พิมพ์: ${new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
         ${periodHtml}
 
-        <h2 style="color:#0F1B4C; margin:22px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:15px;">1. สรุปภาพรวม (ตรงกับ Dashboard จิตอาสา)</h2>
-        <table style="width:100%; border-collapse:collapse;">
+        <h2 style="color:#0F1B4C; margin:20px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:14px;">1. สรุปภาพรวม (Dashboard จิตอาสา)</h2>
+        <style>
+          #pdf-wrapper-temp table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 10px; }
+          #pdf-wrapper-temp th, #pdf-wrapper-temp td { overflow: hidden; text-overflow: ellipsis; }
+        </style>
+        <table style="width:100%;">
           <tr>
             <th style="${thStyle}; text-align:center;">นักเรียนทั้งหมดในระบบ</th>
             <th style="${thStyle}; text-align:center;">ลงบันทึกแล้ว</th>
@@ -3028,8 +3047,8 @@ async function downloadVolunteerPDF() {
           </tr>
         </table>
 
-        <h2 style="color:#0F1B4C; margin:22px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:15px;">2. สรุปภาพรวมรายห้องเรียน (สอดคล้องกับสถิติรายห้องเรียนใน Dashboard)</h2>
-        <table style="width:100%; border-collapse:collapse;">
+        <h2 style="color:#0F1B4C; margin:20px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:14px;">2. สรุปภาพรวมรายห้องเรียน</h2>
+        <table style="width:100%;">
           <tr>
             <th style="${thStyle}; background-color:#059669;">ห้องเรียน</th>
             <th style="${thStyle}; background-color:#059669; text-align:center;">นักเรียน</th>
@@ -3044,29 +3063,33 @@ async function downloadVolunteerPDF() {
           }).join('')}
         </table>
 
-        <h2 style="color:#0F1B4C; margin:22px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:15px;">3. นักเรียนที่มีชั่วโมงสะสมสูงสุด 10 อันดับแรก</h2>
-        <table style="width:100%; border-collapse:collapse;">
-          <tr>
-            <th style="${thStyle}; text-align:center; background-color:#4f46e5;">อันดับ</th>
-            <th style="${thStyle}; background-color:#4f46e5;">ห้อง</th>
-            <th style="${thStyle}; background-color:#4f46e5;">ชื่อ-นามสกุล</th>
-            <th style="${thStyle}; background-color:#4f46e5; text-align:center;">เวลาสะสม (นาที)</th>
-            <th style="${thStyle}; background-color:#4f46e5; text-align:center;">เทียบ (ชม.)</th>
-          </tr>
+        <h2 style="color:#0F1B4C; margin:20px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:14px;">3. นักเรียนที่มีชั่วโมงสะสมสูงสุด 10 อันดับแรก</h2>
+        <table style="width:100%;">
+          <thead>
+            <tr>
+              <th style="${thStyle}; text-align:center; background-color:#4f46e5; width:15%;">อันดับ</th>
+              <th style="${thStyle}; background-color:#4f46e5; width:15%;">ห้อง</th>
+              <th style="${thStyle}; background-color:#4f46e5; width:35%;">ชื่อ-นามสกุล</th>
+              <th style="${thStyle}; background-color:#4f46e5; text-align:center; width:20%;">นาที</th>
+              <th style="${thStyle}; background-color:#4f46e5; text-align:center; width:15%;">ชม.</th>
+            </tr>
+          </thead>
           ${allSummary.length === 0 ? '<tr><td colspan="5" style="' + tdStyle + '; text-align:center; color:#9ca3af;">ยังไม่มีข้อมูลกิจกรรมจิตอาสา</td></tr>' : allSummary.map((s, idx) => {
             const medal = idx === 0 ? 'อันดับ 1' : idx === 1 ? 'อันดับ 2' : idx === 2 ? 'อันดับ 3' : 'อันดับ ' + (idx + 1);
             return `<tr><td style="${tdStyle}; text-align:center;">${medal}</td><td style="${tdStyle}; font-weight:bold;">${s.room}</td><td style="${tdStyle}; font-weight:bold; color:#312e81;">${s.student}</td><td style="${tdStyle}; text-align:center; font-weight:bold;">${s.total_minutes} นาที</td><td style="${tdStyle}; text-align:center; font-weight:bold;">${(s.total_minutes / 60).toFixed(1)} ชม.</td></tr>`;
           }).join('')}
         </table>
 
-        <h2 style="color:#0F1B4C; margin:22px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:15px;">4. สรุปเวลาสะสมรายบุคคล (ตรงกับตารางสรุปเวลาสะสม เป้าหมาย 12 ชม.)</h2>
-        <table style="width:100%; border-collapse:collapse;">
-          <tr>
-            <th style="${thStyle}; background-color:#4f46e5; width:80px;">ห้อง</th>
-            <th style="${thStyle}; background-color:#4f46e5;">ชื่อ-นามสกุล</th>
-            <th style="${thStyle}; background-color:#4f46e5; text-align:center;">เวลาสะสมปัจจุบัน</th>
-            <th style="${thStyle}; background-color:#4f46e5; text-align:center;">สถานะ / แจ้งเตือน</th>
-          </tr>
+        <h2 style="color:#0F1B4C; margin:20px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:14px;">4. สรุปเวลาสะสมรายบุคคล (เป้าหมาย 12 ชม.)</h2>
+        <table style="width:100%;">
+          <thead>
+            <tr>
+              <th style="${thStyle}; width:15%;">ห้อง</th>
+              <th style="${thStyle}; width:35%;">ชื่อ-นามสกุล</th>
+              <th style="${thStyle}; width:30%; text-align:center;">เวลาสะสม</th>
+              <th style="${thStyle}; width:20%; text-align:center;">สถานะ</th>
+            </tr>
+          </thead>
           ${studentList.length === 0 ? '<tr><td colspan="4" style="' + tdStyle + '; text-align:center; color:#9ca3af;">ยังไม่มีข้อมูลสถิติชั่วโมงจิตอาสาสำหรับเงื่อนไขที่เลือก</td></tr>' : studentList.map(s => {
             const hours = (s.total_minutes / 60).toFixed(1);
             const isCompleted = s.total_minutes >= 720;
@@ -3079,16 +3102,18 @@ async function downloadVolunteerPDF() {
           }).join('')}
         </table>
 
-        <h2 style="color:#0F1B4C; margin:22px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:15px;">5. รายละเอียดกิจกรรมทั้งหมด (ตรงกับประวัติรายการ)</h2>
-        <table style="width:100%; border-collapse:collapse;">
-          <tr>
-            <th style="${thStyle};">ห้อง</th>
-            <th style="${thStyle};">ชื่อนักเรียน</th>
-            <th style="${thStyle};">วันที่ทำกิจกรรม</th>
-            <th style="${thStyle};">รายละเอียดกิจกรรม</th>
-            <th style="${thStyle}; text-align:center;">เวลาที่ได้รับ</th>
-            <th style="${thStyle};">ผู้บันทึกข้อมูล</th>
-          </tr>
+        <h2 style="color:#0F1B4C; margin:20px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:14px;">5. รายละเอียดกิจกรรมทั้งหมด</h2>
+        <table style="width:100%;">
+          <thead>
+            <tr>
+              <th style="${thStyle}; width:10%;">ห้อง</th>
+              <th style="${thStyle}; width:20%;">ชื่อนักเรียน</th>
+              <th style="${thStyle}; width:15%;">วันที่</th>
+              <th style="${thStyle}; width:30%;">กิจกรรม</th>
+              <th style="${thStyle}; width:10%; text-align:center;">นาที</th>
+              <th style="${thStyle}; width:15%;">ผู้บันทึก</th>
+            </tr>
+          </thead>
           ${filteredVolunteers.length === 0 ? '<tr><td colspan="6" style="' + tdStyle + '; text-align:center; color:#9ca3af;">ไม่มีประวัติรายการบันทึกกิจกรรมสำหรับเงื่อนไขที่เลือก</td></tr>' : filteredVolunteers.map(v => {
             let displayDate = '-';
             if (v.work_date) {
@@ -3096,8 +3121,8 @@ async function downloadVolunteerPDF() {
               displayDate = new Date(yy, mm - 1, dd).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
             }
             return `<tr>
-              <td style="${tdStyle}; font-weight:bold;">${v.room}</td>
-              <td style="${tdStyle};">${v.student || v.student_name || '-'}</td>
+              <td style="${tdStyle}; font-weight:bold;">${volRoom(v)}</td>
+              <td style="${tdStyle};">${volName(v)}</td>
               <td style="${tdStyle};">${displayDate}</td>
               <td style="${tdStyle};">${v.activity_name || '-'}</td>
               <td style="${tdStyle}; text-align:center; font-weight:bold; color:#059669;">+${v.minutes || 0} นาที</td>
@@ -3131,33 +3156,64 @@ async function downloadVolunteerPDF() {
     console.log('Wrapper size before render:', wrapper.offsetWidth, 'x', wrapper.scrollHeight);
 
     const filename = 'volunteer_report_' + new Date().toISOString().split('T')[0] + '.pdf';
-    const opt = {
-      margin: [8, 8, 12, 8],
-      filename: filename,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, letterRendering: true, windowWidth: 790, windowHeight: wrapper.scrollHeight + 20, scrollX: 0, scrollY: -wrapper.getBoundingClientRect().top + window.scrollY },
-      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' },
-      pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', 'td'] }
-    };
 
-    await html2pdf()
-      .set(opt)
-      .from(wrapper)
-      .toPdf()
-      .get('pdf')
-      .then(pdf => {
-        const totalPages = pdf.internal.getNumberOfPages();
-        for (let i = 1; i <= totalPages; i++) {
-          pdf.setPage(i);
-          pdf.setFontSize(8);
-          pdf.setTextColor(107, 114, 128);
-          pdf.text('รายงานสรุปกิจกรรมจิตอาสา – โรงเรียนโคราชพิตยายาคม', pdf.internal.pageSize.getWidth() - 20, pdf.internal.pageSize.getHeight() - 6, { align: 'right' });
-          pdf.text('หน้า ' + i + ' / ' + totalPages, 12, pdf.internal.pageSize.getHeight() - 6);
-        }
-      })
-      .save();
+    // --- เรนเดอร์ wrapper ทั้งหมดเป็นภาพเดียว (scale 1.5) แล้วแบ่งหน้า A4 เอง ---
+    const marginMM = { top: 10, left: 10, bottom: 12, right: 10 };
+    const canvas = await html2canvas(wrapper, {
+      scale: 1.5,
+      useCORS: true,
+      letterRendering: true,
+      backgroundColor: '#ffffff',
+      windowWidth: 750,
+      scrollX: 0,
+      scrollY: 0,
+      x: 0,
+      y: 0
+    });
 
-    console.log('PDF generated successfully');
+    if (typeof window.jspdf === 'undefined') { alert('ไม่สามารถโหลดไลบรารีสร้าง PDF ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต'); return; }
+    const pdf = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = pdf.internal.pageSize.getWidth();   // 210
+    const pageH = pdf.internal.pageSize.getHeight();  // 297
+    const availW = pageW - marginMM.left - marginMM.right;   // 190 mm
+    const availH = pageH - marginMM.top - marginMM.bottom;   // 275 mm
+
+    // ภาพ wrapper กว้างเท่าไรในหน่วย mm: อ้างอิงจาก wrapper.offsetWidth เทียบ 790px
+    const pxPerMm = canvas.width / availW;  // px ต่อ mm
+    const imgH_mm = canvas.height / pxPerMm; // ความสูงภาพรวมใน mm
+
+    // สัดส่วนการแบ่ง: ความสูง 1 เพจภาพ (imgH) ต่อความสูง 1 เพจ A4 (availH)
+    const pagesTotal = Math.ceil(imgH_mm / availH);
+    const imgHPerPage_px = Math.round((availH / imgH_mm) * canvas.height);
+
+    for (let i = 0; i < pagesTotal; i++) {
+      const y0 = i * imgHPerPage_px;
+      const remainH = canvas.height - y0;
+      const sliceH = Math.min(imgHPerPage_px, remainH);
+      if (sliceH <= 0) break;
+
+      // ตัดภาพเฉพาะส่วนของหน้านี้ (ไม่ครอปข้าง เพื่อความกวางสมบูรณ์)
+      const sliceCanvas = document.createElement('canvas');
+      sliceCanvas.width = canvas.width;
+      sliceCanvas.height = sliceH;
+      const ctx = sliceCanvas.getContext('2d');
+      ctx.drawImage(canvas, 0, y0, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+      const imgData = sliceCanvas.toDataURL('image/webp', 0.8);
+
+      // ความสูงจริงของชิ้นภาพใน mm (ใช้สัดส่วนเดียวกับภาพรวม)
+      const sliceH_mm = sliceH / pxPerMm;
+
+      if (i > 0) pdf.addPage();
+      pdf.addImage(imgData, 'WEBP', marginMM.left, marginMM.top, availW, sliceH_mm);
+
+      // ฟุตเตอร์เลขหน้า (ภาษาอังกฤษเท่านั้นเพื่อเลี่ยงตัวต่างดาว)
+      pdf.setFontSize(8);
+      pdf.setTextColor(107, 114, 128);
+      pdf.text('Page ' + (i + 1) + ' / ' + pagesTotal, pageW - marginMM.right, pageH - 7, { align: 'right' });
+    }
+
+    pdf.save(filename);
+    console.log('PDF generated successfully with', pagesTotal, 'pages');
   } catch (error) {
     console.error('Error in downloadVolunteerPDF:', error);
     alert('เกิดข้อผิดพลาดในการสร้างไฟล์ PDF: ' + error.message);
@@ -3187,7 +3243,7 @@ function exportVolunteerToCSV() {
   let filteredVolunteers = volunteers;
   
   if (room !== 'all') {
-    filteredVolunteers = filteredVolunteers.filter(v => v.room === room);
+    filteredVolunteers = filteredVolunteers.filter(v => volRoom(v) === room);
   }
   
   if (dateStart) {
@@ -3308,7 +3364,7 @@ function exportVolunteerToExcel() {
   let filteredVolunteers = volunteers;
   
   if (room !== 'all') {
-    filteredVolunteers = filteredVolunteers.filter(v => v.room === room);
+    filteredVolunteers = filteredVolunteers.filter(v => volRoom(v) === room);
   }
   
   if (dateStart) {
