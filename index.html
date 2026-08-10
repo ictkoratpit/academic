@@ -2903,18 +2903,37 @@ function downloadVolunteerPDF() {
   // --- 1. เตรียมรายชื่อนักเรียนทั้งหมดตามเงื่อนไขห้องเรียน ---
   const targetStudents = room === 'all' ? students : students.filter(s => s.room === room);
   
-  // สร้าง Map เพื่อเก็บสรุปเวลาของนักเรียนทุกคน (รวมคนที่ยังไม่มีบันทึก)
+  // สร้าง Map เพื่อเก็บสรุปเวลาของนักเรียนทุกคน โดยเทียบจากชื่อและห้อง (รองรับทั้งแบบมีและไม่มีคำนำหน้า หรือช่องว่าง)
   const studentSummaryMap = {};
   targetStudents.forEach(s => {
-    const key = `${s.name}_${s.room}`;
+    const cleanName = (s.name || '').trim();
+    const key = `${cleanName}_${s.room}`;
     studentSummaryMap[key] = { name: s.name, room: s.room, totalMinutes: 0 };
   });
 
-  // นำข้อมูลจาก filteredVolunteers มาบวกเพิ่ม
+  // นำข้อมูลจาก filteredVolunteers มาบวกเพิ่ม (รองรับการเทียบชื่อแบบยืดหยุ่น)
   filteredVolunteers.forEach(vol => {
-    const key = `${vol.student_name}_${vol.room}`;
+    const volName = (vol.student_name || '').trim();
+    const key = `${volName}_${vol.room}`;
     if (studentSummaryMap[key]) {
-      studentSummaryMap[key].totalMinutes += (vol.minutes || 0);
+      studentSummaryMap[key].totalMinutes += (parseInt(vol.minutes) || 0);
+    } else {
+      // ถ้าหา key ตรงกันไม่เจอ ลองค้นหาด้วยชื่อที่ตรงกันในห้องเดียวกัน
+      let foundKey = Object.keys(studentSummaryMap).find(k => {
+        const [sName, sRoom] = k.split('_');
+        return sRoom === vol.room && (sName.includes(volName) || volName.includes(sName));
+      });
+      if (foundKey) {
+        studentSummaryMap[foundKey].totalMinutes += (parseInt(vol.minutes) || 0);
+      } else {
+        // ถ้ายังไม่มีในรายชื่อหลัก ให้เพิ่มเข้าไปชั่วคราวเพื่อไม่ให้ข้อมูลตกหล่น
+        const newKey = `${volName}_${vol.room}`;
+        if (!studentSummaryMap[newKey]) {
+          studentSummaryMap[newKey] = { name: vol.student_name, room: vol.room, totalMinutes: (parseInt(vol.minutes) || 0) };
+        } else {
+          studentSummaryMap[newKey].totalMinutes += (parseInt(vol.minutes) || 0);
+        }
+      }
     }
   });
 
@@ -3086,14 +3105,31 @@ function exportVolunteerToCSV() {
   const targetStudents = room === 'all' ? students : students.filter(s => s.room === room);
   const studentSummaryMap = {};
   targetStudents.forEach(s => {
-    const key = `${s.name}_${s.room}`;
+    const cleanName = (s.name || '').trim();
+    const key = `${cleanName}_${s.room}`;
     studentSummaryMap[key] = { name: s.name, room: s.room, totalMinutes: 0 };
   });
 
   filteredVolunteers.forEach(vol => {
-    const key = `${vol.student_name}_${vol.room}`;
+    const volName = (vol.student_name || '').trim();
+    const key = `${volName}_${vol.room}`;
     if (studentSummaryMap[key]) {
-      studentSummaryMap[key].totalMinutes += (vol.minutes || 0);
+      studentSummaryMap[key].totalMinutes += (parseInt(vol.minutes) || 0);
+    } else {
+      let foundKey = Object.keys(studentSummaryMap).find(k => {
+        const [sName, sRoom] = k.split('_');
+        return sRoom === vol.room && (sName.includes(volName) || volName.includes(sName));
+      });
+      if (foundKey) {
+        studentSummaryMap[foundKey].totalMinutes += (parseInt(vol.minutes) || 0);
+      } else {
+        const newKey = `${volName}_${vol.room}`;
+        if (!studentSummaryMap[newKey]) {
+          studentSummaryMap[newKey] = { name: vol.student_name, room: vol.room, totalMinutes: (parseInt(vol.minutes) || 0) };
+        } else {
+          studentSummaryMap[newKey].totalMinutes += (parseInt(vol.minutes) || 0);
+        }
+      }
     }
   });
 
