@@ -2999,11 +2999,15 @@ async function downloadVolunteerPDF() {
     // --- สร้าง element HTML จริงใน DOM (เพื่อให้ html2canvas เรนเดอร์ได้ถูกต้อง) ---
     const wrapper = document.createElement('div');
     wrapper.id = 'pdf-wrapper-temp';
-    wrapper.style.position = 'relative';
-    wrapper.style.left = '0';
+    // ซ่อนให้มิดชิดแต่ยังให้ html2canvas เห็นได้
+    wrapper.style.position = 'fixed';
     wrapper.style.top = '0';
-    wrapper.style.zIndex = '-10000';
+    wrapper.style.left = '0';
     wrapper.style.width = '750px';
+    wrapper.style.opacity = '0.001';
+    wrapper.style.pointerEvents = 'none';
+    wrapper.style.zIndex = '-9999';
+    wrapper.style.backgroundColor = '#ffffff';
     wrapper.style.boxSizing = 'border-box';
     wrapper.style.fontFamily = "'Sarabun', 'Noto Sans Thai', Arial, sans-serif";
     wrapper.style.color = '#1f2937';
@@ -3031,6 +3035,7 @@ async function downloadVolunteerPDF() {
         <style>
           #pdf-wrapper-temp table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 10px; }
           #pdf-wrapper-temp th, #pdf-wrapper-temp td { overflow: hidden; text-overflow: ellipsis; }
+          #pdf-wrapper-temp tr { page-break-inside: avoid; }
         </style>
         <table style="width:100%;">
           <tr>
@@ -3049,7 +3054,7 @@ async function downloadVolunteerPDF() {
           </tr>
         </table>
 
-        <h2 style="color:#0F1B4C; margin:20px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:14px;">2. สรุปภาพรวมรายห้องเรียน</h2>
+        <h2 class="html2pdf__page-break" style="color:#0F1B4C; margin:20px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:14px;">2. สรุปภาพรวมรายห้องเรียน</h2>
         <table style="width:100%;">
           <tr>
             <th style="${thStyle}; background-color:#059669;">ห้องเรียน</th>
@@ -3065,7 +3070,7 @@ async function downloadVolunteerPDF() {
           }).join('')}
         </table>
 
-        <h2 style="color:#0F1B4C; margin:20px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:14px;">3. นักเรียนที่มีชั่วโมงสะสมสูงสุด 10 อันดับแรก</h2>
+        <h2 class="html2pdf__page-break" style="color:#0F1B4C; margin:20px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:14px;">3. นักเรียนที่มีชั่วโมงสะสมสูงสุด 10 อันดับแรก</h2>
         <table style="width:100%;">
           <thead>
             <tr>
@@ -3082,7 +3087,7 @@ async function downloadVolunteerPDF() {
           }).join('')}
         </table>
 
-        <h2 style="color:#0F1B4C; margin:20px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:14px;">4. สรุปเวลาสะสมรายบุคคล (เป้าหมาย 12 ชม.)</h2>
+        <h2 class="html2pdf__page-break" style="color:#0F1B4C; margin:20px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:14px;">4. สรุปเวลาสะสมรายบุคคล (เป้าหมาย 12 ชม.)</h2>
         <table style="width:100%;">
           <thead>
             <tr>
@@ -3104,7 +3109,7 @@ async function downloadVolunteerPDF() {
           }).join('')}
         </table>
 
-        <h2 style="color:#0F1B4C; margin:20px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:14px;">5. รายละเอียดกิจกรรมทั้งหมด</h2>
+        <h2 class="html2pdf__page-break" style="color:#0F1B4C; margin:20px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:14px;">5. รายละเอียดกิจกรรมทั้งหมด</h2>
         <table style="width:100%;">
           <thead>
             <tr>
@@ -3155,69 +3160,34 @@ async function downloadVolunteerPDF() {
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     await new Promise(r => setTimeout(r, 400));
 
-    console.log('Wrapper size before render:', wrapper.offsetWidth, 'x', wrapper.scrollHeight);
-
     const filename = 'volunteer_report_' + new Date().toISOString().split('T')[0] + '.pdf';
+    
+    const opt = {
+      margin: 10,
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { 
+        scale: 1.5, 
+        useCORS: true, 
+        letterRendering: true,
+        windowWidth: 750
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] }
+    };
 
-    // --- เรนเดอร์ wrapper ทั้งหมดเป็นภาพเดียว (scale 1.5) แล้วแบ่งหน้า A4 เอง ---
-    const marginMM = { top: 10, left: 10, bottom: 12, right: 10 };
-    const canvas = await html2canvas(wrapper, {
-      scale: 1.5,
-      useCORS: true,
-      letterRendering: true,
-      backgroundColor: '#ffffff',
-      windowWidth: 750,
-      scrollX: 0,
-      scrollY: 0,
-      x: 0,
-      y: 0
-    });
-
-    const { jsPDF } = window.jspdf || {};
-    const PDFLib = jsPDF || window.jsPDF;
-    if (!PDFLib) { alert('ไม่สามารถเรียกใช้ไลบรารี jsPDF ได้'); return; }
-    const pdf = new PDFLib({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const pageW = pdf.internal.pageSize.getWidth();   // 210
-    const pageH = pdf.internal.pageSize.getHeight();  // 297
-    const availW = pageW - marginMM.left - marginMM.right;   // 190 mm
-    const availH = pageH - marginMM.top - marginMM.bottom;   // 275 mm
-
-    // ภาพ wrapper กว้างเท่าไรในหน่วย mm: อ้างอิงจาก wrapper.offsetWidth เทียบ 790px
-    const pxPerMm = canvas.width / availW;  // px ต่อ mm
-    const imgH_mm = canvas.height / pxPerMm; // ความสูงภาพรวมใน mm
-
-    // สัดส่วนการแบ่ง: ความสูง 1 เพจภาพ (imgH) ต่อความสูง 1 เพจ A4 (availH)
-    const pagesTotal = Math.ceil(imgH_mm / availH);
-    const imgHPerPage_px = Math.round((availH / imgH_mm) * canvas.height);
-
-    for (let i = 0; i < pagesTotal; i++) {
-      const y0 = i * imgHPerPage_px;
-      const remainH = canvas.height - y0;
-      const sliceH = Math.min(imgHPerPage_px, remainH);
-      if (sliceH <= 0) break;
-
-      // ตัดภาพเฉพาะส่วนของหน้านี้ (ไม่ครอปข้าง เพื่อความกวางสมบูรณ์)
-      const sliceCanvas = document.createElement('canvas');
-      sliceCanvas.width = canvas.width;
-      sliceCanvas.height = sliceH;
-      const ctx = sliceCanvas.getContext('2d');
-      ctx.drawImage(canvas, 0, y0, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
-      const imgData = sliceCanvas.toDataURL('image/webp', 0.8);
-
-      // ความสูงจริงของชิ้นภาพใน mm (ใช้สัดส่วนเดียวกับภาพรวม)
-      const sliceH_mm = sliceH / pxPerMm;
-
-      if (i > 0) pdf.addPage();
-      pdf.addImage(imgData, 'WEBP', marginMM.left, marginMM.top, availW, sliceH_mm);
-
-      // ฟุตเตอร์เลขหน้า (ภาษาอังกฤษเท่านั้นเพื่อเลี่ยงตัวต่างดาว)
-      pdf.setFontSize(8);
-      pdf.setTextColor(107, 114, 128);
-      pdf.text('Page ' + (i + 1) + ' / ' + pagesTotal, pageW - marginMM.right, pageH - 7, { align: 'right' });
-    }
-
-    pdf.save(filename);
-    console.log('PDF generated successfully with', pagesTotal, 'pages');
+    // ใช้ html2pdf ในการจัดการการสร้างและดาวน์โหลด ซึ่งเสถียรกว่าในกรณีข้อมูลเยอะ
+    await html2pdf().set(opt).from(wrapper).toPdf().get('pdf').then(function(pdf) {
+      const totalPages = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(150);
+        pdf.text('Page ' + i + ' / ' + totalPages, pdf.internal.pageSize.getWidth() - 20, pdf.internal.pageSize.getHeight() - 10);
+      }
+    }).save();
+    
+    console.log('PDF generated successfully');
   } catch (error) {
     console.error('Error in downloadVolunteerPDF:', error);
     alert('เกิดข้อผิดพลาดในการสร้างไฟล์ PDF: ' + error.message);
