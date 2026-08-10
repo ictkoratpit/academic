@@ -2877,6 +2877,10 @@ function downloadVolunteerPDF() {
         tr:nth-child(even) { background-color: #f9f9f9; }
         .summary { margin-top: 30px; padding: 15px; background-color: #f0f0f0; border-radius: 5px; }
         .summary h3 { color: #0F1B4C; }
+        .room-summary-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .room-summary-table th { background-color: #059669; color: white; padding: 12px; text-align: left; border: 1px solid #ddd; }
+        .room-summary-table td { padding: 10px; border: 1px solid #ddd; }
+        .room-summary-table tr:nth-child(even) { background-color: #f0fdf4; }
       </style>
     </head>
     <body>
@@ -2909,12 +2913,60 @@ function downloadVolunteerPDF() {
     `;
   });
 
+  // คำนวณสรุปเวลาแยกตามห้องเรียน
+  const roomSummary = {};
+  filteredVolunteers.forEach(vol => {
+    const roomKey = vol.room || 'ไม่ระบุห้อง';
+    if (!roomSummary[roomKey]) {
+      roomSummary[roomKey] = { totalMinutes: 0, count: 0 };
+    }
+    roomSummary[roomKey].totalMinutes += (vol.minutes || 0);
+    roomSummary[roomKey].count += 1;
+  });
+
+  // สร้างตารางสรุปแยกตามห้องเรียน
+  let roomSummaryTable = `
+    <h2 style="color: #0F1B4C; margin-top: 40px; margin-bottom: 15px;">สรุปเวลาสะสมแยกตามห้องเรียน</h2>
+    <table class="room-summary-table">
+      <thead>
+        <tr>
+          <th>ห้องเรียน</th>
+          <th style="text-align: center;">จำนวนรายการ</th>
+          <th style="text-align: center;">เวลาสะสม (นาที)</th>
+          <th style="text-align: center;">เวลาสะสม (ชั่วโมง)</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  // เรียงลำดับห้องเรียน
+  const sortedRooms = Object.keys(roomSummary).sort();
+  sortedRooms.forEach(roomKey => {
+    const data = roomSummary[roomKey];
+    const hours = (data.totalMinutes / 60).toFixed(2);
+    roomSummaryTable += `
+      <tr>
+        <td>${roomKey}</td>
+        <td style="text-align: center;">${data.count}</td>
+        <td style="text-align: center;">${data.totalMinutes}</td>
+        <td style="text-align: center; font-weight: bold;">${hours}</td>
+      </tr>
+    `;
+  });
+
+  roomSummaryTable += `
+      </tbody>
+    </table>
+  `;
+
   htmlContent += `
         </tbody>
       </table>
       
+      ${roomSummaryTable}
+      
       <div class="summary">
-        <h3>สรุปสถิติ</h3>
+        <h3>สรุปสถิติภาพรวม</h3>
         <p>จำนวนรายการทั้งหมด: ${filteredVolunteers.length} รายการ</p>
         <p>เวลาสะสมรวม: ${Math.round(filteredVolunteers.reduce((sum, v) => sum + (v.minutes || 0), 0) / 60 * 10) / 10} ชั่วโมง</p>
       </div>
