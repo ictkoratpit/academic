@@ -2900,14 +2900,22 @@ function downloadVolunteerPDF() {
     filteredVolunteers = filteredVolunteers.filter(v => (v.work_date || '') <= dateEnd);
   }
 
-  // --- 1. คำนวณสรุปเวลาของนักเรียนแต่ละคน ---
+  // --- 1. เตรียมรายชื่อนักเรียนทั้งหมดตามเงื่อนไขห้องเรียน ---
+  const targetStudents = room === 'all' ? students : students.filter(s => s.room === room);
+  
+  // สร้าง Map เพื่อเก็บสรุปเวลาของนักเรียนทุกคน (รวมคนที่ยังไม่มีบันทึก)
   const studentSummaryMap = {};
+  targetStudents.forEach(s => {
+    const key = `${s.name}_${s.room}`;
+    studentSummaryMap[key] = { name: s.name, room: s.room, totalMinutes: 0 };
+  });
+
+  // นำข้อมูลจาก filteredVolunteers มาบวกเพิ่ม
   filteredVolunteers.forEach(vol => {
     const key = `${vol.student_name}_${vol.room}`;
-    if (!studentSummaryMap[key]) {
-      studentSummaryMap[key] = { name: vol.student_name, room: vol.room, totalMinutes: 0 };
+    if (studentSummaryMap[key]) {
+      studentSummaryMap[key].totalMinutes += (vol.minutes || 0);
     }
-    studentSummaryMap[key].totalMinutes += (vol.minutes || 0);
   });
 
   // --- 2. คำนวณสรุปรายห้องและเปอร์เซ็นต์ ---
@@ -2915,7 +2923,9 @@ function downloadVolunteerPDF() {
   const activeRooms = room === 'all' ? ROOMS : [room];
   activeRooms.forEach(r => {
     const studentsInRoom = students.filter(s => s.room === r);
-    roomSummary[r] = { totalMinutes: 0, recordCount: 0, studentCount: studentsInRoom.length, completedStudents: 0 };
+    if (studentsInRoom.length > 0 || room !== 'all') {
+      roomSummary[r] = { totalMinutes: 0, recordCount: 0, studentCount: studentsInRoom.length, completedStudents: 0 };
+    }
   });
 
   filteredVolunteers.forEach(vol => {
@@ -2992,22 +3002,22 @@ function downloadVolunteerPDF() {
         </tbody>
       </table>
 
-      <h2>2. สรุปเวลาสะสมรายบุคคล (เป็นชั่วโมง)</h2>
+      <h2>2. สรุปเวลาสะสมรายบุคคล (เรียงตามรายชื่อ)</h2>
       <table class="student-table">
         <thead>
           <tr>
-            <th>ห้อง</th>
+            <th style="width: 80px;">ห้อง</th>
             <th>ชื่อ-นามสกุล</th>
-            <th style="text-align:center">เวลาสะสม (นาที)</th>
-            <th style="text-align:center">เวลาสะสม (ชั่วโมง)</th>
-            <th style="text-align:center">สถานะ</th>
+            <th style="text-align:center; width: 100px;">เวลาสะสม (นาที)</th>
+            <th style="text-align:center; width: 100px;">เวลาสะสม (ชั่วโมง)</th>
+            <th style="text-align:center; width: 100px;">สถานะ</th>
           </tr>
         </thead>
         <tbody>
   `;
 
-  const sortedStudents = Object.values(studentSummaryMap).sort((a, b) => a.room.localeCompare(b.room) || a.name.localeCompare(b.name));
-  sortedStudents.forEach(s => {
+  const sortedStudentsSummary = Object.values(studentSummaryMap).sort((a, b) => a.room.localeCompare(b.room) || a.name.localeCompare(b.name));
+  sortedStudentsSummary.forEach(s => {
     const hours = (s.totalMinutes / 60).toFixed(2);
     const isDone = s.totalMinutes >= 720;
     htmlContent += `
@@ -3027,6 +3037,7 @@ function downloadVolunteerPDF() {
 
       <div class="summary-box">
         <h3>สรุปสถิติรวมทั้งสิ้น</h3>
+        <p style="text-align:left">จำนวนนักเรียนในรายงาน: ${targetStudents.length} คน</p>
         <p style="text-align:left">จำนวนรายการกิจกรรม: ${filteredVolunteers.length} รายการ</p>
         <p style="text-align:left">เวลารวมทั้งหมด: ${(filteredVolunteers.reduce((sum, v) => sum + (v.minutes || 0), 0) / 60).toFixed(2)} ชั่วโมง</p>
       </div>
@@ -3071,14 +3082,19 @@ function exportVolunteerToCSV() {
     filteredVolunteers = filteredVolunteers.filter(v => (v.work_date || '') <= dateEnd);
   }
 
-  // 1. สรุปรายบุคคล
+  // 1. สรุปรายบุคคล (รวมทุกคนตามเงื่อนไขห้อง)
+  const targetStudents = room === 'all' ? students : students.filter(s => s.room === room);
   const studentSummaryMap = {};
+  targetStudents.forEach(s => {
+    const key = `${s.name}_${s.room}`;
+    studentSummaryMap[key] = { name: s.name, room: s.room, totalMinutes: 0 };
+  });
+
   filteredVolunteers.forEach(vol => {
     const key = `${vol.student_name}_${vol.room}`;
-    if (!studentSummaryMap[key]) {
-      studentSummaryMap[key] = { name: vol.student_name, room: vol.room, totalMinutes: 0 };
+    if (studentSummaryMap[key]) {
+      studentSummaryMap[key].totalMinutes += (vol.minutes || 0);
     }
-    studentSummaryMap[key].totalMinutes += (vol.minutes || 0);
   });
 
   // 2. สรุปรายห้อง
@@ -3086,7 +3102,9 @@ function exportVolunteerToCSV() {
   const activeRooms = room === 'all' ? ROOMS : [room];
   activeRooms.forEach(r => {
     const studentsInRoom = students.filter(s => s.room === r);
-    roomSummary[r] = { totalMinutes: 0, recordCount: 0, studentCount: studentsInRoom.length, completedStudents: 0 };
+    if (studentsInRoom.length > 0 || room !== 'all') {
+      roomSummary[r] = { totalMinutes: 0, recordCount: 0, studentCount: studentsInRoom.length, completedStudents: 0 };
+    }
   });
 
   filteredVolunteers.forEach(vol => {
@@ -3123,7 +3141,7 @@ function exportVolunteerToCSV() {
   });
 
   // ตารางสรุปรายบุคคล
-  csvContent += '\n2. สรุปเวลาสะสมรายบุคคล\n';
+  csvContent += '\n2. สรุปเวลาสะสมรายบุคคล (เรียงตามรายชื่อ)\n';
   csvContent += 'ห้อง,ชื่อ-นามสกุล,เวลาสะสม (นาที),เวลาสะสม (ชั่วโมง),สถานะ\n';
   Object.values(studentSummaryMap).sort((a,b)=>a.room.localeCompare(b.room) || a.name.localeCompare(b.name)).forEach(s => {
     const hours = (s.totalMinutes / 60).toFixed(2);
