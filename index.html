@@ -2886,11 +2886,12 @@ function updateReviewerTab() {
 
 // ✅ ฟังก์ชันที่คำนวณสรุปข้อมูลตามตรรกะเดียวกับ Dashboard จิตอาสา (ใช้ร่วมกันระหว่าง Dashboard, PDF และ CSV)
 function computeVolunteerSummary(room) {
+  const filteredStudents = room === 'all' ? students : students.filter(s => s.room === room);
   const summary = {
-    totalStudents: students.length,
+    totalStudents: filteredStudents.length,
     loggedStudents: 0,
     completedStudents: 0,
-    totalRecords: volunteers.length,
+    totalRecords: 0,
     progressPct: 0,
     roomStats: {},
     studentSummaryMap: {}
@@ -2899,13 +2900,26 @@ function computeVolunteerSummary(room) {
   // --- 1. สรุปเวลาสะสมรายบุคคล (ตรรกะเดียวกับ Dashboard) ---
   const studentSummaryMap = {};
   volunteers.forEach(v => {
-    const name = volName(v), room = volRoom(v);
-    const key = `${name}_${room}`;
-    if (!studentSummaryMap[key]) { studentSummaryMap[key] = { student: name, room: room, total_minutes: 0 }; }
+    const name = volName(v), r = volRoom(v);
+    // กรองตามห้องถ้ามีการเลือก
+    if (room !== 'all' && r !== room) return;
+    
+    const key = `${name}_${r}`;
+    if (!studentSummaryMap[key]) { studentSummaryMap[key] = { student: name, room: r, total_minutes: 0 }; }
     studentSummaryMap[key].total_minutes += (v.minutes || 0);
+    summary.totalRecords++;
   });
+  
   summary.studentSummaryMap = studentSummaryMap;
-  summary.loggedStudents = Object.keys(studentSummaryMap).length;
+  
+  // นับเฉพาะนักเรียนที่อยู่ในรายชื่อคลังข้อมูล (ถ้ามี) หรือนักเรียนที่มีประวัติ
+  const studentKeysInDb = new Set(filteredStudents.map(s => `${s.name.trim()}_${s.room.trim()}`));
+  const loggedKeys = new Set(Object.keys(studentSummaryMap));
+  
+  // รวม Key ทั้งหมดที่เป็นไปได้ในเงื่อนไขนี้
+  const allKeys = new Set([...studentKeysInDb, ...loggedKeys]);
+  
+  summary.loggedStudents = Object.values(studentSummaryMap).filter(s => s.total_minutes > 0).length;
   summary.completedStudents = Object.values(studentSummaryMap).filter(s => s.total_minutes >= 720).length;
 
   // --- 2. สถิติรายห้องเรียน (ตรรกะเดียวกับ Dashboard) ---
@@ -2991,7 +3005,9 @@ async function downloadVolunteerPDF() {
         studentListMap[key] = { student: name, room: roomV, total_minutes: (v.minutes || 0) };
       }
     });
-    const studentList = Object.values(studentListMap).sort((a, b) => a.room.localeCompare(b.room) || a.student.localeCompare(b.student));
+    // เรียงลำดับตามชื่อนักเรียนเป็นหลักตามที่ผู้ใช้ต้องการ
+    const studentList = Object.values(studentListMap).sort((a, b) => a.student.localeCompare(b.student, 'th'));
+    const totalMinutesAll = studentList.reduce((sum, s) => sum + s.total_minutes, 0);
 
     // --- Top 10 นักเรียนชั่วโมงสูงสุด (เหมือน Dashboard) ---
     const allSummary = Object.values(summary.studentSummaryMap).sort((a, b) => b.total_minutes - a.total_minutes).slice(0, 10);
@@ -2999,14 +3015,11 @@ async function downloadVolunteerPDF() {
     // --- สร้าง element HTML จริงใน DOM (เพื่อให้ html2canvas เรนเดอร์ได้ถูกต้อง) ---
     const wrapper = document.createElement('div');
     wrapper.id = 'pdf-wrapper-temp';
-    // ซ่อนให้มิดชิดแต่ยังให้ html2canvas เห็นได้
-    wrapper.style.position = 'fixed';
+    // เปลี่ยนวิธีซ่อน: ย้ายออกนอกจอแทนการใช้ opacity เพื่อป้องกันหน้าว่าง (Blank PDF)
+    wrapper.style.position = 'absolute';
+    wrapper.style.left = '-9999px';
     wrapper.style.top = '0';
-    wrapper.style.left = '0';
     wrapper.style.width = '750px';
-    wrapper.style.opacity = '0.001';
-    wrapper.style.pointerEvents = 'none';
-    wrapper.style.zIndex = '-9999';
     wrapper.style.backgroundColor = '#ffffff';
     wrapper.style.boxSizing = 'border-box';
     wrapper.style.fontFamily = "'Sarabun', 'Noto Sans Thai', Arial, sans-serif";
@@ -3107,6 +3120,12 @@ async function downloadVolunteerPDF() {
               <td style="${tdStyle}; text-align:center; font-weight:bold; color:${isCompleted ? '#059669' : '#d97706'};">${isCompleted ? 'ครบ 12 ชม. แล้ว!' : 'กำลังสะสม'}</td>
             </tr>`;
           }).join('')}
+          ${studentList.length > 0 ? `
+          <tr style="background-color:#f8fafc;">
+            <td colspan="2" style="${tdStyle}; font-weight:bold; text-align:right;">รวมเวลาสะสมทั้งหมดในกลุ่มนี้:</td>
+            <td style="${tdStyle}; font-weight:bold; text-align:center; color:#0F1B4C;">${totalMinutesAll} นาที (${(totalMinutesAll/60).toFixed(1)} ชม.)</td>
+            <td style="${tdStyle};"></td>
+          </tr>` : ''}
         </table>
 
         <h2 class="html2pdf__page-break" style="color:#0F1B4C; margin:20px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:14px;">5. รายละเอียดกิจกรรมทั้งหมด</h2>
@@ -3165,14 +3184,15 @@ async function downloadVolunteerPDF() {
     const opt = {
       margin: 10,
       filename: filename,
-      image: { type: 'jpeg', quality: 0.95 },
+      image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
-        scale: 1.5, 
+        scale: 2, // เพิ่มความชัด
         useCORS: true, 
         letterRendering: true,
-        windowWidth: 750
+        windowWidth: 750,
+        logging: false
       },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
       pagebreak: { mode: ['css', 'legacy'] }
     };
 
