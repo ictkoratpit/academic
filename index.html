@@ -3134,7 +3134,76 @@ async function downloadVolunteerPDF() {
           </tr>` : ''}
         </table>
 
-        <h2 class="html2pdf__page-break" style="color:#0F1B4C; margin:20px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:14px;">5. รายละเอียดกิจกรรมทั้งหมด</h2>
+        <h2 class="html2pdf__page-break" style="color:#0F1B4C; margin:20px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:14px;">5. สรุปเวลาชั่วโมงรายบุคคลแบ่งเป็นห้องๆ</h2>
+        ${(() => {
+          // สร้างสรุปรายบุคคลแบ่งเป็นห้องๆ
+          const roomSummaryMap = {};
+          ROOMS.forEach(r => { roomSummaryMap[r] = []; });
+          
+          targetStudents.forEach(s => {
+            const key = `${s.name}_${s.room}`;
+            const totalMin = studentListMap[key]?.total_minutes || 0;
+            roomSummaryMap[s.room].push({
+              name: s.name,
+              student_id: s.student_id,
+              total_minutes: totalMin,
+              hours: (totalMin / 60).toFixed(1),
+              isCompleted: totalMin >= 720
+            });
+          });
+          
+          // เรียงลำดับนักเรียนในแต่ละห้องตามชื่อ
+          Object.keys(roomSummaryMap).forEach(r => {
+            roomSummaryMap[r].sort((a, b) => a.name.localeCompare(b.name, 'th'));
+          });
+          
+          // สร้าง HTML สำหรับแต่ละห้อง
+          return ROOMS.map(r => {
+            const students = roomSummaryMap[r];
+            if (students.length === 0) return '';
+            
+            const roomTotal = students.reduce((sum, s) => sum + s.total_minutes, 0);
+            const completedCount = students.filter(s => s.isCompleted).length;
+            
+            return `
+            <h3 style="color:#0F1B4C; margin:15px 0 6px 0; padding-bottom:3px; font-size:12px; font-weight:bold; border-bottom:1px solid #d1d5db;">ห้อง ${r} (รวม ${students.length} คน)</h3>
+            <table style="width:100%; margin-bottom:15px;">
+              <thead>
+                <tr>
+                  <th style="${thStyle}; width:8%; text-align:center; background-color:#667eea;">ที่</th>
+                  <th style="${thStyle}; width:10%; background-color:#667eea;">รหัส</th>
+                  <th style="${thStyle}; width:40%; background-color:#667eea;">ชื่อ-นามสกุล</th>
+                  <th style="${thStyle}; width:15%; text-align:center; background-color:#667eea;">นาที</th>
+                  <th style="${thStyle}; width:12%; text-align:center; background-color:#667eea;">ชม.</th>
+                  <th style="${thStyle}; width:15%; text-align:center; background-color:#667eea;">สถานะ</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${students.map((s, idx) => `
+                <tr>
+                  <td style="${tdStyle}; text-align:center; font-weight:bold;">${idx + 1}</td>
+                  <td style="${tdStyle}; font-weight:bold;">${s.student_id}</td>
+                  <td style="${tdStyle}; font-weight:bold; color:#312e81;">${s.name}</td>
+                  <td style="${tdStyle}; text-align:center;">${s.total_minutes}</td>
+                  <td style="${tdStyle}; text-align:center; font-weight:bold;">${s.hours}</td>
+                  <td style="${tdStyle}; text-align:center; font-weight:bold; color:${s.isCompleted ? '#059669' : '#d97706'};">${s.isCompleted ? '✓ ครบ' : '⏳ ' + (12 - Math.floor(s.total_minutes / 60)) + ' ชม.'}</td>
+                </tr>
+                `).join('')}
+              </tbody>
+              <tfoot>
+                <tr style="background-color:#f0f4ff; font-weight:bold;">
+                  <td colspan="3" style="${tdStyle}; text-align:right;">รวมห้อง ${r}:</td>
+                  <td style="${tdStyle}; text-align:center; color:#0F1B4C;">${roomTotal}</td>
+                  <td style="${tdStyle}; text-align:center; color:#0F1B4C;">${(roomTotal / 60).toFixed(1)}</td>
+                  <td style="${tdStyle}; text-align:center; color:#059669;">${completedCount}/${students.length}</td>
+                </tr>
+              </tfoot>
+            </table>
+            `;
+          }).join('');
+        })()}
+
+        <h2 class="html2pdf__page-break" style="color:#0F1B4C; margin:20px 0 8px 0; border-bottom:2px solid #E9C46A; padding-bottom:4px; font-size:14px;">6. รายละเอียดกิจกรรมทั้งหมด</h2>
         <table style="width:100%;">
           <thead>
             <tr>
