@@ -3256,7 +3256,13 @@ async function downloadVolunteerPDF() {
       await document.fonts.ready;
     }
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-    await new Promise(r => setTimeout(r, 800));
+    // รอหลายครั้งเพื่อให้ browser render เนื้อหาหลายชั้น
+    for (let i = 0; i < 3; i++) {
+      await new Promise(r => requestAnimationFrame(r));
+    }
+    
+    // รอนานขึ้นเพื่อให้ render เสร็จสมบูรณ์
+    await new Promise(r => setTimeout(r, 1200));
     
     // ตรวจสอบว่า wrapper มีเนื้อหาจริงๆ
     if (!wrapper.innerHTML || wrapper.innerHTML.trim().length === 0) {
@@ -3271,23 +3277,24 @@ async function downloadVolunteerPDF() {
       filename: filename,
       image: { type: 'jpeg', quality: 0.95 },
       html2canvas: { 
-        scale: 1.5, 
+        scale: 2, 
         useCORS: true, 
         allowTaint: true,
         letterRendering: true,
         windowWidth: 750,
         scrollY: 0,
         scrollX: 0,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        logging: true,
+        imageTimeout: 0
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
       pagebreak: { mode: ['css', 'legacy'] }
     };
 
     // ใช้ html2pdf ในการจัดการการสร้างและดาวน์โหลด
-    // ใช้ wrapper.innerHTML เพื่อหลีกเลี่ยงปัญหา element ที่ซ่อนไว้
-    const htmlContent = wrapper.innerHTML;
-    await html2pdf().set(opt).from(htmlContent, 'html').toPdf().get('pdf').then(function(pdf) {
+    // ใช้ element object ที่ append ไปแล้ว
+    await html2pdf().set(opt).from(wrapper).toPdf().get('pdf').then(function(pdf) {
       const totalPages = pdf.internal.getNumberOfPages();
       for (let i = 1; i <= totalPages; i++) {
         pdf.setPage(i);
