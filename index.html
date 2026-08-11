@@ -3019,13 +3019,11 @@ async function downloadVolunteerPDF() {
     
     // ปรับปรุงการซ่อน: ใช้ visibility hidden ร่วมกับ z-index และ opacity เล็กน้อย
     // html2canvas มักจะมีปัญหากับ left: -9999px ในบางเบราว์เซอร์
-    wrapper.style.position = 'fixed';
-    wrapper.style.top = '0';
-    wrapper.style.left = '0';
+    wrapper.style.position = 'absolute';
+    wrapper.style.top = '-10000px';
+    wrapper.style.left = '-10000px';
     wrapper.style.width = '750px';
-    wrapper.style.zIndex = '-9999';
-    wrapper.style.opacity = '0.02'; // ต้องมีค่าบ้างเพื่อให้ browser เรนเดอร์เนื้อหา
-    wrapper.style.pointerEvents = 'none';
+    wrapper.style.visibility = 'hidden';
     wrapper.style.backgroundColor = '#ffffff';
     wrapper.style.boxSizing = 'border-box';
     wrapper.style.fontFamily = "'Sarabun', 'Noto Sans Thai', Arial, sans-serif";
@@ -3044,6 +3042,12 @@ async function downloadVolunteerPDF() {
     }
 
     wrapper.innerHTML = `
+      <style>
+        body { font-family: 'Sarabun', 'Noto Sans Thai', Arial, sans-serif; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        th, td { border: 1px solid #d1d5db; padding: 4px 6px; font-size: 10px; }
+        tr { page-break-inside: avoid; }
+      </style>
       <div style="padding: 25px 30px;">
         <h1 style="text-align:center; color:#0F1B4C; font-size:20px; margin:0 0 4px 0;">รายงานสรุปกิจกรรมจิตอาสา</h1>
         <p style="text-align:center; color:#666; margin:0 0 2px 0;">โรงเรียนโคราชพิตยายาคม</p>
@@ -3269,22 +3273,21 @@ async function downloadVolunteerPDF() {
       html2canvas: { 
         scale: 1.5, 
         useCORS: true, 
+        allowTaint: true,
         letterRendering: true,
         windowWidth: 750,
         scrollY: 0,
-        scrollX: 0
+        scrollX: 0,
+        backgroundColor: '#ffffff'
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
       pagebreak: { mode: ['css', 'legacy'] }
     };
 
-    // ใช้ html2pdf ในการจัดการการสร้างและดาวน์โหลด ซึ่งเสถียรกว่าในกรณีข้อมูลเยอะ
-    // ใช้ element ที่ append ไปแล้ว แทนที่จะส่ง wrapper โดยตรง
-    const pdfElement = document.getElementById('pdf-wrapper-temp');
-    if (!pdfElement) {
-      throw new Error('ไม่พบ wrapper element ในหน้า');
-    }
-    await html2pdf().set(opt).from(pdfElement).toPdf().get('pdf').then(function(pdf) {
+    // ใช้ html2pdf ในการจัดการการสร้างและดาวน์โหลด
+    // ใช้ wrapper.innerHTML เพื่อหลีกเลี่ยงปัญหา element ที่ซ่อนไว้
+    const htmlContent = wrapper.innerHTML;
+    await html2pdf().set(opt).from(htmlContent, 'html').toPdf().get('pdf').then(function(pdf) {
       const totalPages = pdf.internal.getNumberOfPages();
       for (let i = 1; i <= totalPages; i++) {
         pdf.setPage(i);
