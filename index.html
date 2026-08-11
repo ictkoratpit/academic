@@ -1,5 +1,6 @@
 
 
+
 <!doctype html>
 <html lang="th" class="h-full">
  <head>
@@ -1657,7 +1658,7 @@ function startRealtimeSync() {
     submissions = []; snap.forEach(d => submissions.push({ id: d.id, ...d.data() }));
     renderTable(); renderAdminDocsTable();
   });
-  bookingCollection.orderBy("date", "asc").onSnapshot(snap => {
+  bookingCollection.orderBy("date", "desc").onSnapshot(snap => {
     bookings = []; snap.forEach(d => bookings.push({ id: d.id, ...d.data() }));
     renderBookingTable(); renderCalendarGrid();
   });
@@ -3182,7 +3183,13 @@ async function downloadVolunteerPDF() {
       await document.fonts.ready;
     }
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-    await new Promise(r => setTimeout(r, 400));
+    await new Promise(r => setTimeout(r, 800));
+    
+    // ตรวจสอบว่า wrapper มีเนื้อหาจริงๆ
+    if (!wrapper.innerHTML || wrapper.innerHTML.trim().length === 0) {
+      throw new Error('ไม่สามารถสร้างเนื้อหา PDF ได้ - wrapper element ว่างเปล่า');
+    }
+    console.log('Wrapper content length:', wrapper.innerHTML.length, 'chars');
 
     const filename = 'volunteer_report_' + new Date().toISOString().split('T')[0] + '.pdf';
     
@@ -3203,7 +3210,12 @@ async function downloadVolunteerPDF() {
     };
 
     // ใช้ html2pdf ในการจัดการการสร้างและดาวน์โหลด ซึ่งเสถียรกว่าในกรณีข้อมูลเยอะ
-    await html2pdf().set(opt).from(wrapper).toPdf().get('pdf').then(function(pdf) {
+    // ใช้ element ที่ append ไปแล้ว แทนที่จะส่ง wrapper โดยตรง
+    const pdfElement = document.getElementById('pdf-wrapper-temp');
+    if (!pdfElement) {
+      throw new Error('ไม่พบ wrapper element ในหน้า');
+    }
+    await html2pdf().set(opt).from(pdfElement).toPdf().get('pdf').then(function(pdf) {
       const totalPages = pdf.internal.getNumberOfPages();
       for (let i = 1; i <= totalPages; i++) {
         pdf.setPage(i);
