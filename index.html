@@ -860,6 +860,11 @@
                  <input type="date" id="filter-date-end" onchange="updateExportData()" class="w-full text-xs border border-gray-300 rounded px-2 py-2 bg-gray-50 focus:bg-white focus:outline-none">
                </div>
                <div>
+                 <button onclick="printVolunteerReport()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-[10px] font-bold flex items-center justify-center gap-1.5 transition-all hover:shadow-lg">
+                   <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print
+                 </button>
+               </div>
+               <div>
 <button onclick="downloadVolunteerPDF()" id="btn-vol-pdf" class="w-full bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded text-[10px] font-bold flex items-center justify-center gap-1.5 transition-all hover:shadow-lg">
                    <i data-lucide="file-pdf" class="w-3.5 h-3.5"></i> PDF
                  </button>
@@ -2962,6 +2967,141 @@ function getFilteredVolunteers() {
     if (dateEnd && (v.work_date || '') > dateEnd) return false;
     return true;
   });
+}
+
+// ✅ ฟังก์ชันพิมพ์รายงานสรุปจิตอาสา (เปิดหน้าใหม่และใช้ระบบพิมพ์ของเบราว์เซอร์)
+function printVolunteerReport() {
+  const room = document.getElementById('filter-vol-room-export').value;
+  const dateStart = document.getElementById('filter-date-start').value;
+  const dateEnd = document.getElementById('filter-date-end').value;
+  const filteredVolunteers = getFilteredVolunteers();
+  const summary = computeVolunteerSummary(room);
+  const sortedRooms = ROOMS.filter(r => summary.roomStats[r].total > 0);
+  const targetStudents = room === 'all' ? students : students.filter(s => s.room === room);
+  const studentListMap = {};
+  targetStudents.forEach(s => {
+    studentListMap[`${s.name}_${s.room}`] = { student: s.name, room: s.room, total_minutes: 0 };
+  });
+  filteredVolunteers.forEach(v => {
+    const name = volName(v), roomV = volRoom(v);
+    const key = `${name}_${roomV}`;
+    if (studentListMap[key]) {
+      studentListMap[key].total_minutes += (v.minutes || 0);
+    } else {
+      studentListMap[key] = { student: name, room: roomV, total_minutes: (v.minutes || 0) };
+    }
+  });
+  const studentList = Object.values(studentListMap).sort((a, b) => a.student.localeCompare(b.student, 'th'));
+  const totalMinutesAll = studentList.reduce((sum, s) => sum + s.total_minutes, 0);
+  const allSummary = Object.values(summary.studentSummaryMap).sort((a, b) => b.total_minutes - a.total_minutes).slice(0, 10);
+
+  let periodHtml = '';
+  if (dateStart || dateEnd) {
+    periodHtml = `<p style="text-align:center; color:#059669; font-weight:bold; margin:8px 0;">ช่วงวันที่: ${dateStart ? new Date(dateStart + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) : 'ตั้งแต่เริ่มต้น'} – ${dateEnd ? new Date(dateEnd + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) : 'ถึงปัจจุบัน'}${room !== 'all' ? ' | ห้องเรียน: ' + room : ''}</p>`;
+  } else if (room !== 'all') {
+    periodHtml = `<p style="text-align:center; color:#059669; font-weight:bold; margin:8px 0;">ห้องเรียน: ${room}</p>`;
+  }
+
+  const thStyle = 'background-color:#0F1B4C; color:#ffffff; padding:6px; text-align:left; border:1px solid #d1d5db; font-size:10px;';
+  const tdStyle = 'padding:4px 6px; border:1px solid #d1d5db; font-size:10px; word-break:break-word;';
+
+  const roomSummaryMap = {};
+  ROOMS.forEach(r => { roomSummaryMap[r] = []; });
+  targetStudents.forEach(s => {
+    const key = `${s.name}_${s.room}`;
+    const totalMin = studentListMap[key]?.total_minutes || 0;
+    roomSummaryMap[s.room].push({
+      name: s.name,
+      student_id: s.student_id,
+      total_minutes: totalMin,
+      hours: (totalMin / 60).toFixed(1),
+      isCompleted: totalMin >= 720
+    });
+  });
+  Object.keys(roomSummaryMap).forEach(r => {
+    roomSummaryMap[r].sort((a, b) => a.name.localeCompare(b.name, 'th'));
+  });
+
+  const printContent = `
+    <!DOCTYPE html>
+    <html lang="th">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>รายงานสรุปกิจกรรมจิตอาสา</title>
+      <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+      <style>
+        * { font-family: 'Sarabun', Arial, sans-serif; }
+        body { padding: 20px; background: white; }
+        h1 { text-align: center; color: #0F1B4C; font-size: 24px; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 20px; }
+        .period { text-align: center; color: #059669; font-weight: bold; margin: 10px 0; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th { background-color: #0F1B4C; color: white; padding: 8px; text-align: left; font-size: 11px; border: 1px solid #ddd; }
+        td { padding: 6px 8px; border: 1px solid #ddd; font-size: 10px; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .room-header { background-color: #667eea; color: white; font-weight: bold; }
+        .room-footer { background-color: #f0f4ff; font-weight: bold; }
+        .completed { color: #059669; }
+        .pending { color: #d97706; }
+        @media print { body { padding: 0; } }
+      </style>
+    </head>
+    <body>
+      <h1>รายงานสรุปกิจกรรมจิตอาสา</h1>
+      <p class="subtitle">โรงเรียนโคราชพิทยาคม<br>วันที่พิมพ์: ${new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+      ${periodHtml}
+      
+      <h2 style="color: #0F1B4C; margin-top: 20px; border-bottom: 2px solid #E9C46A; padding-bottom: 5px;">สรุปเวลาชั่วโมงรายบุคคลแบ่งเป็นห้องๆ</h2>
+      ${ROOMS.map(r => {
+        const students_in_room = roomSummaryMap[r];
+        if (students_in_room.length === 0) return '';
+        const roomTotal = students_in_room.reduce((sum, s) => sum + s.total_minutes, 0);
+        const completedCount = students_in_room.filter(s => s.isCompleted).length;
+        return `
+          <h3 style="color: #0F1B4C; margin: 15px 0 8px 0;">ห้อง ${r} (รวม ${students_in_room.length} คน)</h3>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 8%; text-align: center;">ที่</th>
+                <th style="width: 10%;">รหัส</th>
+                <th style="width: 40%;">ชื่อ-นามสกุล</th>
+                <th style="width: 15%; text-align: center;">นาที</th>
+                <th style="width: 12%; text-align: center;">ชม.</th>
+                <th style="width: 15%; text-align: center;">สถานะ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${students_in_room.map((s, idx) => `
+                <tr>
+                  <td style="text-align: center;">${idx + 1}</td>
+                  <td>${s.student_id}</td>
+                  <td>${s.name}</td>
+                  <td style="text-align: center;">${s.total_minutes}</td>
+                  <td style="text-align: center;">${s.hours}</td>
+                  <td style="text-align: center; ${s.isCompleted ? 'class="completed"' : 'class="pending"'}">${s.isCompleted ? '✓ ครบ' : '⏳ ' + (12 - Math.floor(s.total_minutes / 60)) + ' ชม.'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+            <tfoot>
+              <tr class="room-footer">
+                <td colspan="3" style="text-align: right;">รวมห้อง ${r}:</td>
+                <td style="text-align: center;">${roomTotal}</td>
+                <td style="text-align: center;">${(roomTotal / 60).toFixed(1)}</td>
+                <td style="text-align: center;">${completedCount}/${students_in_room.length}</td>
+              </tr>
+            </tfoot>
+          </table>
+        `;
+      }).join('')}
+    </body>
+    </html>
+  `;
+
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(printContent);
+  printWindow.document.close();
+  setTimeout(() => { printWindow.print(); }, 500);
 }
 
 // ✅ ฟังก์ชันดาวน์โหลด PDF สรุปจิตอาสา (ใช้ข้อมูลจริงจาก Dashboard และสร้างไฟล์แบบ async ที่เสถียร)
