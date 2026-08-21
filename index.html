@@ -1,6 +1,7 @@
 
 
 
+
 <!doctype html>
 <html lang="th" class="h-full">
  <head>
@@ -29,6 +30,23 @@
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .chart-circle { transition: stroke-dashoffset 0.6s ease-in-out; transform: rotate(-90deg); transform-origin: 50% 50%; }
+
+    /* Dashboard UX/UI refresh */
+    .dashboard-panel { border: 1px solid #e5e7eb; border-radius: 16px; background: #fff; box-shadow: 0 8px 24px -12px rgba(15, 23, 42, 0.28); }
+    .dashboard-kpi { min-height: 112px; border: 1px solid #e5e7eb; border-radius: 14px; background: #fff; padding: 16px; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+    .dashboard-kpi:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -16px rgba(15, 23, 42, .35); border-color: #cbd5e1; }
+    .dashboard-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid #e5e7eb; }
+    .dashboard-section-title { display: flex; align-items: center; gap: 8px; color: #172554; font-size: 14px; font-weight: 800; }
+    .dashboard-section-caption { color: #64748b; font-size: 10px; margin-top: 3px; }
+    .dashboard-link-button { display: inline-flex; align-items: center; gap: 5px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 7px 10px; color: #334155; background: #fff; font-size: 10px; font-weight: 700; }
+    .dashboard-link-button:hover { background: #f8fafc; border-color: #94a3b8; color: #1e3a8a; }
+    .dashboard-scroll { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+    .dashboard-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .dashboard-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+    @media (max-width: 640px) {
+      .dashboard-kpi { min-height: 100px; padding: 12px; }
+      .dashboard-section-head { padding: 13px 14px; }
+    }
     
     /* Enhanced Button Styles */
     button { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -184,90 +202,211 @@
    <div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/50">
      
      <!-- แท็บ Dashboard สรุปผลส่งงาน -->
-     <div id="panel-dashboard" class="max-w-7xl mx-auto space-y-6 fade-in">
-       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-       <div class="bg-gradient-to-br from-indigo-50 to-white rounded-xl p-5 card-shadow border-l-4 border-indigo-600 hover:shadow-lg transition-all">
-           <p class="text-[11px] text-gray-600 font-bold uppercase tracking-wider">เอกสารวิชาการที่ส่งเข้าระบบ</p>
-           <p id="metric-total" class="text-3xl font-black text-indigo-900 mt-2">0</p>
-           <p class="text-[10px] text-gray-500 mt-1">รายการ</p>
+     <div id="panel-dashboard" class="max-w-7xl mx-auto space-y-5 fade-in">
+       <!-- Dashboard header -->
+       <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
+         <div>
+           <p class="text-[10px] font-bold tracking-[0.18em] text-indigo-600 uppercase">Academic overview</p>
+           <h2 class="text-xl md:text-2xl font-black text-slate-900 mt-1">หน้าสรุปภาพรวมการดำเนินงาน</h2>
+           <p class="text-xs text-slate-500 mt-1">ตรวจสอบงานเอกสาร การจองกิจกรรม และความคืบหน้าจิตอาสาได้จากหน้าเดียว</p>
          </div>
-         <div class="bg-gradient-to-br from-emerald-50 to-white rounded-xl p-5 card-shadow border-l-4 border-emerald-600 hover:shadow-lg transition-all">
-           <p class="text-[11px] text-gray-600 font-bold uppercase tracking-wider">ห้องที่ส่งครบแล้ว</p>
-           <p id="metric-rooms-completed" class="text-3xl font-black text-emerald-600 mt-2">0</p>
-           <p id="list-rooms-completed" class="text-[10px] text-gray-500 mt-1 truncate">-</p>
-         </div>
-         <div class="bg-gradient-to-br from-amber-50 to-white rounded-xl p-5 card-shadow border-l-4 border-amber-600 hover:shadow-lg transition-all">
-           <p class="text-[11px] text-gray-600 font-bold uppercase tracking-wider">ห้องที่ยังค้างส่ง</p>
-           <p id="metric-rooms-pending" class="text-3xl font-black text-amber-600 mt-2">0</p>
-           <p id="list-rooms-pending" class="text-[10px] text-gray-500 mt-1 truncate">-</p>
+         <div class="inline-flex items-center gap-2 self-start lg:self-auto rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[10px] font-bold text-emerald-700">
+           <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+           ข้อมูลอัปเดตอัตโนมัติ
          </div>
        </div>
 
-       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-         <div class="bg-white rounded-xl card-shadow p-5 flex flex-col items-center justify-center min-h-[340px]">
-           <div class="w-full flex items-center justify-between border-b pb-3 mb-4">
-              <h3 class="font-bold text-sm text-slate-800 flex items-center gap-1.5"><i data-lucide="pie-chart" class="w-4 h-4 text-indigo-600"></i> สัดส่วนความคืบหน้างานวิชาการ</h3>
-              <span class="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold">Real-time</span>
+       <!-- Key metrics: see the most important numbers first -->
+       <div class="grid grid-cols-2 xl:grid-cols-4 gap-3">
+         <article class="dashboard-kpi border-l-4 border-l-indigo-600 bg-gradient-to-br from-indigo-50/80 to-white">
+           <div class="flex items-start justify-between gap-2">
+             <div>
+               <p class="text-[10px] font-bold text-slate-500">เอกสารที่ส่งเข้าระบบ</p>
+               <p id="metric-total" class="text-3xl font-black text-indigo-900 mt-2">0</p>
+               <p class="text-[10px] text-slate-400 mt-0.5">รายการทั้งหมด</p>
+             </div>
+             <span class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center"><i data-lucide="files" class="w-4 h-4"></i></span>
            </div>
-           
-           <div class="relative w-44 h-44 flex items-center justify-center">
-              <svg class="w-full h-full" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="40" fill="transparent" stroke="#fee2e2" stroke-width="12"></circle>
-                <circle id="chart-progress-bar" class="chart-circle" cx="50" cy="50" r="40" fill="transparent" stroke="#10b981" stroke-width="12" stroke-dasharray="251.2" stroke-dashoffset="251.2" stroke-linecap="round"></circle>
-              </svg>
-              <div class="absolute text-center">
-                <span id="chart-percentage" class="text-3xl font-black text-slate-800">0%</span>
-                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">ภาพรวมที่เสร็จ</p>
-              </div>
+         </article>
+         <article class="dashboard-kpi border-l-4 border-l-emerald-600 bg-gradient-to-br from-emerald-50/80 to-white">
+           <div class="flex items-start justify-between gap-2">
+             <div>
+               <p class="text-[10px] font-bold text-slate-500">ห้องที่ส่งครบแล้ว</p>
+               <p id="metric-rooms-completed" class="text-3xl font-black text-emerald-700 mt-2">0</p>
+               <p class="text-[10px] text-slate-400 mt-0.5">จากทุกห้องในระบบ</p>
+             </div>
+             <span class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center"><i data-lucide="badge-check" class="w-4 h-4"></i></span>
            </div>
-
-           <div class="grid grid-cols-2 gap-6 w-full max-w-xs mt-6 text-xs font-semibold">
-              <div class="flex items-center gap-2 justify-center bg-emerald-50/50 p-2 rounded-lg border border-emerald-100">
-                 <div class="w-3 h-3 bg-emerald-500 rounded-full"></div>
-                 <div class="text-center">
-                    <p class="text-gray-500 text-[10px]">ส่งแล้ว</p>
-                    <p id="chart-lbl-success" class="font-bold text-emerald-700 text-sm">0 งาน</p>
-                 </div>
-              </div>
-              <div class="flex items-center gap-2 justify-center bg-red-50/50 p-2 rounded-lg border border-red-100">
-                 <div class="w-3 h-3 bg-red-400 rounded-full"></div>
-                 <div class="text-center">
-                    <p class="text-gray-500 text-[10px]">ค้างส่ง</p>
-                    <p id="chart-lbl-pending" class="font-bold text-red-600 text-sm">0 งาน</p>
-                 </div>
-              </div>
+         </article>
+         <article class="dashboard-kpi border-l-4 border-l-amber-500 bg-gradient-to-br from-amber-50/80 to-white">
+           <div class="flex items-start justify-between gap-2">
+             <div>
+               <p class="text-[10px] font-bold text-slate-500">ห้องที่ยังค้างส่ง</p>
+               <p id="metric-rooms-pending" class="text-3xl font-black text-amber-700 mt-2">0</p>
+               <p class="text-[10px] text-slate-400 mt-0.5">ควรติดตามต่อ</p>
+             </div>
+             <span class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center"><i data-lucide="triangle-alert" class="w-4 h-4"></i></span>
            </div>
-         </div>
-
-         <div class="bg-white rounded-xl card-shadow overflow-hidden flex flex-col lg:col-span-2 hover:shadow-lg transition-all">
-           <div class="p-4 bg-gradient-to-r from-indigo-900 to-indigo-800 text-white flex items-center justify-between">
-             <h2 class="font-bold text-sm flex items-center gap-2"><i data-lucide="file-check" class="w-4 h-4"></i>สถานะการส่งเล่มรายงานวิชาการ</h2>
-             <select id="filter-doc" onchange="renderTable()" class="text-xs bg-indigo-800 text-white border border-indigo-700 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400">
-               <option value="all">แสดงเอกสารทั้งหมด</option>
-               <option value="ปพ.5">ปพ.5 (ส่ง 3 ครั้ง - แต่ละรอบการ)</option>
-               <option value="แผนการสอน">แผนการสอน</option>
-               <option value="แผนการปฏิบัติงาน">แผนการปฏิบัติงาน</option>
-             </select>
+         </article>
+         <article class="dashboard-kpi border-l-4 border-l-sky-600 bg-gradient-to-br from-sky-50/80 to-white">
+           <div class="flex items-start justify-between gap-2">
+             <div>
+               <p class="text-[10px] font-bold text-slate-500">กิจกรรมที่กำลังจะถึง</p>
+               <p id="dashboard-booking-upcoming" class="text-3xl font-black text-sky-700 mt-2">0</p>
+               <p class="text-[10px] text-slate-400 mt-0.5">รายการจองในอนาคต</p>
+             </div>
+             <span class="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center"><i data-lucide="calendar-clock" class="w-4 h-4"></i></span>
            </div>
-           <div class="overflow-x-auto flex-1 max-h-[380px]">
-             <table class="w-full text-xs text-left">
-               <thead class="bg-gray-50 font-bold border-b text-gray-600 sticky top-0 z-10">
-                 <tr>
-                   <th class="p-3 bg-gray-50">ห้องเรียน</th>
-                   <th class="p-3 bg-gray-50">ประเภทเอกสาร</th>
-                   <th class="p-3 text-center bg-gray-50">รอบนำส่งที่กำหนด / ผลงาน</th>
-                 </tr>
-               </thead>
-               <tbody id="status-table-body"></tbody>
-             </table>
-           </div>
-         </div>
+         </article>
        </div>
 
-       <div class="bg-white rounded-xl card-shadow overflow-hidden hover:shadow-lg transition-all">
-          <div class="p-4 bg-gradient-to-r from-slate-800 to-slate-700 text-white font-bold text-sm flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-amber-400"></i> ประวัติการอัปโหลดไฟล์เข้าระบบล่าสุด</div>
-          <div id="log-container" class="p-2 divide-y text-xs max-h-[220px] overflow-y-auto"></div>
+       <!-- Academic progress and room follow-up -->
+       <div class="grid grid-cols-1 xl:grid-cols-5 gap-5">
+         <section class="dashboard-panel xl:col-span-2 overflow-hidden">
+           <div class="dashboard-section-head">
+             <div>
+               <h3 class="dashboard-section-title"><i data-lucide="pie-chart" class="w-4 h-4 text-indigo-600"></i> ความคืบหน้างานวิชาการ</h3>
+               <p class="dashboard-section-caption">สัดส่วนงานที่ส่งแล้วเทียบกับงานที่ต้องส่ง</p>
+             </div>
+             <span class="rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-bold text-emerald-700">Real-time</span>
+           </div>
+           <div class="p-5">
+             <div class="relative mx-auto flex h-44 w-44 items-center justify-center">
+               <svg class="h-full w-full" viewBox="0 0 100 100">
+                 <circle cx="50" cy="50" r="40" fill="transparent" stroke="#e2e8f0" stroke-width="12"></circle>
+                 <circle id="chart-progress-bar" class="chart-circle" cx="50" cy="50" r="40" fill="transparent" stroke="#10b981" stroke-width="12" stroke-dasharray="251.2" stroke-dashoffset="251.2" stroke-linecap="round"></circle>
+               </svg>
+               <div class="absolute text-center">
+                 <span id="chart-percentage" class="text-3xl font-black text-slate-800">0%</span>
+                 <p class="text-[9px] font-bold tracking-wide text-slate-400">เสร็จแล้ว</p>
+               </div>
+             </div>
+             <div class="mt-5 grid grid-cols-2 gap-3">
+               <div class="rounded-xl border border-emerald-100 bg-emerald-50/70 p-3 text-center">
+                 <p class="text-[10px] text-slate-500">ส่งแล้ว</p>
+                 <p id="chart-lbl-success" class="mt-1 text-sm font-black text-emerald-700">0 งาน</p>
+               </div>
+               <div class="rounded-xl border border-rose-100 bg-rose-50/70 p-3 text-center">
+                 <p class="text-[10px] text-slate-500">ค้างส่ง</p>
+                 <p id="chart-lbl-pending" class="mt-1 text-sm font-black text-rose-600">0 งาน</p>
+               </div>
+             </div>
+           </div>
+         </section>
+
+         <section class="dashboard-panel xl:col-span-3 overflow-hidden">
+           <div class="dashboard-section-head">
+             <div>
+               <h3 class="dashboard-section-title"><i data-lucide="school" class="w-4 h-4 text-amber-600"></i> สถานะรายห้องเรียน</h3>
+               <p class="dashboard-section-caption">ใช้ส่วนนี้เพื่อตรวจว่าห้องใดส่งครบหรือยังค้าง</p>
+             </div>
+             <button onclick="switchTab('submission')" class="dashboard-link-button"><i data-lucide="upload" class="w-3.5 h-3.5"></i> ไปหน้าส่งเอกสาร</button>
+           </div>
+           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-5">
+             <div class="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
+               <div class="flex items-center justify-between gap-2">
+                 <p class="text-xs font-bold text-emerald-800">ส่งครบแล้ว</p>
+               </div>
+               <p id="list-rooms-completed" class="mt-3 min-h-[80px] text-sm leading-7 text-slate-600">ยังไม่มีห้องที่ส่งครบ</p>
+             </div>
+             <div class="rounded-xl border border-amber-100 bg-amber-50/60 p-4">
+               <div class="flex items-center justify-between gap-2">
+                 <p class="text-xs font-bold text-amber-800">ต้องติดตาม</p>
+               </div>
+               <p id="list-rooms-pending" class="mt-3 min-h-[80px] text-sm leading-7 text-slate-600">ไม่มีห้องค้างส่ง</p>
+             </div>
+           </div>
+           <div class="border-t border-slate-100 px-5 py-3 text-[10px] text-slate-500">
+             <span class="font-bold text-slate-700">คำแนะนำ:</span> ตรวจรายชื่อห้องที่ต้องติดตาม แล้วเลือกประเภทเอกสารจากตารางด้านล่างเพื่อดูรายละเอียดแต่ละรอบ
+           </div>
+         </section>
        </div>
+
+       <!-- Booking and volunteer at a glance -->
+       <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+         <section class="dashboard-panel overflow-hidden">
+           <div class="dashboard-section-head">
+             <div>
+               <h3 class="dashboard-section-title"><i data-lucide="calendar-check" class="w-4 h-4 text-sky-600"></i> การจองปฏิทินกิจกรรม</h3>
+               <p class="dashboard-section-caption">รายการที่กำลังจะถึงและรายการของวันนี้</p>
+             </div>
+             <button onclick="switchTab('booking')" class="dashboard-link-button"><i data-lucide="calendar-days" class="w-3.5 h-3.5"></i> ดูปฏิทินทั้งหมด</button>
+           </div>
+           <div class="p-5 space-y-4">
+             <div class="grid grid-cols-3 gap-2">
+               <div class="rounded-xl bg-sky-50 p-3 text-center"><p class="text-[10px] text-slate-500">จองทั้งหมด</p><p id="dashboard-booking-total" class="mt-1 text-xl font-black text-sky-700">0</p></div>
+               <div class="rounded-xl bg-emerald-50 p-3 text-center"><p class="text-[10px] text-slate-500">กำลังจะถึง</p><p id="dashboard-booking-upcoming-inline" class="mt-1 text-xl font-black text-emerald-700">0</p></div>
+               <div class="rounded-xl bg-indigo-50 p-3 text-center"><p class="text-[10px] text-slate-500">วันนี้</p><p id="dashboard-booking-today" class="mt-1 text-xl font-black text-indigo-700">0</p></div>
+             </div>
+             <div>
+               <div class="mb-2 flex items-center justify-between"><h4 class="text-xs font-bold text-slate-700">รายการจองล่าสุด / ที่กำลังจะมาถึง</h4><span class="text-[9px] text-slate-400">Real-time</span></div>
+               <div id="dashboard-booking-list" class="dashboard-scroll max-h-[245px] space-y-2 overflow-y-auto pr-1"></div>
+             </div>
+           </div>
+         </section>
+
+         <section class="dashboard-panel overflow-hidden">
+           <div class="dashboard-section-head">
+             <div>
+               <h3 class="dashboard-section-title"><i data-lucide="heart-handshake" class="w-4 h-4 text-rose-600"></i> ความคืบหน้าจิตอาสา</h3>
+               <p class="dashboard-section-caption">นับผู้ที่ผ่านเกณฑ์สะสมครบ 12 ชั่วโมง</p>
+             </div>
+             <button onclick="switchTab('volunteer')" class="dashboard-link-button"><i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i> ดูรายละเอียด</button>
+           </div>
+           <div class="p-5 space-y-4">
+             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+               <div class="rounded-xl bg-indigo-50 p-3 text-center"><p class="text-[10px] text-slate-500">นักเรียนทั้งหมด</p><p id="dashboard-vol-total-students" class="mt-1 text-xl font-black text-indigo-700">0</p></div>
+               <div class="rounded-xl bg-sky-50 p-3 text-center"><p class="text-[10px] text-slate-500">ลงบันทึกแล้ว</p><p id="dashboard-vol-logged" class="mt-1 text-xl font-black text-sky-700">0</p></div>
+               <div class="rounded-xl bg-emerald-50 p-3 text-center"><p class="text-[10px] text-slate-500">ผ่านแล้ว</p><p id="dashboard-vol-completed" class="mt-1 text-xl font-black text-emerald-700">0</p></div>
+               <div class="rounded-xl bg-amber-50 p-3 text-center"><p class="text-[10px] text-slate-500">ยังไม่ผ่าน</p><p id="dashboard-vol-pending" class="mt-1 text-xl font-black text-amber-700">0</p></div>
+             </div>
+             <div>
+               <div class="mb-1.5 flex items-center justify-between"><h4 class="text-xs font-bold text-slate-700">อัตราผ่านเกณฑ์รวม</h4><span id="dashboard-vol-pct" class="text-xs font-black text-emerald-700">0%</span></div>
+               <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-100"><div id="dashboard-vol-progress-bar" class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-700" style="width:0%"></div></div>
+             </div>
+             <div>
+               <div class="mb-2 flex items-center justify-between"><h4 class="text-xs font-bold text-slate-700">รายการจิตอาสาล่าสุด</h4><span id="dashboard-vol-records" class="text-[9px] text-slate-400">0 รายการ</span></div>
+               <div id="dashboard-volunteer-list" class="dashboard-scroll max-h-[185px] space-y-2 overflow-y-auto pr-1"></div>
+             </div>
+           </div>
+         </section>
+       </div>
+
+       <!-- Detailed document status -->
+       <section class="dashboard-panel overflow-hidden">
+         <div class="dashboard-section-head flex-col items-start sm:flex-row sm:items-center">
+           <div>
+             <h3 class="dashboard-section-title"><i data-lucide="file-check-2" class="w-4 h-4 text-indigo-600"></i> รายละเอียดสถานะการส่งเอกสาร</h3>
+             <p class="dashboard-section-caption">ตรวจสอบรายห้อง ประเภทเอกสาร และรอบนำส่งที่กำหนด</p>
+           </div>
+           <select id="filter-doc" onchange="renderTable()" class="w-full sm:w-auto rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100">
+             <option value="all">เอกสารทั้งหมด</option>
+             <option value="ปพ.5">ปพ.5 (3 รอบ)</option>
+             <option value="แผนการสอน">แผนการสอน</option>
+             <option value="แผนการปฏิบัติงาน">แผนการปฏิบัติงาน</option>
+           </select>
+         </div>
+         <div class="dashboard-scroll max-h-[420px] overflow-auto">
+           <table class="w-full min-w-[620px] text-xs text-left">
+             <thead class="sticky top-0 z-10 border-b bg-slate-50 font-bold text-slate-600">
+               <tr><th class="p-3">ห้องเรียน</th><th class="p-3">ประเภทเอกสาร</th><th class="p-3 text-center">รอบนำส่งที่กำหนด / ผลงาน</th></tr>
+             </thead>
+             <tbody id="status-table-body"></tbody>
+           </table>
+         </div>
+       </section>
+
+       <!-- Recent activity -->
+       <section class="dashboard-panel overflow-hidden">
+         <div class="dashboard-section-head">
+           <div>
+             <h3 class="dashboard-section-title"><i data-lucide="activity" class="w-4 h-4 text-slate-600"></i> กิจกรรมล่าสุดในระบบ</h3>
+             <p class="dashboard-section-caption">รายการอัปโหลดเอกสารล่าสุดเพื่อใช้ติดตามการดำเนินงาน</p>
+           </div>
+           <span class="text-[9px] text-slate-400">5 รายการล่าสุด</span>
+         </div>
+         <div id="log-container" class="dashboard-scroll max-h-[230px] divide-y overflow-y-auto p-2 text-xs"></div>
+       </section>
      </div>
 
      <!-- แท็บส่งแผนงาน / ปพ.5 -->
@@ -1652,6 +1791,7 @@ function startRealtimeSync() {
     if(modal && !modal.classList.contains('hidden') && !editingGradeId) { handleGradeRoomChange(); }
     handleVolRoomChange();
     renderVolunteerDashboard();
+    renderDashboardActivitySummary();
   });
 
   docCollection.orderBy("submitted_at", "desc").onSnapshot(snap => {
@@ -1661,6 +1801,7 @@ function startRealtimeSync() {
   bookingCollection.orderBy("date", "desc").onSnapshot(snap => {
     bookings = []; snap.forEach(d => bookings.push({ id: d.id, ...d.data() }));
     renderBookingTable(); renderCalendarGrid();
+    renderDashboardActivitySummary();
   });
   gradeCollection.onSnapshot(snap => {
     grades = []; snap.forEach(d => grades.push({ id: d.id, ...d.data() }));
@@ -1683,6 +1824,7 @@ function startRealtimeSync() {
     volunteers = []; snap.forEach(d => volunteers.push({ id: d.id, ...d.data() }));
     renderVolunteerData();
     renderVolunteerDashboard();
+    renderDashboardActivitySummary();
   });
   curriculumCollection.onSnapshot(snap => {
     curriculums = []; snap.forEach(d => curriculums.push({ id: d.id, ...d.data() }));
@@ -1793,6 +1935,102 @@ function renderTable() {
       <span class="text-[9px] text-gray-400 font-medium">${new Date(s.submitted_at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})} น.</span>
     </div>
   `).join('');
+  lucide.createIcons();
+}
+
+// 📌 สรุปข้อมูลการจองปฏิทินและจิตอาสาบนหน้าแรกหลังล็อกอิน
+function escapeDashboardHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
+}
+
+function dashboardDateKey(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function dashboardFormatDate(dateValue) {
+  if (!dateValue) return '-';
+  const parts = String(dateValue).split('-').map(Number);
+  if (parts.length === 3 && parts.every(Number.isFinite)) {
+    return new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+  return escapeDashboardHtml(dateValue);
+}
+
+function renderDashboardActivitySummary() {
+  const bookingList = document.getElementById('dashboard-booking-list');
+  const volunteerList = document.getElementById('dashboard-volunteer-list');
+  if (!bookingList || !volunteerList) return;
+
+  const todayKey = dashboardDateKey();
+  const validBookings = bookings.filter(b => b && b.date);
+  const upcomingBookings = validBookings.filter(b => b.date >= todayKey);
+  const todayBookings = validBookings.filter(b => b.date === todayKey);
+  document.getElementById('dashboard-booking-total').textContent = bookings.length;
+  document.getElementById('dashboard-booking-upcoming').textContent = upcomingBookings.length;
+  const upcomingInlineEl = document.getElementById('dashboard-booking-upcoming-inline');
+  if (upcomingInlineEl) upcomingInlineEl.textContent = upcomingBookings.length;
+  document.getElementById('dashboard-booking-today').textContent = todayBookings.length;
+
+  const displayBookings = [...validBookings].sort((a, b) => {
+    const aFuture = a.date >= todayKey;
+    const bFuture = b.date >= todayKey;
+    if (aFuture !== bFuture) return aFuture ? -1 : 1;
+    return aFuture ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date);
+  }).slice(0, 6);
+
+  bookingList.innerHTML = displayBookings.length ? displayBookings.map(b => {
+    const status = b.date === todayKey
+      ? { label: 'วันนี้', cls: 'bg-indigo-50 text-indigo-700 border-indigo-100' }
+      : b.date > todayKey
+        ? { label: 'กำลังจะถึง', cls: 'bg-emerald-50 text-emerald-700 border-emerald-100' }
+        : { label: 'ผ่านไปแล้ว', cls: 'bg-gray-100 text-gray-500 border-gray-200' };
+    return `<div class="flex items-start gap-2.5 rounded-lg border border-gray-100 bg-gray-50/70 p-2.5 hover:bg-amber-50/50 transition-colors">
+      <div class="shrink-0 w-14 text-center rounded-md bg-white border border-amber-100 py-1">
+        <p class="text-[10px] font-black text-amber-700">${escapeDashboardHtml(dashboardFormatDate(b.date))}</p>
+        <p class="text-[9px] text-gray-400">${escapeDashboardHtml(b.time || 'ไม่ระบุเวลา')}</p>
+      </div>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-start justify-between gap-2">
+          <p class="text-[11px] font-bold text-indigo-900 truncate" title="${escapeDashboardHtml(b.title || '')}">${escapeDashboardHtml(b.title || 'ไม่ระบุหัวข้อ')}</p>
+          <span class="shrink-0 text-[9px] px-1.5 py-0.5 rounded-full border ${status.cls}">${status.label}</span>
+        </div>
+        <p class="text-[10px] text-gray-600 truncate">สถานที่: ${escapeDashboardHtml(b.resource || 'ไม่ระบุ')}</p>
+        <p class="text-[9px] text-gray-400 truncate">ผู้จอง: ${escapeDashboardHtml(b.user || 'ไม่ระบุ')}</p>
+      </div>
+    </div>`;
+  }).join('') : '<div class="rounded-lg border border-dashed border-gray-200 p-5 text-center text-[11px] text-gray-400">ยังไม่มีรายการจองกิจกรรม</div>';
+
+  const summary = computeVolunteerSummary('all');
+  const completed = summary.completedStudents;
+  const pending = Math.max(summary.totalStudents - completed, 0);
+  const progressPct = summary.totalStudents > 0 ? Math.min(Math.round((completed / summary.totalStudents) * 100), 100) : 0;
+  document.getElementById('dashboard-vol-total-students').textContent = summary.totalStudents;
+  document.getElementById('dashboard-vol-logged').textContent = summary.loggedStudents;
+  document.getElementById('dashboard-vol-completed').textContent = completed;
+  document.getElementById('dashboard-vol-pending').textContent = pending;
+  document.getElementById('dashboard-vol-pct').textContent = `${progressPct}%`;
+  document.getElementById('dashboard-vol-progress-bar').style.width = `${progressPct}%`;
+  document.getElementById('dashboard-vol-records').textContent = `${summary.totalRecords} รายการ`;
+
+  const latestVolunteers = [...volunteers].sort((a, b) => {
+    const aKey = `${a.work_date || ''}_${a.timestamp || ''}`;
+    const bKey = `${b.work_date || ''}_${b.timestamp || ''}`;
+    return bKey.localeCompare(aKey);
+  }).slice(0, 5);
+  volunteerList.innerHTML = latestVolunteers.length ? latestVolunteers.map(v => `<div class="flex items-start justify-between gap-2 rounded-lg border border-gray-100 bg-gray-50/70 p-2.5">
+    <div class="min-w-0">
+      <p class="text-[11px] font-bold text-indigo-900 truncate">${escapeDashboardHtml(volName(v))} <span class="text-[9px] text-gray-400 font-medium">(${escapeDashboardHtml(volRoom(v))})</span></p>
+      <p class="text-[10px] text-gray-600 truncate">${escapeDashboardHtml(v.activity_name || 'กิจกรรมจิตอาสา')}</p>
+      <p class="text-[9px] text-gray-400 truncate">ผู้บันทึก: ${escapeDashboardHtml(v.recorded_by || 'ไม่ระบุ')}</p>
+    </div>
+    <div class="shrink-0 text-right">
+      <p class="text-[10px] font-black text-rose-600">${Number(v.minutes || 0)} นาที</p>
+      <p class="text-[9px] text-gray-400">${escapeDashboardHtml(dashboardFormatDate(v.work_date))}</p>
+    </div>
+  </div>`).join('') : '<div class="rounded-lg border border-dashed border-gray-200 p-5 text-center text-[11px] text-gray-400">ยังไม่มีรายการบันทึกจิตอาสา</div>';
   lucide.createIcons();
 }
 
@@ -2852,7 +3090,8 @@ function switchTab(tabId) {
   if(tabId === 'volunteer') { switchVolunteerSub('dashboard'); return; }
   if(tabId === 'grades') { switchGradeSub('list'); }
   if(tabId === 'curriculum') { switchCurriculumSub('list'); return; }
-  if(tabId === reviewer) { initReviewerDropdowns(); renderReviewerDocuments(); return; }
+  if(tabId === 'reviewer') { initReviewerDropdowns(); renderReviewerDocuments(); return; }
+  if(tabId === 'dashboard') renderDashboardActivitySummary();
   renderTable(); renderGradesTable(); renderVolunteerData();
   updateAdminOnlyOptions();
 }
